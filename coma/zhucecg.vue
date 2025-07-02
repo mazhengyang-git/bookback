@@ -1,7 +1,7 @@
 <template>
   <div class="jiaoche">
     <div class="n11">
-      <router-link class="aaa" to="jiaoche" @click="jiaoche"> 轿车</router-link>
+      <router-link class="aaaa" to="jiaoche" @click="jiaoche"> 欢迎,注册成功</router-link>
     </div>
   </div>
 </template>
@@ -23,4 +23,11 @@ const jiaoche = () => {
   router.push('/jiaoche')
 }
 </script>
-<style></style>
+<style>
+.aaaa {
+  position: relative;
+  left: 100px;
+  width: 100%;
+  background-color: burlywood;
+}
+</style>
