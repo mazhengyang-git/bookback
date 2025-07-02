@@ -6,6 +6,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, onUnmounted } from 'vue'
+//vue与git到此一游
 </script>
 <style>
 .se {
