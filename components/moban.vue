@@ -1,4 +1,7 @@
 <template>
+  <div style="background-color: black">
+    <tiao2 />
+  </div>
   <div class="se">
     <div class="gitju">
       <div class="gitz" style="color: chocolate">
@@ -13,6 +16,7 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, onUnmounted } from 'vue'
+import tiao2 from '../coma/tiaos.vue'
 </script>
 <style>
 .se {
