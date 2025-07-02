@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div>
+      <div class="dlzc">
+        <a class="dz" @click="qdlzc">{{ dlzc ? '注册账号' : '返回' }}</a>
+      </div>
+    </div>
+
+    <script lang="ts">
+      export default {
+        name: 'App',
+        //components: { Preson, people },
+      }
+    </script>
+    <script lang="ts" setup>
+      import { ref } from 'vue'
+      const dlzc = ref(0)
+      const qdlzc = () => {
+        dlzc.value = dlzc.value ? 0 : 1
+      }
+    </script>
+    <style>
+      template {
+        overflow-y: scroll; /*   强制显示滚动条轨道（避免布局跳动） */
+      }
+
+      template::-webkit-scrollbar {
+        width: 0 !important; /* 隐藏滚动条（Chrome/Safari） */
+      }
+
+      template {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /*IE/Edge */
+      }
+      .dlzc {
+        position: absolute;
+        width: 300px;
+        height: 360px;
+        margin-left: 1200px;
+        margin-top: 175px;
+        background-color: rgba(225, 117, 58, 0.233);
+        border-radius: 20%;
+        align-items: center;
+        text-align: center;
+      }
+      .dz {
+        color: black;
+        text-decoration: none;
+        font-size: 30px;
+        background-color: #ee8755;
+        padding: 5px 14px 5px 14.5px;
+
+        border-radius: 15px;
+        position: relative;
+        top: 280px;
+      }
+      .dz:hover {
+        background-color: rgb(158, 190, 138);
+      }
+    </style>
+  </body>
+</html>
