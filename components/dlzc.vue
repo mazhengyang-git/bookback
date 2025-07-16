@@ -45,6 +45,7 @@ template {
   border-radius: 3%;
   align-items: center;
   text-align: center;
+  user-select: none;
 }
 .dz {
   color: black;

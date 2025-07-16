@@ -1184,7 +1184,7 @@ const resetToDefault = () => {
 <style>
 .zuo3zuo{
   position: absolute;
-  
+ 
  white-space: nowrap;
  top: -20px;
  color: #000;
@@ -1199,6 +1199,7 @@ left: 30px;
   background-color: lavender;
   border-top: 0.5px rgb(224, 129, 21) solid;
    color: rgb(234, 17, 197);
+    user-select: none;
 }
 .zuoff {
   display: block;
@@ -1232,7 +1233,7 @@ left: 30px;
   left: 80px;
   top: -53px;
   font-size: 20px;
-
+ user-select: none;
   width: 80px;
 }
 
@@ -1244,6 +1245,7 @@ left: 30px;
   position: relative;
   z-index: 9800;
   transition: all 0.5s;
+   user-select: none;
 }
 
 .v-showw {

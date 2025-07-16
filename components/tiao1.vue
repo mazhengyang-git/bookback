@@ -162,7 +162,11 @@ template {
   margin-top: 8px;
   text-decoration: none;
   color: aliceblue;
-
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
   font-size: 26px;
   transition: all 0.5s;
 }

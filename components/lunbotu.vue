@@ -7,17 +7,7 @@
         :to="item.rue"
         v-show="lunxian === index + 1"
       >
-        <span
-          style="
-            position: absolute;
-            top: 19px;
-            font-size: 25px;
-            color: brown;
-            left: 10px;
-            z-index: 9750;
-          "
-          >{{ item.title }}</span
-        >
+        <span class="lunbotuzi">{{ item.title }}</span>
         <img class="tu" :src="item.image" />
       </router-link>
 
@@ -85,7 +75,17 @@ onUnmounted(() => {
   display: flex;
   gap: 10px;
 }
-
+.lunbotuzi {
+  position: absolute;
+  top: 19px;
+  font-size: 25px;
+  color: brown;
+  left: 10px;
+  z-index: 9750;
+}
+.lunbotuzi:hover {
+  color: rgb(198, 111, 43);
+}
 .dots span {
   width: 10px;
   height: 10px;
@@ -167,6 +167,11 @@ template {
   margin-top: -22.75px;
   display: block;
   position: relative;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
 }
 .ce a {
   font-size: 20px;

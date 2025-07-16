@@ -142,6 +142,7 @@ let youlunbb = () => {
   width: 270px;
   height: 140px;
   object-fit: cover;
+  user-select: none;
 }
 .luny {
   position: absolute;
