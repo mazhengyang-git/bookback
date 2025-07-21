@@ -3,10 +3,7 @@ import { createApp } from 'vue'
 import Ass from './Ass.vue'
 //createApp(App).mount('#app')
 import router from './router' // 引入路由实例
-import jp from '../coma/jp.vue'
-import VueLazyload from 'vue-lazyload'
-import loadingImage from '@img/hei.svg' // 确保此路径正确
-import errorImage from '@img/dog1.jpg' // 确保此路径正确
+
 // 创建单一应用实例
 const ass = createApp(Ass)
 

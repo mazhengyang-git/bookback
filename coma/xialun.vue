@@ -83,13 +83,13 @@ import { reactive, ref } from 'vue'
 const hoveredIndex = ref(-1)
 
 const xiatu = reactive([
-  { name: '小米YU7', rue: '/小米YU7', img: '../img/yu7.webp' },
-  { name: '小米SU7', rue: '/小米SU7', img: '../img/su7.webp' },
-  { name: '海鸥', rue: '/海鸥', img: '../img/haiou.webp' },
-  { name: 'eπ007', rue: '/eπ007', img: '../img/ep.webp' },
-  { name: '海鸥', rue: '/海鸥', img: '../img/haiou.webp' },
-  { name: '小米SU7', rue: '/小米SU7', img: '../img/su7.webp' },
-  { name: '海鸥', rue: '/海鸥', img: '../img/haiou.webp' },
+  { name: '小米YU7', rue: '/小米YU7', img: '../src/img/yu7.webp' },
+  { name: '小米SU7', rue: '/小米SU7', img: '../src/img/su7.webp' },
+  { name: '海鸥', rue: '/海鸥', img: '../src/img/haiou.webp' },
+  { name: 'eπ007', rue: '/eπ007', img: '../src/img/ep.webp' },
+  { name: '海鸥', rue: '/海鸥', img: '../src/img/haiou.webp' },
+  { name: '小米SU7', rue: '/小米SU7', img: '../src/img/su7.webp' },
+  { name: '海鸥', rue: '/海鸥', img: '../src/img/haiou.webp' },
 ])
 </script>
 

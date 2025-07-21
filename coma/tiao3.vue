@@ -267,17 +267,17 @@ const jiaoche = () => {
 
 let chexuan = reactive([
   {
-    img: '../img/新能源车.png',
+    img: '../src/img/新能源车.png',
     ming: '新能源',
     route: '/ny',
   },
-  { img: '../img/轿车.png', ming: '轿车', route: '/jiaoche' },
-  { img: '../img/suv (1).png', ming: 'SUV', route: '/suv' },
-  { img: '../img/MPV-侧.png', ming: 'MPV' },
-  { img: '../img/豪华型车型.png', ming: '豪华品牌' },
-  { img: '../img/跑车.png', ming: '跑车' },
-  { img: '../img/皮卡.png', ming: '皮卡' },
-  { img: '../img/面包车.png', ming: '面包' },
+  { img: '../src/img/轿车.png', ming: '轿车', route: '/jiaoche' },
+  { img: '../src/img/suv (1).png', ming: 'SUV', route: '/suv' },
+  { img: '../src/img/MPV-侧.png', ming: 'MPV' },
+  { img: '../src/img/豪华型车型.png', ming: '豪华品牌' },
+  { img: '../src/img/跑车.png', ming: '跑车' },
+  { img: '../src/img/皮卡.png', ming: '皮卡' },
+  { img: '../src/img/面包车.png', ming: '面包' },
 ])
 
 let chejia = reactive([

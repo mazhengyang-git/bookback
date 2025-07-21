@@ -89,7 +89,7 @@ const handleLogin = () => {
   width: 100%;
 }
 .mbdbei {
-  background: url('../img/mbdbjing.png');
+  background: url('../src/img/mbdbjing.png');
   object-fit: cover;
   position: relative;
   z-index: 8800;

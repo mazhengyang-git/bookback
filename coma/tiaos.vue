@@ -5,13 +5,13 @@
     <img loading="lazy" />
     <div class="ssstiao">
       <span style="cursor: pointer" @click="zuoxian">
-        <img class="stu" src="../img/hengsan.png" loading="lazy" />
+        <img class="stu" src="../src/img/hengsan.png" loading="lazy" />
       </span>
       <span style="cursor: pointer" @click="zuoxians" class="sa1" to="">探索车型</span>
       <router-link class="sa2" to="">预约品鉴</router-link>
       <router-link class="sa3" to="">找经销商</router-link>
       <router-link to="">
-        <img class="stua" src="../img/mbhbz.png" loading="lazy" />
+        <img class="stua" src="../src/img/mbhbz.png" loading="lazy" />
       </router-link>
 
       <a alt="void(0)" href="javascript:void(0)">
@@ -20,15 +20,15 @@
           title="搜索"
           alt="void(0)"
           class="sa11"
-          src="../img/sou.png"
+          src="../src/img/sou.png"
           loading="lazy"
         />
       </a>
       <router-link to="">
-        <img class="sa22" src="../img/zanxin.png" loading="lazy" />
+        <img class="sa22" src="../src/img/zanxin.png" loading="lazy" />
       </router-link>
       <span @click="dengdian" to="">
-        <img class="sa33" src="../img/mdl.png" loading="lazy" />
+        <img class="sa33" src="../src/img/mdl.png" loading="lazy" />
       </span>
     </div>
   </div>
@@ -37,25 +37,25 @@
     <div class="mbyoukuai">
       <div class="mb-item">
         <div @click="zuoxians">
-          <img class="yousitu" src="../img/youtu1.png" loading="lazy" />
+          <img class="yousitu" src="../src/img/youtu1.png" loading="lazy" />
           <span class="yousizi">探索车型</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi2">
-          <img class="yousitu" src="../img/youtu2.png" loading="lazy" />
+          <img class="yousitu" src="../src/img/youtu2.png" loading="lazy" />
           <span class="yousizi">在线购车</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi3">
-          <img class="yousitu" src="../img/youtu3.png" loading="lazy" />
+          <img class="yousitu" src="../src/img/youtu3.png" loading="lazy" />
           <span class="yousizi">金融试算</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi4">
-          <img class="yousitu" src="../img/youtu4.png" loading="lazy" />
+          <img class="yousitu" src="../src/img/youtu4.png" loading="lazy" />
           <span class="yousizi">找经销商</span>
         </div>
       </div>

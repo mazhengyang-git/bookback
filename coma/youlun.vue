@@ -27,17 +27,17 @@ import { reactive, ref } from 'vue'
 let youluna = reactive([
   {
     name: '阿斯顿马丁DBS GT',
-    img: '../img/阿斯顿马丁DBS GT.jfif',
+    img: '../src/img/阿斯顿马丁DBS GT.jfif',
     rue: 'asidun|mading|DBS GT',
   },
   {
     name: '布加迪威龙',
-    img: '../img/布加迪威龙.webp',
+    img: '../src/img/布加迪威龙.webp',
     rue: 'bujiadi|weilong',
   },
   {
     name: '红旗S9',
-    img: '../img/红旗S9.webp',
+    img: '../src/img/红旗S9.webp',
     rue: 'hongqi|S9',
   },
 ])
@@ -45,17 +45,17 @@ let youluna = reactive([
 let youlunb = reactive([
   {
     name: '日产 GTR',
-    img: '../img/日产 GTR.webp',
+    img: '../src/img/日产 GTR.webp',
     rue: 'richan|GTR',
   },
   {
     name: '迈巴赫S480',
-    img: '../img/迈巴赫S480.webp',
+    img: '../src/img/迈巴赫S480.webp',
     rue: 'MaiBaHe|S480',
   },
   {
     name: '道奇地狱猫 恶魔V8',
-    img: '../img/道奇地狱猫V8.webp',
+    img: '../src/img/道奇地狱猫V8.webp',
     rue: 'daoqidiyumao|emoV8',
   },
 ])

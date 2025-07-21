@@ -53,7 +53,7 @@ const checkImages = () => {
 
     img.onerror = () => {
       // 图片加载失败时替换为默认图片
-      sccccc.value[index].img = '../img/GTR.webp'
+      sccccc.value[index].img = '../src/img/GTR.webp'
       console.warn(`Using default image for: ${item.name}`)
     }
   })
