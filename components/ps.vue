@@ -6,7 +6,7 @@
 
 <script lang="ts" name="Person" setup>
 import { withDefaults } from 'vue'
-import { type Persons } from '@/index'
+import { type Persons } from '../src/index'
 withDefaults(defineProps<{ list?: Persons }>(), {
   list: () => [
     {

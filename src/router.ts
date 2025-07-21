@@ -24,7 +24,7 @@ const router = createRouter({
     { path: '/denglucg', component: denglucg },
     { path: '/zhucecg', component: zhucecg },
     { path: '/ny', component: ny },
-    { path: '/', component: '' },
+
     { path: '/jinpai', component: jinpai },
     { path: '/MaiBaHe|S480', component: maibahes480 },
     { path: '/tiaos', component: tiaos },

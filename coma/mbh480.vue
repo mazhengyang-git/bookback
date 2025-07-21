@@ -59,7 +59,6 @@
       alt="Wave Effect"
       ref="bgImg"
       :src="bgSrc"
-      @load="onBgLoaded"
       loading="eager"
     />
     <span @click="zuodianx" class="mbhz1">-</span><span class="mbhz2">礼待天下</span>
@@ -122,11 +121,15 @@ onMounted(() => {
   }, 1000) // 3秒后无论如何都隐藏遮罩
 })
 //懒加载截止代码
-let zuox = ref(false)
-let dengx = ref(false)
-let zuoxs = ref(false)
-let soux = ref(false)
-let souy = ref(false)
+interface RefData<T = any> {
+  value: T
+}
+
+let zuox: RefData<boolean> = ref(false)
+let dengx: RefData<boolean> = ref(false)
+let zuoxs: RefData<boolean> = ref(false)
+let soux: RefData<boolean> = ref(false)
+let souy: RefData<boolean> = ref(false)
 provide('soux', soux)
 provide('zuox', zuox)
 provide('dengx', dengx)

@@ -63,14 +63,16 @@
   </div>
 </template>
 <script lang="ts" setup>
-import router from '@/router'
+import router from '../src/router'
 import { ref, provide, inject, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-let zuox = inject('zuox')
-let soux = inject('soux')
-let zuoxs = inject('zuoxs')
-let souy = inject('souy')
-let dengx = inject('dengx')
+import type { Ref } from 'vue' // 类型单独导入
+let zuox = inject<Ref<boolean>>('zuox')!
+let soux = inject<Ref<boolean>>('soux')!
+let zuoxs = inject<Ref<boolean>>('zuoxs')!
+let souy = inject<Ref<boolean>>('souy')!
+let dengx = inject<Ref<boolean>>('dengx')!
+
 let dengdian = () => {
   soux.value = false
   if (dengx.value === true) {

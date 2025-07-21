@@ -4,7 +4,7 @@
       <li class="liis">
         <div class="container">
           <div v-for="(e, index) in chexuan" :key="index" class="item">
-            <router-link :to="e.route">
+           <router-link :to="e.route!">
               <span
                 style="
                   display: grid !important;
@@ -14,7 +14,7 @@
                 ><img :src="e.img" class="aatu"
               /></span>
             </router-link>
-            <router-link :to="e.route" class="aaa">
+            <router-link :to="e.route!" class="aaa">
               <span style="position: relative; left: -73px">{{ e.ming }}</span>
             </router-link>
           </div>
@@ -103,7 +103,7 @@
                       <hr />
                       <div class="car-links">
                         <router-link class="rx2" :to="car.rueb"><span>报价</span></router-link> |
-                        <router-link class="rx3" :to="car.rute"><span>图库</span></router-link> |
+                        <router-link class="rx3" :to="car.ruet"><span>图库</span></router-link> |
                         <router-link class="rx4" :to="car.rues"><span>社区</span></router-link>
                       </div>
                     </div>

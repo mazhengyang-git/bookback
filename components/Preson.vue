@@ -10,8 +10,8 @@
 
 <script lang="ts" name="Preson" setup>
 import { ref } from 'vue'
-let name = ref('牛')
-let age = ref(19)
+let name: any = ref('牛')
+let age: any = ref(19)
 let aihao = '听离歌'
 function changeName() {
   name.value = prompt('输入姓名')

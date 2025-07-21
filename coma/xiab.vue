@@ -11,9 +11,9 @@
             >
             <hr />
             <div class="car-links">
-              <router-link class="rx2" :to="car.rueb"><span>报价</span></router-link> |
-              <router-link class="rx3" :to="car.ruet"><span>图库</span></router-link> |
-              <router-link class="rx4" :to="car.rues"><span>社区</span></router-link>
+              <router-link class="rx2" to="car.rueb"><span>报价</span></router-link> |
+              <router-link class="rx3" to="car.ruet"><span>图库</span></router-link> |
+              <router-link class="rx4" to="car.rues"><span>社区</span></router-link>
             </div>
           </div>
         </div>
@@ -24,9 +24,18 @@
 
 <script lang="ts" name="xiab" setup>
 import { reactive } from 'vue'
+interface Car {
+  name: string
+  rue: string // 必选属性（必须有）
+  rueb?: string // 可选属性（可能有）
+  ruet?: string // 可选属性（可能有）
+  rues?: string // 可选属性（可能有）
+}
+interface CarCategory {
+  cars: Car[] // 每个分类包含 Car 数组
+}
 
-// 定义汽车类别和对应汽车信息的数组
-let carCategories = reactive([
+let carCategories = reactive<CarCategory[]>([
   {
     cars: [
       { name: 'επ007', rue: '/jiaoche', rueb: '/jiaoche', ruet: '/jiaoche', rues: '/jiaoche' },
@@ -83,6 +92,7 @@ let carCategories = reactive([
     ],
   },
 ])
+// 定义汽车类别和对应汽车信息的数组
 </script>
 
 <style scoped>

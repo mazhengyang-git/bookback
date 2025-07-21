@@ -72,8 +72,10 @@ import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 const router = useRouter()
 const shu = ref('')
-const shuru = (e) => {
-  shu.value = e.target.value.replace(/[^\d]/g, '')
+const shuru = (e: Event) => {
+  // 需指定 target 为 HTMLInputElement 类型（类型断言）
+  const input = e.target as HTMLInputElement
+  shu.value = input.value.replace(/[^\d]/g, '')
   if (shu.value.length > 11) {
     shu.value = shu.value.slice(0, 11)
   }

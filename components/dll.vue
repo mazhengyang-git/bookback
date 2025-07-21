@@ -11,7 +11,6 @@
       账号:<input
         style="width: 240px; height: 30px; border: 2px green solid"
         v-model="shu"
-        @input="shur"
         type="text"
         placeholder="账号"
         maxlength="11"

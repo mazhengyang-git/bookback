@@ -21,7 +21,7 @@
 
 <script lang="ts" name="people" setup>
 import { ref, reactive, toRefs } from 'vue'
-let car = reactive({
+let car: any = reactive({
   ming: '奔驰迈巴赫 s480',
   jia: 232.3,
 })
