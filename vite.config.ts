@@ -13,4 +13,7 @@ export default defineConfig({
       '@img': fileURLToPath(new URL('./src/img', import.meta.url)),
     },
   },
+
+  // 确保没有排除图片格式（默认已包含常见图片格式）
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.svg', '**/*.jpg'],
 })

@@ -24,20 +24,26 @@
 
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
+import md from '../src/img/阿斯顿马丁DBS GT.jfif'
+import bjd from '../src/img/布加迪威龙.webp'
+import reds9 from '../src/img/红旗S9.webp'
+import rgtr from '../src/img/日产 GTR.webp'
+import ms480 from '../src/img/迈巴赫S480.webp'
+import diyucat from '../src/img/道奇地狱猫V8.webp'
 let youluna = reactive([
   {
     name: '阿斯顿马丁DBS GT',
-    img: '../src/img/阿斯顿马丁DBS GT.jfif',
+    img: md,
     rue: 'asidun|mading|DBS GT',
   },
   {
     name: '布加迪威龙',
-    img: '../src/img/布加迪威龙.webp',
+    img: bjd,
     rue: 'bujiadi|weilong',
   },
   {
     name: '红旗S9',
-    img: '../src/img/红旗S9.webp',
+    img: reds9,
     rue: 'hongqi|S9',
   },
 ])
@@ -45,17 +51,17 @@ let youluna = reactive([
 let youlunb = reactive([
   {
     name: '日产 GTR',
-    img: '../src/img/日产 GTR.webp',
+    img: rgtr,
     rue: 'richan|GTR',
   },
   {
     name: '迈巴赫S480',
-    img: '../src/img/迈巴赫S480.webp',
+    img: ms480,
     rue: 'MaiBaHe|S480',
   },
   {
     name: '道奇地狱猫 恶魔V8',
-    img: '../src/img/道奇地狱猫V8.webp',
+    img: diyucat,
     rue: 'daoqidiyumao|emoV8',
   },
 ])

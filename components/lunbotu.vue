@@ -29,13 +29,16 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, onUnmounted } from 'vue'
-import Xialun from '../coma/xialun.vue'
+import mdlun from '../src/img/md.webp'
 
+import redh9 from '../src/img/红旗H9.webp'
+import xmisu7 from '../src/img/su7.webp'
+import ada8 from '../src/img/GTR.webp'
 const slides = ref([
-  { title: '阿斯顿.马丁vanquish', image: '../src/img/md.webp', rue: '/阿斯顿.马丁vanquish' },
-  { title: '红旗H9', image: '../src/img/红旗H9.webp', rue: '红旗H9' },
-  { title: '小米SU7', image: '../src/img/su7.webp', rue: '小米SU7' },
-  { title: '奥迪A8', image: '../src/img/GTR.webp', rue: '奥迪A8' },
+  { title: '阿斯顿.马丁vanquish', image: mdlun, rue: '/阿斯顿.马丁vanquish' },
+  { title: '红旗H9', image: redh9, rue: '红旗H9' },
+  { title: '小米SU7', image: xmisu7, rue: '小米SU7' },
+  { title: '奥迪A8', image: ada8, rue: '奥迪A8' },
 ])
 
 let lunxian = ref(1)

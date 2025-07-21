@@ -1,6 +1,6 @@
 <template>
   <div class="dlzc">
-    <img src="../img/mi.webp" style="width: 300px; height: 200px" />
+    <img src="../src/img/mi.webp" style="width: 300px; height: 200px" />
     <router-link class="dz" to="/dll">登录</router-link>
   </div>
 </template>

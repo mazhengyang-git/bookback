@@ -5,30 +5,23 @@
     <img loading="lazy" />
     <div class="ssstiao">
       <span style="cursor: pointer" @click="zuoxian">
-        <img class="stu" src="../src/img/hengsan.png" loading="lazy" />
+        <img class="stu" :src="hengsan" loading="lazy" />
       </span>
       <span style="cursor: pointer" @click="zuoxians" class="sa1" to="">探索车型</span>
       <router-link class="sa2" to="">预约品鉴</router-link>
       <router-link class="sa3" to="">找经销商</router-link>
       <router-link to="">
-        <img class="stua" src="../src/img/mbhbz.png" loading="lazy" />
+        <img class="stua" :src="mbhb" loading="lazy" />
       </router-link>
 
       <a alt="void(0)" href="javascript:void(0)">
-        <img
-          @click="soudian"
-          title="搜索"
-          alt="void(0)"
-          class="sa11"
-          src="../src/img/sou.png"
-          loading="lazy"
-        />
+        <img @click="soudian" title="搜索" alt="void(0)" class="sa11" :src="sou" loading="lazy" />
       </a>
       <router-link to="">
-        <img class="sa22" src="../src/img/zanxin.png" loading="lazy" />
+        <img class="sa22" :src="mxin" loading="lazy" />
       </router-link>
       <span @click="dengdian" to="">
-        <img class="sa33" src="../src/img/mdl.png" loading="lazy" />
+        <img class="sa33" :src="mdengdian" loading="lazy" />
       </span>
     </div>
   </div>
@@ -37,36 +30,49 @@
     <div class="mbyoukuai">
       <div class="mb-item">
         <div @click="zuoxians">
-          <img class="yousitu" src="../src/img/youtu1.png" loading="lazy" />
+          <img class="yousitu" :src="yousitu1" loading="lazy" />
           <span class="yousizi">探索车型</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi2">
-          <img class="yousitu" src="../src/img/youtu2.png" loading="lazy" />
+          <img class="yousitu" :src="yousitu2" loading="lazy" />
           <span class="yousizi">在线购车</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi3">
-          <img class="yousitu" src="../src/img/youtu3.png" loading="lazy" />
+          <img class="yousitu" :src="yousitu3" loading="lazy" />
           <span class="yousizi">金融试算</span>
         </div>
       </div>
       <div class="mb-item">
         <div @click="yousi4">
-          <img class="yousitu" src="../src/img/youtu4.png" loading="lazy" />
+          <img class="yousitu" :src="yousitu4" loading="lazy" />
           <span class="yousizi">找经销商</span>
         </div>
       </div>
     </div>
+  </div>
+  <div style="display: none; transform: scale(1.1, 1.1); transition: transfrom 0.5s linear">
+    {{ usedImages }}
   </div>
 </template>
 <script lang="ts" setup>
 import router from '../src/router'
 import { ref, provide, inject, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import mbhb from '../src/img/mbhbz.png'
+import sou from '../src/img/sou.png'
+import yousitu1 from '../src/img/youtu1.png'
+import yousitu2 from '../src/img/youtu2.png'
+import yousitu3 from '../src/img/youtu3.png'
+import yousitu4 from '../src/img/youtu4.png'
+import mdengdian from '../src/img/mdl.png'
+import mxin from '../src/img/zanxin.png'
+import hengsan from '../src/img/hengsan.png'
 import type { Ref } from 'vue' // 类型单独导入
+const usedImages = [yousitu1, yousitu2, yousitu3, yousitu4, mdengdian, mxin, sou, mbhb, hengsan]
 let zuox = inject<Ref<boolean>>('zuox')!
 let soux = inject<Ref<boolean>>('soux')!
 let zuoxs = inject<Ref<boolean>>('zuoxs')!

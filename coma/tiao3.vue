@@ -250,6 +250,15 @@ import xiab from '../coma/xiab.vue'
 import { useRouter } from 'vue-router'
 import xialun from '../coma/xialun.vue'
 import ylun from '../coma/youlun.vue'
+import newEnergyImg from '../src/img/新能源车.png'
+import carImg from '../src/img/轿车.png'
+import suvImg from '../src/img/suv (1).png'
+import mpv from '../src/img/MPV-侧.png'
+import haocar from '../src/img/豪华型车型.png'
+import pcar from '../src/img/跑车.png'
+import picar from '../src/img/皮卡.png'
+import mbcar from '../src/img/面包车.png'
+
 components: {
   xialun
 }
@@ -267,17 +276,17 @@ const jiaoche = () => {
 
 let chexuan = reactive([
   {
-    img: '../src/img/新能源车.png',
+    img: newEnergyImg,
     ming: '新能源',
     route: '/ny',
   },
-  { img: '../src/img/轿车.png', ming: '轿车', route: '/jiaoche' },
-  { img: '../src/img/suv (1).png', ming: 'SUV', route: '/suv' },
-  { img: '../src/img/MPV-侧.png', ming: 'MPV' },
-  { img: '../src/img/豪华型车型.png', ming: '豪华品牌' },
-  { img: '../src/img/跑车.png', ming: '跑车' },
-  { img: '../src/img/皮卡.png', ming: '皮卡' },
-  { img: '../src/img/面包车.png', ming: '面包' },
+  { img: carImg, ming: '轿车', route: '/jiaoche' },
+  { img: suvImg, ming: 'SUV', route: '/suv' },
+  { img: mpv, ming: 'MPV' },
+  { img: haocar, ming: '豪华品牌' },
+  { img: pcar, ming: '跑车' },
+  { img: picar, ming: '皮卡' },
+  { img: mbcar, ming: '面包' },
 ])
 
 let chejia = reactive([

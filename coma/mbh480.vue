@@ -10,7 +10,7 @@
     <div class="soux" :class="{ soudian: soux }">
       <span class="soulan"
         ><input class="sesou" placeholder="EQS" /><RouterLink to=""
-          ><img class="sousou" src="../src/img/sou.png" /></RouterLink
+          ><img class="sousou" :src="sou" /></RouterLink
       ></span>
       <hr class="souxian1" />
     </div>
@@ -68,7 +68,7 @@
     </div>
 
     <div class="topsxi" :class="{ zuodiana: zuoxs }">
-      <img class="topxians" src="../src/img/topb.png" />
+      <img class="topxians" :src="topb" />
     </div>
 
     <img @click="zuodianx" class="mbtu2" alt="Wave Effect" :src="bgSrc" loading="lazy" />
@@ -87,12 +87,16 @@ import {
   provide,
 } from 'vue'
 import tiaos from '../coma/tiaos.vue'
+import mbh from '../src/img/mbh.jpg'
+import sou from '../src/img/sou.png'
+import topb from '../src/img/topb.png'
+
 //懒加载开始代码
-const bgSrc = './src/img/mbh.jpg'
+const bgSrc = mbh
 const allImagesLoaded = ref(false)
 
 // 需要监听的图片元素
-const imagesToLoad = [bgSrc, './src/img/mbh.jpg', './src/img/sou.png', './src/img/topb.png']
+const imagesToLoad = [bgSrc, mbh, sou, topb]
 
 function loadImages() {
   const imagePromises = imagesToLoad.map((src) => {
