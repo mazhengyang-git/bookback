@@ -9,13 +9,13 @@
     <hr class="yyyyyyx" />
     <div class="xianyou1" v-for="(r, index) in youlunb" :key="index" v-show="stx === 1">
       <router-link :to="r.rue"
-        ><img :src="r.img" class="youluntu" />
+        ><img :src="r.img" class="youluntu" loading="lazy" />
         <span class="youlunzi">{{ r.name }}</span></router-link
       >
     </div>
     <div class="xianyou2" v-for="(r, index) in youluna" :key="index" v-show="stx === 2">
       <router-link :to="r.rue"
-        ><img :src="r.img" class="youluntu" />
+        ><img :src="r.img" class="youluntu" loading="lazy" />
         <span class="youlunzi">{{ r.name }}</span></router-link
       >
     </div>

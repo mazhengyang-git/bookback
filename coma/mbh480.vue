@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <!--url(#waterWave) -->
-  </div>
+  <Transition name="fade">
+    <div v-show="!allImagesLoaded" class="black-mask"></div>
+  </Transition>
   <div class="overflow-hidden-container">
     <div class="toptiao">
       <div><tiaos /></div>
@@ -51,8 +51,17 @@
         <span></span>
       </div>
     </div>
-    <span @click="zuodianx" class="mbhz">梅赛德斯-迈巴赫S级轿车</span
-    ><img @click="zuodianx" class="mbtu" alt="Wave Effect" src="../img/mbh.jpg" />
+    <span @click="zuodianx" class="mbhz">梅赛德斯-迈巴赫S级轿车</span>
+
+    <img
+      @click="zuodianx"
+      :class="'mbtu'"
+      alt="Wave Effect"
+      ref="bgImg"
+      :src="bgSrc"
+      @load="onBgLoaded"
+      loading="eager"
+    />
     <span @click="zuodianx" class="mbhz1">-</span><span class="mbhz2">礼待天下</span>
     <div style="position: relative">
       <RouterLink class="syu1" to="">预约品鉴</RouterLink
@@ -63,13 +72,56 @@
       <img class="topxians" src="/img/topb.png" />
     </div>
 
-    <img @click="zuodianx" class="mbtu2" alt="Wave Effect" src="../img/mbh.jpg" />
+    <img @click="zuodianx" class="mbtu2" alt="Wave Effect" src="../img/mbh.jpg" loading="lazy" />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, inject, reactive, ref, onMounted, onUnmounted, provide } from 'vue'
+import {
+  onBeforeUnmount,
+  computed,
+  inject,
+  reactive,
+  ref,
+  onMounted,
+  onUnmounted,
+  provide,
+} from 'vue'
 import tiaos from '../coma/tiaos.vue'
+//懒加载开始代码
+const bgSrc = '/img/mbh.jpg'
+const allImagesLoaded = ref(false)
+
+// 需要监听的图片元素
+const imagesToLoad = [bgSrc, '../img/mbh.jpg', '../img/sou.png', '/img/topb.png']
+
+function loadImages() {
+  const imagePromises = imagesToLoad.map((src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.src = src
+      img.onload = resolve
+    })
+  })
+
+  Promise.all(imagePromises)
+    .then(() => {
+      allImagesLoaded.value = true
+    })
+    .catch(() => {
+      // 即使有图片加载失败，也继续显示内容
+      allImagesLoaded.value = true
+    })
+}
+onMounted(() => {
+  loadImages()
+
+  // 设置超时作为后备，确保遮罩不会永远存在
+  setTimeout(() => {
+    allImagesLoaded.value = true
+  }, 1000) // 3秒后无论如何都隐藏遮罩
+})
+//懒加载截止代码
 let zuox = ref(false)
 let dengx = ref(false)
 let zuoxs = ref(false)
@@ -87,17 +139,29 @@ let zuodianx = () => {
 }
 
 onMounted(() => {
-  // 使用更安全的类型断言
-
   // 在组件卸载前移除事件监听器
-  onBeforeUnmount(() => {})
+  //onBeforeUnmount(() => {})
 })
 </script>
 
 <style scoped>
+.black-mask {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 19999;
+}
+
+/* 遮罩淡出动画 */
+.fade-leave-active {
+  opacity: 1;
+}
+.fade-leave-to {
+  opacity: 0;
+}
 .dengx {
   position: fixed;
-  display: block;
+  display: none;
   width: 330px;
   height: 330px;
   top: 100px;
@@ -111,6 +175,7 @@ onMounted(() => {
 .dengx.dengdian {
   backdrop-filter: blur(12px);
   z-index: 10555;
+  display: block;
   opacity: 1;
 }
 .sousou {
@@ -163,7 +228,11 @@ onMounted(() => {
   position: relative;
   /* 注释这两行，避免切断滚动上下文，影响 sticky 定位 */
   overflow-x: hidden;
-
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
   overflow-y: hidden;
   width: 100%;
 } /*隐藏滚动条关键*/
@@ -416,7 +485,7 @@ zuozuosw {
   width: 1530px;
 
   left: -5px;
-  height: 100vh;
+  height: 761px;
   object-fit: cover;
   display: block;
   animation:

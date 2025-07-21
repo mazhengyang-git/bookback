@@ -1,19 +1,20 @@
 import { createApp } from 'vue'
 //import App from './App.vue'
 import Ass from './Ass.vue'
-createApp(Ass).use(router)
 //createApp(App).mount('#app')
-createApp(Ass).mount('#ass')
 import router from './router' // 引入路由实例
 import jp from '../coma/jp.vue'
-createApp(Ass)
-  .use(router) // 使用路由
-  .mount('#ass') // 挂载应用
-// 关键！注入路由
-jp.use(router)
+import VueLazyload from 'vue-lazyload'
+import loadingImage from '@img/hei.svg' // 确保此路径正确
+import errorImage from '@img/dog1.jpg' // 确保此路径正确
+// 创建单一应用实例
 const ass = createApp(Ass)
-// 挂载路由
+
+// 统一注册插件
 ass.use(router)
-// 可选：挂载 Pinia（用于管理登录状态）
-// 挂载到 DOM
+
+// 假设你有不同优先级的组件使用懒加载，这里分别注册不同配置
+// 高优先级组件使用的懒加载配置
+
+// 挂载应用
 ass.mount('#ass')

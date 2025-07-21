@@ -2,27 +2,70 @@
   <nav class="n1s" @click="soudianx"></nav>
 
   <div class="n11">
-    <img />
+    <img loading="lazy" />
     <div class="ssstiao">
       <span style="cursor: pointer" @click="zuoxian">
-        <img class="stu" src="../img/hengsan.png"
-      /></span>
+        <img class="stu" src="../img/hengsan.png" loading="lazy" />
+      </span>
       <span style="cursor: pointer" @click="zuoxians" class="sa1" to="">探索车型</span>
       <router-link class="sa2" to="">预约品鉴</router-link>
       <router-link class="sa3" to="">找经销商</router-link>
-      <router-link to=""> <img class="stua" src="../img/mbhbz.png" /></router-link>
+      <router-link to="">
+        <img class="stua" src="../img/mbhbz.png" loading="lazy" />
+      </router-link>
 
-      <a alt="void(0)" href="javascript:void(0)"
-        ><img @click="soudian" title="搜索" alt="void(0)" class="sa11" src="../img/sou.png" />
+      <a alt="void(0)" href="javascript:void(0)">
+        <img
+          @click="soudian"
+          title="搜索"
+          alt="void(0)"
+          class="sa11"
+          src="../img/sou.png"
+          loading="lazy"
+        />
       </a>
-      <router-link to=""><img class="sa22" src="../img/zanxin.png" /></router-link>
-      <span @click="dengdian" to=""><img class="sa33" src="../img/mdl.png" /></span>
+      <router-link to="">
+        <img class="sa22" src="../img/zanxin.png" loading="lazy" />
+      </router-link>
+      <span @click="dengdian" to="">
+        <img class="sa33" src="../img/mdl.png" loading="lazy" />
+      </span>
+    </div>
+  </div>
+  <div class="mbyoukuai1">.</div>
+  <div class="viewport-wrapper">
+    <div class="mbyoukuai">
+      <div class="mb-item">
+        <div @click="zuoxians">
+          <img class="yousitu" src="../img/youtu1.png" loading="lazy" />
+          <span class="yousizi">探索车型</span>
+        </div>
+      </div>
+      <div class="mb-item">
+        <div @click="yousi2">
+          <img class="yousitu" src="../img/youtu2.png" loading="lazy" />
+          <span class="yousizi">在线购车</span>
+        </div>
+      </div>
+      <div class="mb-item">
+        <div @click="yousi3">
+          <img class="yousitu" src="../img/youtu3.png" loading="lazy" />
+          <span class="yousizi">金融试算</span>
+        </div>
+      </div>
+      <div class="mb-item">
+        <div @click="yousi4">
+          <img class="yousitu" src="../img/youtu4.png" loading="lazy" />
+          <span class="yousizi">找经销商</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-
 <script lang="ts" setup>
-import { ref, provide, inject } from 'vue'
+import router from '@/router'
+import { ref, provide, inject, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 let zuox = inject('zuox')
 let soux = inject('soux')
 let zuoxs = inject('zuoxs')
@@ -75,8 +118,64 @@ let zuoxians = () => {
   }
   soux.value = false
 }
+const yousi2 = () => {
+  router.push('/mbdll')
+}
+const yousi3 = () => {
+  router.push('/mbdll')
+}
+const yousi4 = () => {
+  router.push('/mbdll')
+}
 </script>
 <style scoped>
+/* 以下样式完全覆盖旧的，直接复制即可 */
+.mbyoukuai {
+  top: 400px;
+  z-index: 16666;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 32px;
+  position: fixed;
+  right: 7.75px;
+  height: 100vh;
+  width: 100px; /* 裁剪宽度设置为工具栏可视区域 */
+  overflow-x: hidden; /* 超出部分自动隐藏 */
+  pointer-events: auto; /* 允许点击穿透到下层 */
+}
+
+.mb-item {
+  --offset: 84px;
+  position: relative;
+  width: 120px;
+  height: 45px;
+  background-color: rgb(79, 78, 78);
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  transition: transform 0.35s linear;
+  transform: translateX(var(--offset));
+}
+.mb-item:hover {
+  --offset: 11.25px;
+  transform: translateX(var(--offset));
+}
+
+.yousitu {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  position: relative;
+  margin: 7px 10px 7.5px 11px;
+}
+
+.yousizi {
+  margin-left: 0;
+  font-size: 14px;
+  position: relative;
+  top: -17.5px;
+  color: #ffffff;
+}
 .n1s {
   /* 关键：改为粘性定位，滚动到 top: 0 时置顶 */
   position: fixed;
@@ -87,16 +186,28 @@ let zuoxians = () => {
 
   background: linear-gradient(to bottom, rgb(14, 1, 1), rgb(4, 4, 4), rgb(14, 1, 1));
   z-index: 10200; /* 保持层级，覆盖下方内容 */
-  animation: tiao 0.75s forwards;
-  /* 移除 left: -5px，避免错位，如需调整位置用 margin 等 */
-  opacity: 0.5;
+  animation: tiao 0.5s forwards ease-in;
+
+  opacity: 0.7;
 }
 @keyframes tiao {
-  from {
+  0% {
     height: 122px;
-    opacity: 0.5;
+    opacity: 0.7;
   }
-  to {
+  25% {
+    height: 122px;
+    opacity: 1;
+  }
+  50% {
+    height: 122px;
+    opacity: 1;
+  }
+  75% {
+    height: 91.5px;
+    opacity: 1;
+  }
+  100% {
     height: 61px;
     opacity: 1;
   }

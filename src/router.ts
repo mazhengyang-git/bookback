@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/home.vue' // 确保路径正确
-import dll from '../components/dll.vue' // 确保路径正确
+import dll from '../components/dll.vue'
+import mbdll from '../components/mbdll.vue' // 确保路径正确
+import tiaos from '../coma/tiaos.vue'
 import zhuce from '../components/zhuce.vue'
 import jiaoche from '../coma/jiaoche.vue'
 //import mading from '../components/mading.vue'
@@ -15,6 +17,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: Home },
     { path: '/dll', component: dll },
+    { path: '/mbdll', component: mbdll },
     { path: '/zhuce', component: zhuce },
     //{ path: '/mading', component: Mading },
     { path: '/jiaoche', component: jiaoche },
@@ -24,6 +27,7 @@ const router = createRouter({
     { path: '/', component: '' },
     { path: '/jinpai', component: jinpai },
     { path: '/MaiBaHe|S480', component: maibahes480 },
+    { path: '/tiaos', component: tiaos },
   ],
 })
 

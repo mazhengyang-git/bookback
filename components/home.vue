@@ -4,7 +4,7 @@
       <tiao1 />
     </div>
     <br />
-    <div>
+    <div style="position: relative; left: -12.5px">
       <lunbotu />
     </div>
     <div>
@@ -14,11 +14,7 @@
       <tiao3 />
     </div>
   </div>
-  <dog />
-  <div>
-    <RouterLink to="/ny">新能源</RouterLink>
-    <RouterLink to="/MaiBaHe|S480">迈巴赫</RouterLink>
-  </div>
+
   <div><RouterView></RouterView></div>
 </template>
 

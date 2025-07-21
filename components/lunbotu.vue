@@ -129,12 +129,12 @@ template {
   transition: all 0.7s;
 }
 .pw.prev {
-  left: 623px;
+  left: 620px;
   top: -220px;
 }
 .pw.next {
   top: -220px;
-  right: 80px;
+  right: 82px;
 }
 template::-webkit-scrollbar {
   width: 0 !important; /* 隐藏滚动条（Chrome/Safari） */
@@ -197,6 +197,7 @@ template {
   width: 700px;
   height: 400px;
   position: relative;
+  left: -5px;
   z-index: 9600;
   object-fit: cover;
   image-rendering: -webkit-optimize-contrast;
