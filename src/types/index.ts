@@ -1,0 +1,60 @@
+// 星途科幻图书电商平台 - 核心类型定义
+// 图书信息
+export interface Book {
+  id: number
+  name: string // 书名
+  author: string // 作者
+  category: string // 科幻分类（硬科幻/软科幻/科幻小说等）
+  price: number // 价格
+  cover: string // 封面图
+  desc: string // 简介
+  stock: number // 库存
+  mulu: string //目录展示
+}
+
+// 用户信息
+export interface User {
+  id: number
+  username: string
+  role: 'buyer' | 'seller' | 'admin' // 买家/卖家/管理员（毕设角色权限）
+  token?: string
+  create_time?: string
+  update_time?: string
+}
+
+// 购物车项
+export interface CartItem extends Book {
+  count: number // 购买数量
+  checked: boolean // 是否选中
+}
+// 订单类型
+export interface Order {
+  id: number
+  orderNo: string
+  user_id: number
+  book_id: number
+  count: number
+  totalPrice: number
+  status: string
+  createTime: string
+  book_name: string
+  book_cover: string
+}
+
+// 原有 User 和 Book 类型保留，新增 Order 即可
+// 公告数据类型（和后端对应）
+export interface Announcement {
+  id: number
+  title: string
+  content: string
+  create_time: string
+  admin_id: number
+  update_time?: string
+}
+export interface userment {
+  id: number
+  username: string
+  create_time: string
+  update_time: string
+  role: 'admin' | 'buyer' | 'seller'
+}

@@ -1,17 +1,17 @@
 <template>
-  <div class="app">
-    <moban />
-    <dog />
+  <!-- 星途科幻图书电商平台 - 根组件 -->
+  <div id="app">
+    <router-view />
   </div>
 </template>
 
-<script lang="ts" name="App" setup>
-import moban from '../components/moban.vue'
-import dog from '../xiaozu/dogdayin.vue'
+<script setup lang="ts">
+// 根组件 - 无业务逻辑，仅承载路由
 </script>
 
-<style>
-.app {
-  background-color: antiquewhite;
+<style scoped>
+#app {
+  width: 100%;
+  height: 100%;
 }
 </style>

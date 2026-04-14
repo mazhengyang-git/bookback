@@ -1,0 +1,129 @@
+/* 全局科幻主题样式 - 星途科幻图书电商平台 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 全局背景：深色科技风 */
+body {
+  background-color: #efeff4;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(0, 80, 160, 0.1) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(0, 120, 255, 0.1) 0%, transparent 20%);
+  color: #e0e6ff;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+}
+
+/* 容器通用样式 */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 科幻风格标题 */
+.sci-fi-title {
+  position: relative;
+  font-size: 28px;
+  font-weight: bold;
+  color: #409eff;
+  text-align: center;
+  margin: 20px 0;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
+}
+
+.sci-fi-title::after {
+  content: '';
+  display: block;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #409eff, transparent);
+  margin: 10px auto;
+}
+
+/* 按钮科幻化 */
+.el-button--primary {
+  background-color: #0066cc;
+  border-color: #0088ff;
+  box-shadow: 0 0 8px rgba(0, 136, 255, 0.4);
+}
+
+.el-button--primary:hover {
+  background-color: #0088ff;
+  border-color: #409eff;
+  box-shadow: 0 0 12px rgba(64, 158, 255, 0.6);
+}
+
+/* 卡片科幻化 */
+.el-card {
+  background-color: rgba(18, 26, 40, 0.8);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.el-card__header {
+  border-bottom: 1px solid rgba(64, 158, 255, 0.2);
+  color: #409eff;
+}
+
+/* 表格科幻化 */
+.el-table {
+  --el-table-row-hover-bg-color: rgba(0, 80, 160, 0.2);
+  --el-table-header-text-color: #409eff;
+  --el-table-text-color: #e0e6ff;
+  background-color: rgba(18, 26, 40, 0.8);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+}
+
+.el-table th {
+  background-color: rgba(0, 66, 133, 0.3) !important;
+}
+
+.el-table td,
+.el-table th {
+  border-color: rgba(64, 158, 255, 0.1);
+}
+
+/* 表单科幻化 */
+.el-form-item__label {
+  color: #409eff;
+}
+
+.el-input,
+.el-select,
+.el-input-number {
+  background-color: rgba(18, 26, 40, 0.8);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  color: #e0e6ff;
+}
+
+.el-input:focus,
+.el-select:focus,
+.el-input-number:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 8px rgba(64, 158, 255, 0.4);
+}
+
+/* 弹窗科幻化 */
+.el-dialog {
+  background-color: rgba(18, 26, 40, 0.95);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid rgba(64, 158, 255, 0.2);
+}
+
+.el-dialog__title {
+  color: #409eff;
+}
+
+/* 标签科幻化 */
+.el-tag {
+  background-color: rgba(0, 80, 160, 0.3);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+}
