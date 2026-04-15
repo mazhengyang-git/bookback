@@ -1,33 +1,39 @@
-# vue_k1
+# 星途科幻图书电商平台前端
 
-This template should help get you started developing with Vue 3 in Vite.
+#### 介绍
 
-## Recommended IDE Setup
+项目结构文件夹与启动
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+    这是一个基于 Vue3 + TypeScript + Node.js + MySQL 的图书商城系统
 
-## Type Support for `.vue` Imports in TS
+实现了用户注册登录、商品展示、购物车、订单管理、用户管理、商品管理等核心功能
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+#### 软件架构
 
-## Customize configuration
+软件架构说明
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+    开发环境 vscode vite/vue3构建
 
-## Project Setup
+## 技术栈
 
-```sh
-npm install
-```
+- 前端：Vue3、TypeScript、Element Plus、Axios  
+  Pinia、Vue Router、Vite
+- 后端：Node.js、Express、MySQL、JWT
 
-### Compile and Hot-Reload for Development
+# 安装依赖教程
 
-```sh
-npm run dev
-```
+1. 在vscode里的powershell终端窗口里执行npm install
 
-### Type-Check, Compile and Minify for Production
+# 使用说明
 
-```sh
-npm run build
-```
+1. 打开vscode,建议给后端文件夹起名为book-server
+2. powershell终端窗口中输入启动命令: npm run dev
+3. 项目上线打包命令，npm run build
+4. 管理员账号admin2,密码123456,或注册管理员账号，注册时密匙为：admin123456
+
+# 参与贡献
+
+1. Fork 本仓库
+2. 新建 Feat_xxx 分支
+3. 提交代码
+4. 新建 Pull Request

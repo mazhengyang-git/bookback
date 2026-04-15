@@ -13,9 +13,16 @@
           <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
         </div>
       </div>
-      <div class="sejb">
+      <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
         <div class="syws">
-          <el-button link class="syses1" @click="$router.push('/books')">图书商城</el-button>
+          <el-button link class="syses" @click="go('/books')">图书商城</el-button>
+          <span class="acwy"
+            ><el-button v-if="showhover" class="ac1" @click="go('/books?category=软科幻')"
+              >软科幻</el-button
+            ><el-button v-if="showhover" class="ac2" @click="go('/books?category=硬科幻')"
+              >硬科幻</el-button
+            ></span
+          >
         </div>
       </div>
     </div>
@@ -167,7 +174,24 @@ const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
-
+let timeleave: NodeJS.Timeout | null = null
+const showhover = ref(false)
+function mouseleve() {
+  timeleave = setTimeout(() => {
+    if (showhover.value === true) {
+      showhover.value = false
+    }
+  }, 750)
+}
+function mouseshow() {
+  if (timeleave) clearTimeout(timeleave)
+  showhover.value = true
+}
+function go(path) {
+  setTimeout(() => {
+    router.push(path)
+  }, 10) // 只延迟10毫秒，人感觉不到，但浏览器能缓过来
+}
 // 图片预览逻辑
 const handlePreviewShow = () => {
   nextTick(() => {
@@ -422,6 +446,77 @@ onMounted(() => {
   font-size: 16px;
 }
 
+/* 顶部导航 - 响应式适配 */
+.home-top-nav {
+  width: 100%;
+  height: 3.75rem; /* 60px → rem */
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 0.0625rem solid rgba(64, 158, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem; /* 20px → rem */
+  position: sticky;
+  top: 0;
+  z-index: 999 !important;
+
+  @media (max-width: 768px) {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 0.625rem;
+  }
+}
+.sejb {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 9 !important;
+  z-index: 9996 !important;
+}
+
+/* 父按钮容器（保持你原来的样式，不变） */
+
+/* 子菜单容器：垂直排列、自动拉伸、完美居中 */
+.acwy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* 子按钮自动填满容器宽度，永远等宽 */
+
+  /* 核心定位：零硬凑，100%靠谱的居中方案 */
+  position: absolute;
+  top: 100%; /* 父按钮正下方，无缝衔接 */
+  left: 50%; /* 父容器水平中点 */
+  transform: translateX(-50%); /* 子菜单自身居中，完美对齐父按钮 */
+
+  margin-top: 0px; /* 父按钮和子菜单的美观间距 */
+}
+
+/* 两个按钮共用样式：统一宽度、内边距、盒模型 */
+.ac1,
+.ac2 {
+  width: clamp(101px, 10vw, 109px) !important;
+  padding: 9px 20px !important;
+  height: auto !important;
+  text-align: center;
+  box-sizing: border-box; /* 关键：padding不撑大宽度，永远等宽 */
+  border-radius: 0; /* 统一圆角，再单独设置 */
+}
+
+/* 上按钮：仅保留顶部圆角 */
+.ac1 {
+  border-radius: 4px 4px 0 0 !important;
+  position: relative;
+  left: 6px;
+}
+
+/* 下按钮：仅保留下圆角，无缝拼接 */
+.ac2 {
+  border-radius: 0 0 4px 4px !important;
+  margin-top: -1px; /* 消除按钮之间的缝隙，标准写法 */
+  position: relative;
+  left: -5.95px;
+}
 /* 图书详情外层容器 - 响应式基础 */
 .book-detail-container {
   width: 100%;
@@ -701,27 +796,6 @@ onMounted(() => {
 :deep(.el-input-number__increase) {
   color: #fff;
   font-size: clamp(0.875rem, 1.5vw, 1rem); /* 增减按钮文字缩放 */
-}
-
-/* 顶部导航 - 响应式适配 */
-.home-top-nav {
-  width: 100%;
-  height: 3.75rem; /* 60px → rem */
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 0.0625rem solid rgba(64, 158, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.25rem; /* 20px → rem */
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-  overflow: hidden;
-  @media (max-width: 768px) {
-    height: auto;
-    flex-wrap: wrap;
-    padding: 0.625rem;
-  }
 }
 
 .nav-left {

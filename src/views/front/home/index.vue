@@ -14,6 +14,21 @@
       <img class="doubao" src="/img/doubao.png" alt="豆包" draggable="false" />
     </a>
   </div>
+  <div class="login-bar1" style="position: fixed">
+    <span
+      style="
+        position: absolute;
+        color: green;
+        font-size: 17px;
+        top: 17px;
+        left: 1347px;
+        margin-right: 10px;
+        font-weight: 700;
+        z-index: 3000 !important;
+      "
+      >欢迎：{{ userStore.user?.username }}</span
+    >
+  </div>
   <div class="home-container">
     <!-- 顶部导航栏 -->
     <div class="home-top-nav">
@@ -26,9 +41,16 @@
             <el-button link class="syse" @click="go('/home')">首页</el-button>
           </div>
         </div>
-        <div class="sejb">
+        <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
           <div class="syws">
             <el-button link class="syse1" @click="go('/books')">图书商城</el-button>
+            <span class="acwy"
+              ><el-button v-if="showhover" class="ac1" @click="go('/books?category=软科幻')"
+                >软科幻</el-button
+              ><el-button v-if="showhover" class="ac2" @click="go('/books?category=硬科幻')"
+                >硬科幻</el-button
+              ></span
+            >
           </div>
         </div>
         <el-input
@@ -56,31 +78,20 @@
         </div>
         <!-- 已登录 -->
         <div v-else class="login-bar">
-          <span
-            style="
-              position: absolute;
-              color: green;
-              font-size: 18px;
-              right: 250px;
-              margin-right: 10px;
-              font-weight: 700;
-            "
-            >欢迎：{{ userStore.user?.username }}</span
-          >
           <el-button
-            style="position: relative; left: 33px; background-color: #d5d3d0"
+            style="position: relative; left: -70px; background-color: #d5d3d0"
             link
             @click="go('/user')"
             ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
           >
           <el-button
-            style="position: relative; left: 24px; background-color: #d5d3d0"
+            style="position: relative; left: -74px; background-color: #d5d3d0"
             link
             @click="go('/cart')"
             ><img style="width: 24px; height: auto" src="/img/购物车.png" />购物车</el-button
           >
           <el-button
-            style="color: white; background-color: red; position: relative; left: 30px"
+            style="color: white; background-color: red; position: relative; left: -60px"
             type="danger"
             link
             @click="handleLogout"
@@ -107,15 +118,15 @@
       </el-button>
       <h2 class="sci-fi-title1">科幻分类</h2>
       <div class="category-list">
-        <el-card class="category-card" @click="go('/books?category=硬科幻')">
-          <div class="category-icon">🔭</div>
-          <h3>硬科幻</h3>
-          <p>基于科学原理的科幻作品</p>
-        </el-card>
         <el-card class="category-card1" @click="go('/books?category=软科幻')">
           <div class="category-icon">🧠</div>
           <h3>软科幻</h3>
           <p>侧重人文/社会的科幻作品</p>
+        </el-card>
+        <el-card class="category-card" @click="go('/books?category=硬科幻')">
+          <div class="category-icon">🔭</div>
+          <h3>硬科幻</h3>
+          <p>基于科学原理的科幻作品</p>
         </el-card>
       </div>
     </div>
@@ -150,7 +161,22 @@
         </el-card>
       </div>
     </div>
-    <button class="notice-btn" @click="openNotice">🔔 系统公告</button>
+    <span
+      ref="doubaoBtn1"
+      @mousedown="handleMouseDown1"
+      draggable="false"
+      style="position: fixed; left: 16px; top: 380px; z-index: 999; cursor: move"
+    >
+      <button
+        class="notice-btn"
+        @click="notandmouse"
+        style="position: static; transform: none"
+        rel="noopener noreferrer"
+        draggable="false"
+      >
+        🔔 系统公告
+      </button></span
+    >
 
     <!-- 右侧渐变背景公告抽屉 -->
     <div class="notice-drawer" :class="showNotice ? 'open' : 'close'">
@@ -181,7 +207,7 @@ import type { Book } from '@/types/index'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import { useBookStore } from '@/store/book'
-import { Search } from '@element-plus/icons-vue'
+import { Hide, Search } from '@element-plus/icons-vue'
 import lunbotu from '@/views/front/home/lunbotu.vue'
 import { getAnnouncementList } from '@/api/front/announcement'
 import type { Announcement } from '@/types/index'
@@ -196,18 +222,50 @@ const refshua = ref(0)
 const searchKeyword = ref<string>('')
 const slidesLoaded = ref(false)
 const bgSrc = bookStore
-const showNotice = ref(false)
+const showNotice = ref(0)
 // 公告列表
 const noticeList = ref<Announcement[]>([])
 const doubaoBtn = ref(null)
+const doubaoBtn1 = ref(null)
 const isDragging = ref(false)
+const hasDragged1 = ref(false) //@ts-ignore
 const hasDragged = ref(false) //@ts-ignore
 const startPos = ref({ x: 0, y: 0 })
-const currentPos = ref({ x: 10, y: 110 })
+const currentPos = ref({ x: 6, y: 110 })
 const DRAG_THRESHOLD = 5
-
+const isDragging1 = ref(false)
+const startPos1 = ref({ x: 0, y: 0 })
+const currentPos1 = ref({ x: 6, y: 380 })
+const DRAG_THRESHOLD1 = 5
 // 安全跳转：解决首次点击卡顿/转圈
 //@ts-ignore
+let timeleave: NodeJS.Timeout | null = null
+const showhover = ref(false)
+function mouseleve() {
+  timeleave = setTimeout(() => {
+    if (showhover.value === true) {
+      showhover.value = false
+    }
+  }, 450)
+}
+function mouseshow() {
+  if (timeleave) clearTimeout(timeleave)
+  showhover.value = true
+}
+function notandmouse() {
+  if (hasDragged1.value) {
+    //@ts-ignore
+    handleLinkClick1()
+    showNotice.value === 1
+    return
+  }
+  if (showNotice.value === 1) {
+    showNotice.value = 0
+    return
+  } else {
+    openNotice()
+  }
+} //@ts-ignore
 function go(path) {
   setTimeout(() => {
     router.push(path)
@@ -244,6 +302,38 @@ const handleMouseDown = (e) => {
   // 添加全局事件
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
+} //@ts-ignore
+const handleMouseDown1 = (p) => {
+  isDragging1.value = true
+  hasDragged1.value = false
+  const startX1 = p.clientX
+  const startY1 = p.clientY
+  const initialLeft1 = currentPos1.value.x
+  const initialTop1 = currentPos1.value.y //@ts-ignore
+  const handleMouseMove1 = (e) => {
+    const deltaX1 = e.clientX - startX1
+    const deltaY1 = e.clientY - startY1
+    if (Math.abs(deltaX1) > DRAG_THRESHOLD1 || Math.abs(deltaY1) > DRAG_THRESHOLD1) {
+      hasDragged1.value = true
+    }
+    currentPos1.value.x = initialLeft1 + deltaX1
+    currentPos1.value.y = initialTop1 + deltaY1
+    if (doubaoBtn1.value) {
+      //@ts-ignore
+      doubaoBtn1.value.style.left = currentPos1.value.x + 'px' //@ts-ignore
+      doubaoBtn1.value.style.top = currentPos1.value.y + 'px' //@ts-ignore
+      doubaoBtn1.value.style.right = 'unset' //@ts-ignore
+      doubaoBtn1.value.style.transform = 'unset'
+    }
+  }
+  const handleMouseUp1 = () => {
+    isDragging1.value = false
+    document.removeEventListener('mousemove', handleMouseMove1)
+    document.removeEventListener('mouseup', handleMouseUp1)
+  }
+  // 添加全局事件
+  document.addEventListener('mousemove', handleMouseMove1)
+  document.addEventListener('mouseup', handleMouseUp1)
 }
 //@ts-ignore
 const handleLinkClick = (e) => {
@@ -252,8 +342,14 @@ const handleLinkClick = (e) => {
     e.stopPropagation()
     return false
   }
+} //@ts-ignore
+const handleLinkClick1 = (p) => {
+  if (hasDragged1.value) {
+    p.preventDefault()
+    p.stopPropagation()
+    return false
+  }
 }
-
 // 获取公告
 const getNotice = async () => {
   const res = await getAnnouncementList() //@ts-ignore
@@ -264,8 +360,8 @@ const getNotice = async () => {
 }
 
 // 打开/关闭
-const openNotice = () => (showNotice.value = true)
-const closeNotice = () => (showNotice.value = false)
+const openNotice = () => (showNotice.value = 1)
+const closeNotice = () => (showNotice.value = 0)
 // 需要监听的图片元素
 const imagesToLoad = [bgSrc, bookStore]
 // 价格格式化函数
@@ -377,6 +473,7 @@ onMounted(async () => {
 * {
   user-select: none !important;
   -webkit-user-select: none !important;
+
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -463,6 +560,22 @@ button {
   white-space: nowrap;
 }
 .login-bar span {
+  white-space: nowrap;
+  background: linear-gradient(135deg, #141414, #ff0000);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+}
+.login-bar1 {
+  display: flex;
+  position: absolute;
+
+  align-items: center;
+
+  white-space: nowrap;
+}
+.login-bar1 span {
   white-space: nowrap;
   background: linear-gradient(135deg, #141414, #ff0000);
   background-clip: text;
@@ -710,16 +823,65 @@ button {
   color: #eb791c;
 }
 .szi {
-  color: #26416e;
-  font-weight: 800;
-  background: linear-gradient(180deg, #e6693c 25%, #ceda5d 50%, #e6693c 100%);
+  color: #653601;
+  font-weight: 600;
+  background: linear-gradient(180deg, #3f85c7 25%, #a4dff1 50%, #3f85c7 100%);
 }
 .szi:hover {
-  color: #3c73e1;
+  color: #ff8d02;
 }
 </style>
 
 <style scoped>
+.sejb {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 父按钮容器（保持你原来的样式，不变） */
+
+/* 子菜单容器：垂直排列、自动拉伸、完美居中 */
+.acwy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* 子按钮自动填满容器宽度，永远等宽 */
+
+  /* 核心定位：零硬凑，100%靠谱的居中方案 */
+  position: absolute;
+  top: 100%; /* 父按钮正下方，无缝衔接 */
+  left: 50%; /* 父容器水平中点 */
+  transform: translateX(-50%); /* 子菜单自身居中，完美对齐父按钮 */
+  z-index: 999;
+  margin-top: 0px; /* 父按钮和子菜单的美观间距 */
+}
+
+/* 两个按钮共用样式：统一宽度、内边距、盒模型 */
+.ac1,
+.ac2 {
+  width: clamp(101px, 10vw, 117.7px) !important;
+  padding: 7px 20px !important;
+  height: auto !important;
+  text-align: center;
+  box-sizing: border-box; /* 关键：padding不撑大宽度，永远等宽 */
+  border-radius: 0; /* 统一圆角，再单独设置 */
+}
+
+/* 上按钮：仅保留顶部圆角 */
+.ac1 {
+  border-radius: 4px 4px 0 0 !important;
+  position: relative;
+  left: 5.9px;
+}
+
+/* 下按钮：仅保留下圆角，无缝拼接 */
+.ac2 {
+  border-radius: 0 0 4px 4px !important;
+  margin-top: -1px; /* 消除按钮之间的缝隙，标准写法 */
+  position: relative;
+  left: -5.95px;
+}
 .doubao {
   width: 40px;
   height: auto;
@@ -730,7 +892,7 @@ button {
 .doubao-entrance {
   position: fixed;
   top: 110px;
-  left: 10px;
+  left: 0;
   z-index: 9999;
   cursor: move;
   user-select: none;
@@ -1091,10 +1253,10 @@ button {
   top: 50%;
   transform: translateY(-50%);
   z-index: 99;
-  padding: clamp(8px, 1vw, 10px) clamp(10px, 1.2vw, 14px);
+  padding: clamp(6px, 1vw, 9px) clamp(6px, 1.2vw, 8px);
   background: linear-gradient(135deg, #4e73df, #224abe);
   color: #fff;
-
+  width: 88px;
   border-radius: clamp(40px, 4vw, 50px);
   font-size: clamp(0.28cm, 0.3vw, 0.32cm);
   cursor: pointer;

@@ -387,20 +387,24 @@ button {
 }
 
 /* Element 表格样式适配 */
-.el-table {
-  --el-table-row-hover-bg-color: rgba(0, 80, 160, 0.2);
+:deep(.el-table) {
+  --el-table-header-bg-color: #ffffff !important;
+  --el-table-row-hover-bg-color: #f5f7fa;
   --el-table-header-text-color: #409eff;
   --el-table-text-color: #151515;
-  background-color: rgba(18, 26, 40, 0.9);
-  border: 1px solid rgba(64, 158, 255, 0.2);
+  --el-table-bg-color: #fff;
+  /* 去掉黑色背景，改为白色 */
+  background-color: #fff !important;
+  border: 1px solid #e4e7ed !important;
 }
 
-.el-table th {
-  background-color: rgba(0, 66, 133, 0.3) !important;
+/* 清理冲突样式，确保表头纯白 */
+:deep(.el-table th) {
+  background-color: #f6f2f2 !important;
 }
 
-.el-table td,
-.el-table th {
-  border-color: rgba(64, 158, 255, 0.1);
+:deep(.el-table td),
+:deep(.el-table th) {
+  border-color: #e4e7ed;
 }
 </style>

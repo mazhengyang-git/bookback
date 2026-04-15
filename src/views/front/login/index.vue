@@ -1,55 +1,62 @@
 <template>
-  <div class="login-page">
-    <div class="box">
-      <el-button class="gwy" type="primary" @click="$router.push('/home')">返回首页</el-button>
-      <h2 class="sci-fi-title" style="margin-left: 3px; position: relative; bottom: 5px">
-        星途科幻 - 登录
-      </h2>
-      <el-form
-        :rules="rules"
-        style="margin-left: -20px"
-        :model="form"
-        ref="formRef"
-        label-width="80px"
-      >
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            maxlength="13"
-            placeholder="请输入用户名"
-            v-model="form.username"
-            @keyup.enter="submitLogin"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            maxlength="13"
-            placeholder="请输入密码"
-            v-model="form.password"
-            type="password"
-            @keyup.enter="submitLogin"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="角色">
-          <el-radio-group v-model="form.role">
-            <el-radio value="buyer">买家</el-radio>
-            <el-radio value="seller">卖家</el-radio>
-            <el-radio value="admin">管理员</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-button
-          style="position: relative; margin-right: 0.5px; left: 117px"
-          type="primary"
-          @click="submitLogin"
-          >登录</el-button
+  <div class="beij">
+    <div class="home-top-navwy">
+      <div>
+        <h2 class="sci-fi-title">星途科幻图书</h2>
+      </div>
+    </div>
+    <div class="login-page">
+      <div class="box">
+        <el-button class="gwy" type="primary" @click="$router.push('/home')">返回首页</el-button>
+        <h2 class="sci-fi-title" style="margin-left: 3px; position: relative; bottom: 5px">
+          星途科幻 - 登录
+        </h2>
+        <el-form
+          :rules="rules"
+          style="margin-left: -20px"
+          :model="form"
+          ref="formRef"
+          label-width="80px"
         >
-        <el-button
-          style="position: relative; margin-right: 0.5px; left: 128px"
-          @click="$router.push('/register')"
-          >注册</el-button
-        >
-      </el-form>
+          <el-form-item style="font-weight: 700" label="用户名" prop="username">
+            <el-input
+              maxlength="13"
+              placeholder="请输入用户名/手机号"
+              v-model="form.username"
+              @keyup.enter="submitLogin"
+              show-word-limit
+            />
+          </el-form-item>
+          <el-form-item style="font-weight: 700" label="密码" prop="password">
+            <el-input
+              maxlength="13"
+              placeholder="请输入密码"
+              v-model="form.password"
+              type="password"
+              @keyup.enter="submitLogin"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item style="font-weight: 700" label="角色">
+            <el-radio-group v-model="form.role">
+              <el-radio style="font-weight: 700" value="buyer">买家</el-radio>
+              <el-radio style="font-weight: 700" value="seller">卖家</el-radio>
+              <el-radio style="font-weight: 700" value="admin">管理员</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-button
+            style="position: relative; margin-right: 0.5px; left: 117px; font-weight: 700"
+            type="primary"
+            @click="submitLogin"
+            >登录</el-button
+          >
+          <el-button
+            style="position: relative; margin-right: 0.5px; left: 128px; font-weight: 700"
+            @click="$router.push('/register')"
+            >注册</el-button
+          >
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -162,26 +169,43 @@ button {
   user-select: auto !important;
   -webkit-user-select: auto !important;
 }
+.beij {
+  width: 100%;
+  height: 100vh !important;
+  background: url(/public/img/flzc.jpg);
+  background-color: #ffffff !important;
+  background-size: cover;
+  background-position: center; /* 向上偏移 */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .login-page {
   height: 100vh;
   display: flex;
+
   align-items: center;
   justify-content: center;
-  background: #0b1220;
 }
 .gwy {
   position: absolute;
-  margin-top: -30.2px;
-  margin-left: -30.2px;
+  font-weight: 700;
+  margin-top: -30.5px;
+  margin-left: -30px;
   z-index: 10;
   padding: 0 5px 0 5px;
 }
+.home-top-navwy {
+  position: absolute;
+  width: 100vw;
+  height: 80px;
+  background-color: rgb(224, 222, 221);
+}
 .box {
-  width: 400px;
+  width: 440px;
   padding: 30px;
-  background: #121a28;
-  border-radius: 12px;
-  color: #fff;
-  border: 1px solid rgba(64, 158, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgb(0, 0, 0);
 }
 </style>

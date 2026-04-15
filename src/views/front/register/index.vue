@@ -1,67 +1,97 @@
 <template>
-  <div class="register-container">
-    <div class="register-box">
-      <el-button class="gwy" type="primary" @click="$router.push('/home')">返回首页</el-button>
-      <h2 class="sci-fi-title">星途科幻 - 注册</h2>
-      <el-form
-        ref="registerFormRef"
-        :model="registerForm"
-        :rules="registerRules"
-        label-width="80px"
-        class="register-form"
-      >
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            maxlength="13"
-            v-model="registerForm.username"
-            placeholder="请输入用户名"
-            clearable
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="registerForm.password"
-            type="password"
-            placeholder="至少6位"
-            maxlength="13"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
-            v-model="registerForm.confirmPassword"
-            type="password"
-            placeholder="请再次输入密码"
-            maxlength="13"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="用户类型">
-          <el-radio-group v-model="registerForm.role" @change="handleRoleChange">
-            <el-radio value="buyer">买家</el-radio>
-            <el-radio value="seller">卖家</el-radio>
-            <el-radio value="admin">管理员</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
-        <!-- 管理员密钥验证（仅管理员显示） -->
-        <el-form-item label="管理密钥" prop="adminKey" v-if="registerForm.role === 'admin'">
-          <el-input
-            v-model="registerForm.adminKey"
-            type="password"
-            placeholder="请输入管理员注册密钥"
-            clearable
-          />
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" @click="handleRegister" class="register-btn">注册</el-button>
-          <el-button style="margin-top: 10px" @click="$router.push('/login')" link
-            >返回登录</el-button
+  <div class="beij">
+    <div class="home-top-navwy">
+      <div>
+        <h2 class="sci-fi-title">星途科幻图书</h2>
+      </div>
+    </div>
+    <div class="register-container">
+      <div class="register-box">
+        <el-button class="gwy" type="primary" @click="$router.push('/home')">返回首页</el-button>
+        <h2 class="sci-fi-title">星途科幻 - 注册</h2>
+        <el-form
+          ref="registerFormRef"
+          :model="registerForm"
+          :rules="registerRules"
+          label-width="80px"
+          class="register-form"
+        >
+          <el-form-item label-width="85" style="font-weight: 700" label="用户名" prop="username">
+            <el-input
+              style="font-weight: 700"
+              maxlength="13"
+              v-model="registerForm.username"
+              placeholder="请输入用户名/手机号"
+              clearable
+              show-word-limit
+            />
+          </el-form-item>
+          <el-form-item style="font-weight: 700" label="密码" label-width="85" prop="password">
+            <el-input
+              label-width="85"
+              style="font-weight: 700 !important"
+              v-model="registerForm.password"
+              type="password"
+              placeholder="至少6位"
+              maxlength="13"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item
+            label-width="85"
+            style="font-weight: 700"
+            label="确认密码"
+            prop="confirmPassword"
           >
-        </el-form-item>
-      </el-form>
+            <el-input
+              v-model="registerForm.confirmPassword"
+              type="password"
+              placeholder="请再次输入密码"
+              maxlength="13"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item label-width="85" style="font-weight: 700" label="用户类型">
+            <el-radio-group v-model="registerForm.role" @change="handleRoleChange">
+              <el-radio style="font-weight: 700" value="buyer">买家</el-radio>
+              <el-radio style="font-weight: 700" value="seller">卖家</el-radio>
+              <el-radio style="font-weight: 700" value="admin">管理员</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <!-- 管理员密钥验证（仅管理员显示） -->
+          <el-form-item
+            style="font-weight: 700"
+            label="管理密钥"
+            label-width="85"
+            prop="adminKey"
+            v-if="registerForm.role === 'admin'"
+          >
+            <el-input
+              v-model="registerForm.adminKey"
+              type="password"
+              placeholder="请输入管理员注册密钥"
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item>
+            <el-button
+              style="font-weight: 700"
+              type="primary"
+              @click="handleRegister"
+              class="register-btn"
+              >注册</el-button
+            >
+            <el-button
+              style="margin-top: 10px; font-weight: 700"
+              @click="$router.push('/login')"
+              link
+              >返回登录</el-button
+            >
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -84,15 +114,92 @@ const registerForm = reactive({
   adminKey: '',
 })
 
-// 管理员注册密钥（可自行修改，建议配置到.env文件）
+// 管理员注册密钥
 const ADMIN_REGISTER_KEY = 'admin123456'
+
+// ===================== 核心：用户名校验规则 =====================
+//合法手机号前3位（真实号段）
+const validMobilePrefixes = [
+  '130',
+  '131',
+  '132',
+  '133',
+  '134',
+  '135',
+  '136',
+  '137',
+  '138',
+  '139',
+  '150',
+  '151',
+  '152',
+  '153',
+  '155',
+  '156',
+  '157',
+  '158',
+  '159',
+  '166',
+  '172',
+  '173',
+  '175',
+  '176',
+  '177',
+  '178',
+  '180',
+  '181',
+  '182',
+  '183',
+  '184',
+  '185',
+  '186',
+  '187',
+  '188',
+  '189',
+  '190',
+  '191',
+  '192',
+  '193',
+  '195',
+  '196',
+  '197',
+  '198',
+  '199',
+]
+
+// 校验：账号规则（1字母+5数字）
+const isValidAccount = (str: string): boolean => {
+  const hasLetter = /[a-zA-Z]/.test(str)
+  const digitMatch = str.match(/\d/g)
+  const hasEnoughDigits = digitMatch && digitMatch.length >= 5
+  const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str)
+  return hasLetter && hasEnoughDigits && onlyLetterAndDigit
+}
+
+// 校验：正规11位手机号
+const isValidPhone = (phone: string): boolean => {
+  if (!/^\d{11}$/.test(phone)) return false
+  const prefix = phone.slice(0, 3)
+  return validMobilePrefixes.includes(prefix)
+}
 
 // 表单校验规则
 const registerRules = reactive<FormRules>({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 6, max: 13, message: '用户名长度6-13位', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名仅支持字母、数字、下划线', trigger: 'blur' },
+    { required: true, message: '请输入用户名/手机号', trigger: 'blur' },
+    { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (!value) return callback()
+        // 满足任意一种格式即可
+        if (isValidAccount(value) || isValidPhone(value)) {
+          callback()
+        } else {
+          callback(new Error('格式：1字母+5位数字 或 11位正规手机号'))
+        }
+      },
+      trigger: 'blur',
+    },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -142,7 +249,7 @@ const handleRoleChange = () => {
   }
 }
 
-// 注册逻辑（适配后端接口）
+// 注册逻辑
 const handleRegister = async () => {
   if (!registerFormRef.value) {
     ElMessage.error('表单初始化失败，请刷新页面')
@@ -176,7 +283,8 @@ const handleRegister = async () => {
     if (!res) {
       ElMessage.error('注册失败：接口无返回数据')
       return
-    } //@ts-ignore
+    }
+    //@ts-ignore
     if (res.code === 200) {
       //@ts-ignore
       ElMessage.success(res.msg || '注册成功')
@@ -190,8 +298,8 @@ const handleRegister = async () => {
     ElMessage.error('注册失败：服务异常，请稍后重试')
   }
 }
-//管理员账号注册时的key:admin123456
 </script>
+
 <style scoped>
 * {
   user-select: none !important;
@@ -203,27 +311,44 @@ button {
   user-select: auto !important;
   -webkit-user-select: auto !important;
 }
+.home-top-navwy {
+  position: absolute;
+  width: 100vw;
+  height: 80px;
+  background-color: rgb(224, 222, 221);
+}
+.beij {
+  width: 100%;
+  height: 100vh !important;
+  background: url(/public/img/flzc.jpg);
+  background-color: #ffffff !important;
+  background-size: cover;
+  background-position: center; /* 向上偏移 */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .gwy {
   position: absolute;
-  margin-top: -30px;
-  margin-left: -30px;
+  margin-top: -20.7px;
+  margin-left: -20.5px;
   z-index: 10;
   padding: 0 5px 0 5px;
 }
 .register-container {
   width: 100%;
   height: 100vh;
-  background-color: #0a0e17;
+
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .register-box {
-  width: 400px;
-  padding: 30px;
-  background-color: rgba(18, 26, 40, 0.8);
+  width: 440px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.8);
   border-radius: 8px;
-  border: 1px solid rgba(64, 158, 255, 0.2);
+  border: 1px solid rgb(0, 0, 0);
 }
 .register-form {
   margin-top: 20px;
