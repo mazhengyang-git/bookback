@@ -21,8 +21,8 @@ app.use(cors({
 
 //导入订单路由
 const orderRouter = require('./router/orderRouter')
-
-
+const userdate = require('./router/userupdate')
+const orderadmin = require('./router/orderment')
 
 const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
@@ -34,6 +34,9 @@ app.use('/api/userment', umentRouter);
 app.use('/api/announcement', announcementRouter);
 app.use('/api/bookguanli', bookguan);
 app.use('/api/pay', payRouter);
+app.use('/api', userdate);
+// 订单后台路由（前缀和前端的 /api/back/order 完全匹配）
+app.use('/api', orderadmin);
 //启动服务器
 app.listen(3002, () => {
   console.log(`后端服务器运行在：http://localhost:3002 ✅`);

@@ -25,7 +25,8 @@ const getUserOrders = async (req, res) => {
       totalPrice: Number(item.total_price) || 0, //转数字，对应前端totalPrice
       status: item.status || '已付款', //订单状态
       bookCover: item.book_cover || '/default-book.png', //图书封面（可选）
-      createTime:item.create_time||''
+      createTime:item.create_time||'',
+      bookId: item.book_id 
     }));
 
     res.json({ code: 200, msg: '获取订单成功', data: formatOrders });

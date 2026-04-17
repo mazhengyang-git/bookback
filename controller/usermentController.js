@@ -11,7 +11,7 @@ exports.getuserment = async (req, res) => {
 
     //2.查询用户列表
     const [list] = await pool.execute(
-      'SELECT id, username, create_time, update_time, role FROM user ORDER BY id DESC'
+      'SELECT id, username, create_time,phone, update_time, role FROM user ORDER BY id DESC'
     );
 
     //3.统计买家数量（role = 'buyer'）

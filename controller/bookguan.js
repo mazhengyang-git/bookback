@@ -29,14 +29,15 @@ exports.addBook = async (req, res) => {
       cover,
       desc,
       mulu,
-      status
+      status,
+      author_into
     } = req.body;
 
     //SQL插入语句
     await pool.execute(
-      `INSERT INTO book (book_name, author, category, price, stock, cover, \`desc\`, mulu, status) 
+      `INSERT INTO book (book_name, author, category,author_into, price, stock, cover, \`desc\`, mulu, status) 
        VALUES (?,?,?,?,?,?,?,?,?)`,
-      [book_name, author, category, price, stock, cover, desc, mulu, status]
+      [book_name, author,author_into, category, price, stock, cover, desc, mulu, status]
     );
 
     res.json({ code: 200, msg: '图书新增成功' });
@@ -64,13 +65,14 @@ exports.updateBook = async (req, res) => {
       cover,
       desc,
       mulu,
-      status
+      status,
+      author_into
     } = req.body;
 
     //SQL更新语句
     await pool.execute(
       `UPDATE book 
-       SET book_name=?, author=?, category=?, price=?, stock=?, cover=?, \`desc\`=?, mulu=?, status=? 
+       SET book_name=?, author=?, category=?,author_into=?, price=?, stock=?, cover=?, \`desc\`=?, mulu=?, status=? 
        WHERE id=?`,
       [book_name, author, category, price, stock, cover, desc, mulu, status, id]
     );
