@@ -34,3 +34,27 @@ export const register = (data: {
 }) => {
   return request.post<RegisterResponse>('/api/user/register', data)
 }
+export const updateUserInfoApi = (data: any) => {
+  return request({
+    url: '/api/user/update',
+    method: 'post',
+    data,
+  })
+}
+// 1. 发送验证码
+export function sendSmsCode(data) {
+  return request({
+    url: 'api/user/send-code',
+    method: 'post',
+    data,
+  })
+}
+
+// 2. 验证码登录
+export function loginByCode(data) {
+  return request({
+    url: 'api/user/login-by-code',
+    method: 'post',
+    data,
+  })
+}

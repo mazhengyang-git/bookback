@@ -86,6 +86,7 @@
         @click="$router.push(`/book/${book.id}`)"
       >
         <div class="book-card-content">
+          <!--@vue-ignore-->
           <img
             :src="book.cover || '/img/default-book.jpg'"
             referrerpolicy="no-referrer"
@@ -129,7 +130,7 @@ import { getBookListApi } from '@/api/front/book'
 import type { Book } from '@/types/index'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter, useRoute } from 'vue-router'
-
+//@ts-ignore
 let timeleave: NodeJS.Timeout | null = null
 const showhover = ref(false)
 function mouseleve() {
@@ -223,7 +224,7 @@ onMounted(() => {
   // 遮罩逻辑
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.1)
+  }, 0.05)
 })
 </script>
 
@@ -441,7 +442,7 @@ onMounted(() => {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.25rem 1.25rem;
+  padding: 1.25rem 1.25rem 1.25rem 1.25rem;
   background-color: #d3d7dc;
   min-height: calc(100vh - 3.75rem - 80px);
   @media (max-width: 768px) {

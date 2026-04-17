@@ -34,6 +34,20 @@
 
     <!-- 顶部导航栏 -->
     <div class="admin-header">
+      <span
+        style="
+          position: relative;
+          color: white;
+          font-size: 20px;
+          white-space: nowrop;
+          font-weight: 700;
+          z-index: 3000 !important;
+          position: absolute;
+          display: block;
+          right: 10px;
+        "
+        >欢迎：管理员 {{ userStore.user?.username }}</span
+      >
       <h2>{{ title }}</h2>
       <el-button style="position: absolute; left: 20px" type="primary" @click="goToFront"
         >返回前台</el-button
@@ -49,6 +63,27 @@
       <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookguan')">
         商品管理
       </button>
+      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('orderguan')">
+        订单管理
+      </button>
+
+      <button
+        link
+        @click="switchTab('useradmin')"
+        style="
+          color: black;
+          -webkit-user-select: none;
+          margin-top: 20px;
+          padding: 9px;
+          width: 84px;
+          margin-left: -3px;
+        "
+      >
+        <img
+          style="width: 18px; height: auto; position: relative; top: 5px"
+          src="/img/个人中心.png"
+        />个人中心
+      </button>
     </div>
 
     <!-- 管理显示区域 -->
@@ -61,6 +96,12 @@
       </div>
       <div class="sub-page-container bookguan" v-if="activeTab === 'bookguan'">
         <bookdetail />
+      </div>
+      <div class="sub-page-container bookguan" v-if="activeTab === 'useradmin'">
+        <useradmin />
+      </div>
+      <div class="sub-page-container bookguan" v-if="activeTab === 'orderguan'">
+        <orderadmin />
       </div>
     </div>
 
@@ -78,14 +119,15 @@ import { useRouter } from 'vue-router'
 import notice from '@/views/back/notice/index.vue'
 import userment from '@/views/back/userment/index.vue'
 import bookdetail from '@/views/back/book/index.vue'
-
+import orderadmin from '@/views/back/order/index.vue'
+import useradmin from '@/views/back/user/index.vue'
 const title = '后台首页'
 const userStore = useUserStore()
 const router = useRouter()
 
 const activeTab = ref('notice')
 
-const switchTab = (tab: 'notice' | 'user' | 'bookguan') => {
+const switchTab = (tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan') => {
   activeTab.value = activeTab.value === tab ? '' : tab
 }
 

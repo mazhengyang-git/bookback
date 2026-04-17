@@ -10,6 +10,7 @@ export interface Book {
   desc: string // 简介
   stock: number // 库存
   mulu: string //目录展示
+  authorInto: string //作者简介
 }
 
 // 用户信息
@@ -20,6 +21,7 @@ export interface User {
   token?: string
   create_time?: string
   update_time?: string
+  phone: string
 }
 
 // 购物车项
@@ -50,6 +52,7 @@ export interface Announcement {
   create_time: string
   admin_id: number
   update_time?: string
+  phone: string
 }
 export interface userment {
   id: number
@@ -57,4 +60,5 @@ export interface userment {
   create_time: string
   update_time: string
   role: 'admin' | 'buyer' | 'seller'
+  phone: string
 }

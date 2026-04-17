@@ -1,11 +1,19 @@
-import { adminGetAllOrdersApi, adminUpdateOrderStatusApi } from '../mock'
+import request from '@/utils/request'
 
-// 获取所有订单
+// 获取所有订单（后台）
 export const adminGetAllOrders = (status?: string) => {
-  return adminGetAllOrdersApi(status)
+  return request({
+    url: '/api/back/order/list',
+    method: 'get',
+    params: { status },
+  })
 }
 
-// 修改订单状态
-export const adminUpdateOrderStatus = (id: number, status: string) => {
-  return adminUpdateOrderStatusApi(id, status)
+// 更新订单状态（后台）
+export const adminUpdateOrderStatus = (orderId: number, status: string) => {
+  return request({
+    url: '/api/back/order/update',
+    method: 'post',
+    data: { orderId, status },
+  })
 }

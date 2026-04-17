@@ -14,21 +14,7 @@
       <img class="doubao" src="/img/doubao.png" alt="豆包" draggable="false" />
     </a>
   </div>
-  <div class="login-bar1" style="position: fixed">
-    <span
-      style="
-        position: absolute;
-        color: green;
-        font-size: 17px;
-        top: 17px;
-        left: 1347px;
-        margin-right: 10px;
-        font-weight: 700;
-        z-index: 3000 !important;
-      "
-      >欢迎：{{ userStore.user?.username }}</span
-    >
-  </div>
+
   <div class="home-container">
     <!-- 顶部导航栏 -->
     <div class="home-top-nav">
@@ -78,6 +64,19 @@
         </div>
         <!-- 已登录 -->
         <div v-else class="login-bar">
+          <span
+            style="
+              position: relative;
+              color: green;
+              font-size: 17px;
+              top: -10px;
+              right: 947px;
+
+              font-weight: 700;
+              z-index: 3000 !important;
+            "
+            >欢迎：{{ userStore.user?.username }}</span
+          >
           <el-button
             style="position: relative; left: -70px; background-color: #d5d3d0"
             link
@@ -88,7 +87,11 @@
             style="position: relative; left: -74px; background-color: #d5d3d0"
             link
             @click="go('/cart')"
-            ><img style="width: 24px; height: auto" src="/img/购物车.png" />购物车</el-button
+            ><img
+              class="gwdh"
+              style="width: 24px; height: auto"
+              src="/img/购物车.png"
+            />购物车</el-button
           >
           <el-button
             style="color: white; background-color: red; position: relative; left: -60px"
@@ -234,7 +237,7 @@ const startPos = ref({ x: 0, y: 0 })
 const currentPos = ref({ x: 6, y: 110 })
 const DRAG_THRESHOLD = 5
 const isDragging1 = ref(false)
-const startPos1 = ref({ x: 0, y: 0 })
+
 const currentPos1 = ref({ x: 6, y: 380 })
 const DRAG_THRESHOLD1 = 5
 // 安全跳转：解决首次点击卡顿/转圈
@@ -465,7 +468,7 @@ onMounted(async () => {
   await getHotBooks()
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.1) // 3秒后无论如何都隐藏遮罩
+  }, 0.05) // 3秒后无论如何都隐藏遮罩
 })
 </script>
 
@@ -597,7 +600,7 @@ button {
 }
 .home-banner {
   /* 轮播高度响应式 */
-  height: clamp(400px, 45vw, 543px);
+  height: clamp(400px, 45vw, 613px);
   background: linear-gradient(135deg, rgba(64, 158, 255, 0.05) 0%, #121a28 100%);
   box-shadow: 0 8px 30px rgba(64, 158, 255, 0.1);
   border-radius: clamp(8px, 1vw, 12px);
@@ -833,6 +836,30 @@ button {
 </style>
 
 <style scoped>
+.gwdh {
+  animation: 1.3s gwbian linear infinite;
+}
+@keyframes gwbian {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-6deg);
+    border: 0.5px solid rgb(209, 209, 206);
+  }
+  50% {
+    transform: rotate(-0deg);
+    border: 1px solid rgb(209, 209, 206);
+  }
+  75% {
+    transform: rotate(5deg);
+    border: 0.5px solid rgb(209, 209, 206);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 .sejb {
   position: relative;
   display: inline-flex;
@@ -1033,7 +1060,7 @@ button {
   position: fixed;
   /* 偏移量响应式，保留原布局 */
   margin-left: clamp(650px, 70vw, 800px);
-  z-index: 98;
+  z-index: 102;
   border-bottom: 1px solid #eee;
   animation: tiao 0.5s forwards ease-in;
   opacity: 0.7;

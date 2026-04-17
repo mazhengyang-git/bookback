@@ -11,7 +11,6 @@
  * 4. 懒加载：所有路由组件均采用懒加载，优化首屏加载性能
  */
 
-// ... 原有代码
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
 import { ElMessage } from 'element-plus'
@@ -91,7 +90,7 @@ const routes = [
   {
     path: '/admin',
     name: 'Admin',
-    // 修正：替换错误的pay页面为后台首页（避免白屏），保留原有嵌套结构
+    // 后台首页
     component: () => import('@/views/back/home/index.vue'),
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
@@ -111,23 +110,35 @@ const routes = [
         component: () => import('@/views/back/order/index.vue'),
       },
 
-      // 新增：后台公告管理（保留嵌套结构，增量新增）
+      // 后台公告管理
       {
         path: 'notice',
         name: 'AdminNotice',
         component: () => import('@/views/back/notice/index.vue'),
         meta: { requiresAuth: true, requiresAdmin: true },
       },
-      // 新增：后台系统设置（保留嵌套结构，增量新增）
+      // 后台系统设置（保留嵌套结构，增量新增）
       {
         path: 'system',
         name: 'AdminSystem',
         component: () => import('@/views/back/system/index.vue'),
         meta: { requiresAuth: true, requiresAdmin: true },
       },
+      {
+        path: 'useradmin',
+        name: 'AdminUseradmin',
+        component: () => import('@/views/back/user/index.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+      },
+      {
+        path: 'orderadmin',
+        name: 'AdminOrderadmin',
+        component: () => import('@/views/back/order/index.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+      },
     ],
   },
-  // 新增：卖家中心（补全原有缺失的路由，避免跳转/seller白屏）
+  // 卖家中心
   {
     path: '/seller',
     name: 'SellerCenter',

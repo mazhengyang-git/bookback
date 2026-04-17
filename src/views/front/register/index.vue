@@ -169,13 +169,22 @@ const validMobilePrefixes = [
 
 // 校验：账号规则（1字母+5数字）
 const isValidAccount = (str: string): boolean => {
-  const hasLetter = /[a-zA-Z]/.test(str)
+  // 统计字母数量
+  const letterMatch = str.match(/[a-zA-Z]/g)
+  const letterCount = letterMatch ? letterMatch.length : 0
+  // 统计数字数量
   const digitMatch = str.match(/\d/g)
-  const hasEnoughDigits = digitMatch && digitMatch.length >= 5
-  const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str)
-  return hasLetter && hasEnoughDigits && onlyLetterAndDigit
-}
+  const digitCount = digitMatch ? digitMatch.length : 0
 
+  // 仅允许字母+数字
+  const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str)
+
+  // 核心规则：字母 1~2 个 + 数字 ≥5 个 + 纯字母数字
+  const validLetter = letterCount >= 1 && letterCount <= 2
+  const validDigit = digitCount >= 5
+
+  return validLetter && validDigit && onlyLetterAndDigit
+}
 // 校验：正规11位手机号
 const isValidPhone = (phone: string): boolean => {
   if (!/^\d{11}$/.test(phone)) return false

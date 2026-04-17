@@ -29,5 +29,7 @@ export const useUserStore = defineStore('user', {
       this.user = {} as User
     },
   },
-  persist: true,
+  persist: {
+    storage: sessionStorage, // 强制使用会话存储，标签页独立
+  },
 })

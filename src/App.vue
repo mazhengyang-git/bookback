@@ -1,4 +1,5 @@
 <template>
+  <div class="global-wave-bg"></div>
   <!-- 星途科幻图书电商平台 - 根组件 -->
   <div id="app">
     <router-view />

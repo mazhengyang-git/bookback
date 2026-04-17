@@ -1,9 +1,10 @@
 <template>
   <div class="pay-page">
     <div class="pay-header">
-      <h2>确认支付</h2>
+      <h2 style="color: darkorange">确认支付</h2>
       <!-- 使用link类型 + 关闭deprecated警告 -->
       <el-button
+        style="padding: 5px"
         @click="router.go(-1)"
         type="link"
         class="back-btn"
@@ -21,22 +22,27 @@
         <img :src="payGoods.cover || '/default-book.png'" alt="图书封面" class="book-cover" />
         <div class="goods-info">
           <!-- 优先级：先取data里的book_name，再取name -->
-          <h3>{{ payGoods.book_name || payGoods.name || '未知图书' }}</h3>
-          <p>规格：{{ payGoods.spec || '平装版' }}</p>
-          <p>单价：¥{{ toFixedNumber(payGoods.price, 2) }}</p>
-          <p>数量：{{ payGoods.count || 1 }}</p>
+          <h3 style="color: black">{{ payGoods.book_name || payGoods.name || '未知图书' }}</h3>
+          <p style="color: gray">规格：{{ payGoods.spec || '平装版' }}</p>
+          <p style="color: gray">单价：¥{{ toFixedNumber(payGoods.price, 2) }}</p>
+          <p style="color: gray">数量：{{ payGoods.count || 1 }}</p>
         </div>
       </div>
 
       <!-- 总计 -->
       <div class="pay-total">
-        <span>支付金额：</span>
+        <span style="color: black">支付金额：</span>
         <span class="total-price">¥{{ toFixedNumber(totalAmount, 2) }}</span>
       </div>
 
       <!-- 支付按钮 -->
       <div class="pay-btn-group">
-        <el-button type="primary" size="large" @click="submitDirectPay1" :loading="submitting">
+        <el-button
+          size="large"
+          style="color: black !important"
+          @click="submitDirectPay1"
+          :loading="submitting"
+        >
           确认支付
         </el-button>
       </div>

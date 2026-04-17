@@ -38,11 +38,22 @@
           <h3 class="item-name">{{ item.name || '未知图书' }}</h3>
           <p class="item-price">¥{{ Number(item.price || 0).toFixed(2) }}</p>
         </div>
+
+        <!-- 橙色按钮控制+可输入 -->
         <div class="item-count">
           <button class="count-btn" @click="handleReduce(item.cartId)">-</button>
-          <span class="count-num">{{ item.count || 1 }}</span>
+          <!--@vue-ignore-->
+          <el-input-number
+            v-model="item.count"
+            :min="1"
+            class="count-num"
+            @change="(val) => handleUpdateCount(item.cartId, val)"
+            size="default"
+            :controls="false"
+          />
           <button class="count-btn" @click="handleAdd(item)">+</button>
         </div>
+
         <button class="del-btn" @click="handleDelete(item.cartId)">删除</button>
       </div>
 
@@ -61,6 +72,261 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+input,
+textarea,
+button {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+}
+
+/* 加载遮罩 */
+.black-mask {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 19999;
+}
+/* 遮罩淡出动画 */
+.fade-leave-active {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* ========== 核心响应式容器 ========== */
+.syses11 {
+  color: #000000;
+  font-size: clamp(16px, 3vw, 18px);
+  margin-bottom: 10px;
+  display: inline-block;
+}
+.cart-container {
+  width: 95%;
+  max-width: 1200px;
+  margin: 20px auto;
+  color: #2d2b2b;
+}
+.cart-title {
+  text-align: center;
+  color: #ff9100;
+  margin-bottom: 20px;
+  font-size: clamp(22px, 5vw, 28px);
+}
+
+/* ========== 购物车列表容器 ========== */
+.cart-list {
+  background: #ffffff;
+  padding: clamp(15px, 3vw, 25px);
+  border-radius: 12px;
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ========== 全选栏 - 右侧总价永远贴边 ========== */
+.check-all-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #333;
+  width: 100%;
+}
+.check-all-bar :deep(.el-checkbox) {
+  color: #007bff;
+  font-size: clamp(14px, 2vw, 16px);
+}
+/* 总价自动贴右边缘 */
+.total-price {
+  font-weight: bold;
+  font-size: clamp(16px, 3vw, 20px);
+  color: #000000;
+  margin-left: auto; /* 核心：自动推到最右侧 */
+  white-space: nowrap;
+}
+
+/* ========== 购物车单项 - 响应式弹性布局 ========== */
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #333;
+  gap: clamp(8px, 2vw, 15px); /* 自适应间距 */
+  width: 100%;
+  flex-wrap: nowrap; /* 禁止换行，防止溢出 */
+}
+.item-check {
+  flex-shrink: 0; /* 禁止压缩 */
+}
+.item-check :deep(.el-checkbox) {
+  color: #007bff;
+}
+
+/* 封面自适应 */
+.item-cover {
+  width: clamp(60px, 10vw, 80px);
+  height: clamp(80px, 13vw, 100px);
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0; /* 禁止压缩 */
+}
+
+/* 图书信息区 */
+.item-info {
+  flex: 1; /* 填充剩余空间 */
+  min-width: 0; /* 核心：解决flex文本溢出问题 */
+}
+.item-name {
+  font-size: clamp(18px, 2.5vw, 20px);
+  font-weight: bold;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.item-price {
+  font-size: clamp(15px, 2vw, 17px);
+  color: #ba7608;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 数量控制区 - 自适应尺寸，不压缩 */
+.item-count {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; /* 禁止压缩 */
+}
+.count-btn {
+  width: clamp(32px, 6vw, 45px);
+  height: clamp(32px, 6vw, 42px);
+  border: none;
+  background: #ffae00;
+  color: #000;
+  font-size: clamp(18px, 3vw, 22px);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.count-btn:hover {
+  background: #ff6600;
+}
+
+/* 数量输入框自适应 */
+:deep(.count-num.el-input-number) {
+  width: clamp(45px, 8vw, 60px) !important;
+  height: clamp(32px, 6vw, 46px);
+  margin: 0 2px;
+}
+:deep(.count-num .el-input__wrapper) {
+  height: 100%;
+  padding: 0;
+  box-shadow: none;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+}
+:deep(.count-num .el-input__inner) {
+  text-align: center;
+  padding: 0;
+  font-size: clamp(14px, 2vw, 16px);
+  color: #000;
+}
+
+/* 删除按钮-自适应 */
+.del-btn {
+  background: #ff4444;
+  color: #fff;
+  border: none;
+  padding: 0 clamp(8px, 2vw, 12px);
+  height: clamp(32px, 6vw, 40px);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0; /* 禁止压缩 */
+  font-size: clamp(12px, 2vw, 15px);
+}
+.del-btn:hover {
+  background: #da5757;
+}
+
+/* ========== 底部按钮区-永远贴右边缘 ========== */
+.cart-footer {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 核心：按钮永远贴右侧 */
+  gap: clamp(8px, 2vw, 12px);
+  width: 100%;
+  flex-wrap: wrap;
+}
+.clear-btn,
+.clear-btn1,
+.go-shop-btn {
+  background: #ffae00;
+  color: #000;
+  border: none;
+  padding: 0 clamp(12px, 3vw, 20px);
+  height: clamp(36px, 6vw, 40px);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: clamp(14px, 2vw, 16px);
+  white-space: nowrap;
+}
+.clear-btn1:hover,
+.clear-btn:hover,
+.go-shop-btn:hover {
+  background: #ed931d;
+  transition: all 0.3s ease;
+}
+
+/* ========== 空购物车 ========== */
+.empty-cart {
+  text-align: center;
+  padding: clamp(40px, 8vw, 60px) 0;
+  background: rgba(200, 198, 198, 0.7);
+  border-radius: 12px;
+  width: 100%;
+}
+.empty-icon {
+  font-size: clamp(40px, 10vw, 60px);
+  margin-bottom: 20px;
+}
+.empty-tip {
+  font-size: clamp(16px, 3vw, 18px);
+  margin-bottom: 20px;
+}
+
+/* ========== 超小屏幕极限适配 ========== */
+@media (max-width: 480px) {
+  .cart-item {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .item-info {
+    flex: 1;
+    min-width: 120px;
+  }
+  .item-count {
+    margin-left: auto;
+  }
+  .del-btn {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+</style>
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
@@ -86,6 +352,17 @@ const selectedTotal = computed(() => {
     .reduce((sum, item) => sum + item.price * item.count, 0)
 })
 
+// 输入框更新数量
+const handleUpdateCount = async (cartId: number, count: number) => {
+  try {
+    await updateCartCount(cartId, count)
+    cartStore.updateCount(cartId, count)
+    cartStore.calcTotalPrice()
+  } catch (error) {
+    ElMessage.error('修改数量失败')
+  }
+}
+
 //单个勾选
 const handleItemCheck = (cartId: number, checked: boolean) => {
   if (checked) {
@@ -108,11 +385,10 @@ const handleCheckAll = (checked: boolean) => {
 
 onMounted(() => {
   console.log('页面刷新，开始加载购物车数据')
-
   loadCartData()
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.1) // 3秒后无论如何都隐藏遮罩
+  }, 0.1)
 })
 
 const loadCartData = async () => {
@@ -123,7 +399,8 @@ const loadCartData = async () => {
   }
 
   try {
-    const res = await getCartList() //@ts-ignore
+    const res = await getCartList()
+    //@ts-ignore
     if (res.code === 200 && res.data) {
       cartStore.clearCart()
       res.data.forEach((item: any) => {
@@ -139,16 +416,14 @@ const loadCartData = async () => {
       })
       cartStore.calcTotalPrice()
 
-      //========== 默认全选 ==========
+      //默认全选
       checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
       isAllChecked.value = true
     }
-  } catch (error: any) {
-    //console.error('加载购物车失败：', error)
-    // ElMessage.error(error.msg || '加载购物车失败')
-  }
+  } catch (error: any) {}
 }
 
+// 减少数量（数量=1时删除商品，完全保留原有逻辑）
 const handleReduce = async (cartId: number) => {
   const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
   if (!targetItem) return
@@ -158,7 +433,6 @@ const handleReduce = async (cartId: number) => {
       await deleteCartItem(cartId)
       cartStore.deleteItem(cartId)
       cartStore.calcTotalPrice()
-      //同步删除勾选
       checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
       ElMessage.success('删除成功')
     } catch (error) {
@@ -176,6 +450,7 @@ const handleReduce = async (cartId: number) => {
   }
 }
 
+// 增加数量
 const handleAdd = async (item: any) => {
   try {
     await updateCartCount(item.cartId, item.count + 1)
@@ -186,6 +461,7 @@ const handleAdd = async (item: any) => {
   }
 }
 
+// 删除商品
 const handleDelete = async (cartId: number) => {
   try {
     await deleteCartItem(cartId)
@@ -198,6 +474,7 @@ const handleDelete = async (cartId: number) => {
   }
 }
 
+// 清空购物车
 const handleClear = async () => {
   try {
     await clearCart()
@@ -209,7 +486,7 @@ const handleClear = async () => {
   }
 }
 
-//支付：只传选中的商品
+// 支付
 const handlePay = () => {
   const selectedItems = cartStore.currentCart.filter((item) =>
     checkedIds.value.includes(item.cartId),
@@ -227,179 +504,3 @@ const handlePay = () => {
   })
 }
 </script>
-
-<style scoped>
-* {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-}
-input,
-textarea,
-button {
-  user-select: auto !important;
-  -webkit-user-select: auto !important;
-}
-.black-mask {
-  position: fixed;
-  inset: 0;
-  background: #ffffff;
-  z-index: 19999;
-}
-
-/* 遮罩淡出动画 */
-.fade-leave-active {
-  opacity: 1;
-}
-.fade-leave-to {
-  opacity: 0;
-}
-.syses11 {
-  color: #000000;
-  font-size: 18px;
-}
-.cart-container {
-  width: 80%;
-  margin: 20px auto;
-  color: #2d2b2b;
-}
-.sejb11 {
-  display: inline-block;
-}
-.cart-title {
-  text-align: center;
-  color: #ffae00;
-  margin-bottom: 20px;
-}
-.cart-list {
-  background: rgba(192, 191, 191, 0.7);
-  padding: 20px;
-  border-radius: 8px;
-}
-
-/* 全选栏 */
-.check-all-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #333;
-}
-.check-all-bar :deep(.el-checkbox) {
-  color: #fff;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #333;
-  gap: 12px;
-}
-/* 勾选框 */
-.item-check :deep(.el-checkbox) {
-  color: #fff;
-}
-.item-cover {
-  width: 80px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.item-info {
-  flex: 1;
-  margin: 0 10px;
-}
-.item-name {
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-.item-price {
-  color: #ba7608;
-}
-.item-count {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.count-btn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: #ffae00;
-  color: #000;
-  cursor: pointer;
-  border-radius: 4px;
-}
-.del-btn {
-  background: #ff4444;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.del-btn:hover {
-  background: #da5757;
-}
-.cart-footer {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.total-price {
-  font-size: 18px;
-  color: #000000;
-  margin: 0;
-}
-.clear-btn {
-  background: #ffae00;
-  color: #000;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.clear-btn1 {
-  background: #ffae00;
-  color: #000;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.clear-btn1:hover {
-  background: #ed931d;
-  transition: all 0.3s ease;
-}
-.clear-btn:hover {
-  background: #ed931d;
-  transition: all 0.3s ease;
-}
-.empty-cart {
-  text-align: center;
-  padding: 50px 0;
-  background: rgba(200, 198, 198, 0.7);
-  border-radius: 8px;
-}
-.empty-icon {
-  font-size: 60px;
-  margin-bottom: 20px;
-}
-.empty-tip {
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-.go-shop-btn {
-  background: #ffae00;
-  color: #000;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-</style>

@@ -35,3 +35,27 @@ export const deleteAnnouncement = (id: number) => {
     method: 'DELETE',
   })
 }
+export function getMyNotice() {
+  return request({
+    url: '/api/announcement/my-notice',
+    method: 'get',
+  })
+}
+
+// 用户绑定手机号
+export function bindPhone(phone) {
+  return request({
+    url: '/api/announcement/bind-phone',
+    method: 'post',
+    data: { phone },
+  })
+}
+
+// 管理员重置密码（验证手机号）
+export function resetUserPassword(data) {
+  return request({
+    url: '/api/announcement/reset-password',
+    method: 'post',
+    data,
+  })
+}

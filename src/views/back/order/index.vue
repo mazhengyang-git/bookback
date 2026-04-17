@@ -2,58 +2,108 @@
   <div class="admin-order-container">
     <div class="admin-header">
       <h2>订单管理</h2>
-      <el-select
-        v-model="selectedStatus"
-        placeholder="请选择订单状态"
-        style="width: 150px"
-        @change="getOrderList"
-      >
-        <el-option label="全部" value="全部" />
-        <el-option label="待付款" value="待付款" />
-        <el-option label="已付款" value="已付款" />
-        <el-option label="待发货" value="待发货" />
-        <el-option label="已发货" value="已发货" />
-        <el-option label="已完成" value="已完成" />
-        <el-option label="已取消" value="已取消" />
-      </el-select>
+      <!-- 筛选导航条 -->
+      <div class="filter-scroll-wrapper">
+        <el-scrollbar class="filter-scroll" horizontal>
+          <div class="filter-btn-group">
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '全部' }"
+              @click="handleFilter('全部')"
+            >
+              全部
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '待付款' }"
+              @click="handleFilter('待付款')"
+            >
+              待付款
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '已付款' }"
+              @click="handleFilter('已付款')"
+            >
+              已付款
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '待发货' }"
+              @click="handleFilter('待发货')"
+            >
+              待发货
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '已发货' }"
+              @click="handleFilter('已发货')"
+            >
+              已发货
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '已完成' }"
+              @click="handleFilter('已完成')"
+            >
+              已完成
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '已取消' }"
+              @click="handleFilter('已取消')"
+            >
+              已取消
+            </div>
+          </div>
+        </el-scrollbar>
+      </div>
     </div>
 
-    <!-- 订单列表 -->
-    <el-table v-loading="loading" :data="orderList" border stripe>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="orderNo" label="订单编号" width="180" />
-      <el-table-column prop="username" label="下单用户" width="120" />
-      <el-table-column prop="bookName" label="图书名称" width="200" />
-      <el-table-column prop="count" label="数量" width="80" />
-      <el-table-column prop="totalPrice" label="总价（元）" width="100">
-        <template #default="scope"> ¥{{ scope.row.totalPrice.toFixed(2) }} </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" width="120">
-        <template #default="scope">
-          <el-tag :type="getStatusTagType(scope.row.status)">
-            {{ scope.row.status }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createTime" label="下单时间" width="180" />
-      <el-table-column label="操作" width="200">
-        <template #default="scope">
-          <el-select
-            v-model="scope.row.newStatus"
-            placeholder="修改状态"
-            size="small"
-            @change="(val: string) => handleUpdateStatus(scope.row.id, val)"
-          >
-            <el-option label="待付款" value="待付款" />
-            <el-option label="已付款" value="已付款" />
-            <el-option label="待发货" value="待发货" />
-            <el-option label="已发货" value="已发货" />
-            <el-option label="已完成" value="已完成" />
-            <el-option label="已取消" value="已取消" />
-          </el-select>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 表格容器+粘性横向滚动条 -->
+    <div class="table-sticky-wrapper">
+      <el-table v-loading="loading" :data="orderList" border stripe fit>
+        <el-table-column prop="orderNo" label="订单编号" min-width="136" />
+        <el-table-column prop="username" label="下单用户" min-width="90" />
+        <el-table-column prop="bookName" label="图书名称" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="count" label="数量" min-width="60" />
+        <el-table-column prop="totalPrice" label="总价（元）" min-width="90">
+          <template #default="scope">
+            ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" min-width="90">
+          <template #default="scope">
+            <el-tag :type="getStatusTagType(scope.row.status)">
+              {{ scope.row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="下单时间" min-width="120">
+          <template #default="scope">
+            {{ scope.row.createTime?.replace('T', ' ').slice(0, 16) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="200">
+          <template #default="scope">
+            <el-select
+              v-model="scope.row.newStatus"
+              placeholder="修改状态"
+              size="small"
+              style="width: 100%"
+              @change="(val: string) => handleUpdateStatus(scope.row.id, val)"
+            >
+              <el-option label="待付款" value="待付款" />
+              <el-option label="已付款" value="已付款" />
+              <el-option label="待发货" value="待发货" />
+              <el-option label="已发货" value="已发货" />
+              <el-option label="已完成" value="已完成" />
+              <el-option label="已取消" value="已取消" />
+            </el-select>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </div>
 </template>
 
@@ -62,19 +112,24 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { adminGetAllOrders, adminUpdateOrderStatus } from '@/api/back/order'
 
-// 加载状态
 const loading = ref(false)
-// 订单列表
 const orderList = ref<any[]>([])
-// 选中的状态
 const selectedStatus = ref('全部')
+
+// 筛选按钮点击事件
+const handleFilter = (status: string) => {
+  selectedStatus.value = status
+  getOrderList()
+}
 
 // 获取订单列表
 const getOrderList = async () => {
   loading.value = true
   try {
-    const res = (await adminGetAllOrders(selectedStatus.value)) as { code: number; data: any[] }
-    // 给每个订单添加newStatus字段，用于修改状态
+    const res = (await adminGetAllOrders(selectedStatus.value)) as unknown as {
+      code: number
+      data: any[]
+    }
     orderList.value = res.data.map((item) => ({ ...item, newStatus: item.status }))
   } catch (error) {
     console.error('获取订单列表失败：', error)
@@ -83,7 +138,7 @@ const getOrderList = async () => {
   }
 }
 
-// 获取状态对应的标签类型
+// 状态标签样式
 const getStatusTagType = (status: string) => {
   switch (status) {
     case '待付款':
@@ -106,10 +161,12 @@ const getStatusTagType = (status: string) => {
 // 修改订单状态
 const handleUpdateStatus = async (id: number, status: string) => {
   try {
-    const res = (await adminUpdateOrderStatus(id, status)) as { code: number; msg: string }
+    const res = (await adminUpdateOrderStatus(id, status)) as unknown as {
+      code: number
+      msg: string
+    }
     if (res.code === 200) {
       ElMessage.success(res.msg)
-      // 刷新列表
       getOrderList()
     }
   } catch (error) {
@@ -117,7 +174,6 @@ const handleUpdateStatus = async (id: number, status: string) => {
   }
 }
 
-// 页面加载时获取列表
 onMounted(() => {
   getOrderList()
 })
@@ -126,11 +182,11 @@ onMounted(() => {
 <style scoped>
 .admin-order-container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
 }
 
+/* 头部布局 */
 .admin-header {
   display: flex;
   justify-content: space-between;
@@ -138,5 +194,66 @@ onMounted(() => {
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
+  gap: 20px;
+}
+
+/* 筛选导航条容器 */
+.filter-scroll-wrapper {
+  flex: 1;
+  max-width: 600px;
+}
+.filter-scroll {
+  height: 40px;
+}
+
+.filter-btn-group {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+/* 未选中状态文字改为纯黑 */
+.filter-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 13px;
+  color: #333; /* 未选中文字纯黑 */
+}
+.filter-btn.active {
+  background: #409eff;
+  color: #fff; /* 选中状态保持白色 */
+}
+.filter-btn:hover {
+  background: #e5e6eb;
+}
+.filter-btn.active:hover {
+  background: #3388ff;
+}
+
+/* 粘性表格容器（滚动条固定） */
+.table-sticky-wrapper {
+  overflow-x: auto; /* 横向滚动条 */
+  position: sticky;
+  top: 80px; /* 固定在筛选栏下方，和视口顶部保持距离 */
+  background: #fff; /* 背景白色，避免滚动时内容穿透 */
+  z-index: 10; /* 层级比侧边栏高，不被挡住 */
+  padding-bottom: 5px; /* 给滚动条留一点空间 */
+  width: 100%;
+}
+
+/* 加宽横向滚动条 */
+:deep(.el-scrollbar__bar.is-horizontal) {
+  height: 6px !important;
+}
+:deep(.el-scrollbar__thumb) {
+  background: #c0c4cc !important;
+  border-radius: 3px !important;
+}
+:deep(.el-scrollbar__thumb:hover) {
+  background: #909399 !important;
 }
 </style>
