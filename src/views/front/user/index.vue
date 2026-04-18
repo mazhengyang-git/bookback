@@ -245,30 +245,50 @@ const handleBind = async () => {
     ElMessage.error(res.msg)
   }
 }
+const originalPhone = ref('') // 存储原始手机号
 
 // ===================== 修改手机号 =====================
 const handleEditPhone = () => {
-  editPhone.value = userStore.user?.phone || ''
+  // 赋值原始手机号 + 输入框默认值
+  originalPhone.value = userStore.user?.phone || ''
+  editPhone.value = originalPhone.value
   showEditPhoneDialog.value = true
 }
+
+// 2. 确认修改手机号（拦截一致的手机号）
 const confirmEditPhone = async () => {
+  // 第一步：校验空值
   if (!editPhone.value) {
     ElMessage.error('请输入新手机号')
     return
   }
-  const res = await bindPhone(editPhone.value) //@ts-ignore
-  if (res.code === 200) {
-    ElMessage.success('手机号修改成功')
-    // 手动更新 + 调用接口
-    if (userStore.user) {
-      userStore.user.phone = editPhone.value
-    } //@ts-ignore
-    await userStore.getUserInfo()
-    showEditPhoneDialog.value = false
-    editPhone.value = ''
-  } else {
+  // 拦截 新手机号 = 原手机号 的情况
+  if (editPhone.value === originalPhone.value) {
+    ElMessage.warning('新手机号与原手机号一致，无需修改')
+    return
+  }
+
+  try {
+    // 调用修改接口
+    const res = await bindPhone(editPhone.value)
     //@ts-ignore
-    ElMessage.error(res.msg)
+    if (res.code === 200) {
+      ElMessage.success('手机号修改成功')
+      // 更新本地用户信息
+      if (userStore.user) {
+        userStore.user.phone = editPhone.value
+      }
+      // 重新获取用户信息（保持数据同步）
+      await userStore.getUserInfo()
+      // 关闭弹窗 + 清空输入框
+      showEditPhoneDialog.value = false
+      editPhone.value = ''
+    } else {
+      //@ts-ignore
+      ElMessage.error(res.msg || '手机号修改失败')
+    }
+  } catch (error) {
+    //ElMessage.error('网络异常，修改失败')
   }
 }
 

@@ -10,7 +10,7 @@ export interface Book {
   desc: string // 简介
   stock: number // 库存
   mulu: string //目录展示
-  authorInto: string //作者简介
+  author_into: string //作者简介
 }
 
 // 用户信息

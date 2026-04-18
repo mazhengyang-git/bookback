@@ -8,7 +8,7 @@
     <!-- 表格容器 -->
     <div class="table-scroll-wrapper">
       <el-table v-loading="loading" :data="bookList" border stripe>
-        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column type="index" label="序号" width="80" />
         <el-table-column prop="book_name" label="图书名称" min-width="200" />
         <el-table-column prop="author" label="作者" width="120" />
         <el-table-column prop="category" label="分类" width="100" />
@@ -73,8 +73,11 @@
             placeholder="请输入图书简介"
           />
         </el-form-item>
-        <el-form-item label="目录" prop="mulu">
+        <el-form-item label="图书目录" prop="mulu">
           <el-input v-model="bookForm.mulu" type="textarea" placeholder="请输入图书目录" />
+        </el-form-item>
+        <el-form-item label="作者简介" prop="author_into">
+          <el-input v-model="bookForm.author_into" type="textarea" placeholder="请输入作者简介" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -108,6 +111,7 @@ const bookForm = reactive<Book>({
   desc: '',
   stock: 0,
   mulu: '',
+  author_into: '',
   status: 1, // 默认上架
 })
 
@@ -118,7 +122,8 @@ const bookRules = reactive({
   category: [{ required: true, message: '请选择分类', trigger: 'change' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
-  mulu: [{ required: true, message: '请输入目录', trigger: 'blur' }],
+  mulu: [{ required: true, message: '请输入图书目录', trigger: 'blur' }],
+  author_into: [{ required: true, message: '请输入作者简介', trigger: 'blur' }],
 })
 
 // 获取列表
@@ -156,6 +161,7 @@ const handleAdd = () => {
     desc: '',
     stock: 0,
     mulu: '',
+    author_into: '',
     status: 1,
   })
   isEdit.value = false

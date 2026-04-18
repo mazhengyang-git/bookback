@@ -174,8 +174,8 @@ button {
 
 /* 封面自适应 */
 .item-cover {
-  width: clamp(60px, 10vw, 80px);
-  height: clamp(80px, 13vw, 100px);
+  width: clamp(55px, 10vw, 86px);
+  height: clamp(80px, 13vw, 125px);
   object-fit: cover;
   border-radius: 4px;
   cursor: pointer;

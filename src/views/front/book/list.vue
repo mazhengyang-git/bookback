@@ -119,11 +119,25 @@
           : '暂无图书数据 😕'
       }}
     </div>
+
+    <!-- 豆瓣同款底部分页栏（强制显示+完整布局+适配主题） -->
+    <div class="pagination-wrapper" v-if="total > 0">
+      <el-pagination
+        v-model:current-page="currentPage"
+        :page-size="pageSize"
+        :total="total"
+        layout="prev, pager, next"
+        @current-change="handlePageChange"
+        background
+        :prev-text="'上一页'"
+        :next-text="'下一页'"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { getBookListApi } from '@/api/front/book'
@@ -162,26 +176,44 @@ const formatPrice = (price: any): string => {
 }
 
 const selectedCategory = ref('全部')
-const allBooks = ref<Book[]>([])
+const allBooks = ref<Book[]>([]) // 原始全部图书数据
 const searchKeyword = ref('')
-const showBooks = ref<Book[]>([])
+// 存储【筛选+一次性随机打乱】后的完整列表（切换页码不改动）
+const filteredBooks = ref<Book[]>([])
+const showBooks = ref<Book[]>([]) // 当前页面展示的图书
 
-// 加载图书列表
+// ====================== 分页核心变量 ======================
+const currentPage = ref(1) // 当前页码，默认第1页
+const pageSize = ref(6) // 每页只显示6本图书
+const total = ref(0) // 筛选之后的总图书数量
+// 自动计算总页数
+const totalPage = computed(() => {
+  return Math.ceil(total.value / pageSize.value)
+})
+// ========================================================
+
+// 加载图书列表（筛选 + 随机打乱 → 只执行一次）
 const loadBookList = async () => {
   try {
     const res = await getBookListApi(selectedCategory.value)
     //@ts-ignore
     allBooks.value = res.code === 200 ? res.data || [] : []
-    handleSearch()
+    // 加载完数据重置页码到第1页
+    currentPage.value = 1
+    // 筛选 + 仅此处执行一次随机打乱
+    doFilterAndShuffle()
   } catch (error) {
     allBooks.value = []
+    filteredBooks.value = []
     showBooks.value = []
+    total.value = 0
   }
 }
 
-// 搜索逻辑
-const handleSearch = () => {
+// 筛选 + 一次性随机打乱（刷新/初始化调用）
+const doFilterAndShuffle = () => {
   const keyword = searchKeyword.value.trim().toLowerCase()
+  // 1. 筛选数据
   let filtered = allBooks.value.filter((book) => {
     const matchName = keyword ? (book.name?.toLowerCase() || '').includes(keyword) : true
     const matchCategory =
@@ -189,19 +221,42 @@ const handleSearch = () => {
     return matchName && matchCategory
   })
 
-  // 随机打乱排序
+  // 2. 随机打乱（执行一次！切换页码不再打乱）
   for (let i = filtered.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[filtered[i], filtered[j]] = [filtered[j], filtered[i]]
   }
 
-  showBooks.value = filtered
+  // 3. 存储打乱后的完整列表
+  filteredBooks.value = filtered
+  total.value = filtered.length
+  // 4. 分页切片
+  doPaginationSlice()
+}
+
+// 分页切片（切换页码调用）
+const doPaginationSlice = () => {
+  const startIndex = (currentPage.value - 1) * pageSize.value
+  const endIndex = startIndex + pageSize.value
+  showBooks.value = filteredBooks.value.slice(startIndex, endIndex)
+}
+
+// 搜索（重新筛选+打乱）
+const handleSearch = () => {
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 页码切换事件（切片）
+const handlePageChange = () => {
+  doPaginationSlice()
 }
 
 // 清空搜索
 const handleClearSearch = () => {
   searchKeyword.value = ''
-  handleSearch()
+  currentPage.value = 1
+  doFilterAndShuffle()
 }
 
 // 退出登录
@@ -221,13 +276,12 @@ onMounted(() => {
 
   // 加载列表
   loadBookList()
-  // 遮罩逻辑
+  // 页面加载完成关闭遮罩
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.05)
+  }, 0.1)
 })
 </script>
-
 <style scoped>
 /*基础响应式配置*/
 :root {
@@ -442,11 +496,13 @@ onMounted(() => {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+  padding: 1.25rem 1.25rem 4rem 1.25rem; /* 底部加大内边距 */
   background-color: #d3d7dc;
   min-height: calc(100vh - 3.75rem - 80px);
+  position: relative;
+  margin-top: -30px;
   @media (max-width: 768px) {
-    padding: 0 0.625rem 1.25rem;
+    padding: 0 0.625rem 3rem;
   }
 }
 
@@ -454,6 +510,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 45vw, 270px), 1fr));
   gap: 1.25rem;
+  margin-bottom: 1.5rem; /* 缩小卡片底部间距 */
+  margin-bottom: 0px;
 }
 
 .book-card {
@@ -494,6 +552,7 @@ onMounted(() => {
   font-weight: bold;
   color: #333;
   margin-bottom: 0.5rem;
+  white-space: nowrop;
 }
 
 .book-author,
@@ -503,6 +562,8 @@ onMounted(() => {
   font-size: clamp(0.875rem, 1.5vw, 1rem);
   color: #666;
   margin-bottom: 0.25rem;
+  white-space: nowrop;
+  width: 215px;
 }
 
 .book-price {
@@ -526,9 +587,36 @@ onMounted(() => {
   font-size: clamp(1.125rem, 2vw, 1.25rem);
   color: #999;
   margin-top: 3.125rem;
+  margin-bottom: 2rem;
+}
+
+/* 分页栏样式（豆瓣同款+金色主题+居中强制展示） */
+.pagination-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+/* 页面全部金色按钮主题 */
+:deep(.el-pagination) {
+  --el-pagination-button-bg-color: #ffffff;
+  --el-pagination-button-disabled-bg-color: #f5f5f5;
+  --el-pagination-color: #e6a23c;
+  --el-pagination-active-bg: #e6a23c;
+  --el-pagination-active-border-color: #e6a23c;
+  font-size: 15px;
+}
+/* 页码按钮加宽 */
+:deep(.el-pagination .el-pager li) {
+  min-width: 36px;
+  height: 36px;
+  line-height: 36px;
 }
 
 :deep(.el-select) {
   z-index: 9996 !important;
+}
+* {
+  transform: scale(0.98);
 }
 </style>

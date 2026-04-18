@@ -253,7 +253,7 @@
   padding: 1.25rem;
   background-color: #b8b6b6;
   color: #fff;
-  min-height: 100vh;
+  min-height: 101vh;
   position: relative;
   overflow: visible;
 }
@@ -286,7 +286,7 @@
 /* 图书封面 - 原始样式 */
 .book-detail-cover {
   width: 20rem;
-  aspect-ratio: 3/4;
+  aspect-ratio: 3.5/5;
   border-radius: 0.5rem;
   border: 0.0625rem solid #34495e;
   overflow: hidden;
