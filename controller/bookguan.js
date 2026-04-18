@@ -1,4 +1,3 @@
-//数据库连接池
 const pool = require('../config/db');
 
 //1.获取所有图书
@@ -19,7 +18,6 @@ exports.addBook = async (req, res) => {
       return res.status(403).json({ code: 403, msg: '无管理员权限' });
     }
 
-    //接收前端传递的图书字段
     const {
       book_name,
       author,
@@ -33,11 +31,13 @@ exports.addBook = async (req, res) => {
       author_into
     } = req.body;
 
-    //SQL插入语句
+    // 数据库字段顺序
+    // book_name, author, category, author_into, price, stock, cover, `desc`, mulu, status
     await pool.execute(
       `INSERT INTO book (book_name, author, category,author_into, price, stock, cover, \`desc\`, mulu, status) 
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      [book_name, author,author_into, category, price, stock, cover, desc, mulu, status]
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      
+      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status]
     );
 
     res.json({ code: 200, msg: '图书新增成功' });
@@ -47,14 +47,13 @@ exports.addBook = async (req, res) => {
   }
 };
 
-//3.管理员修改图书内容
+//3.管理员修改图书内容（同步参数顺序）
 exports.updateBook = async (req, res) => {
   try {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({ code: 403, msg: '无管理员权限' });
     }
 
-    //接收参数
     const {
       id,
       book_name,
@@ -69,12 +68,11 @@ exports.updateBook = async (req, res) => {
       author_into
     } = req.body;
 
-    //SQL更新语句
     await pool.execute(
       `UPDATE book 
        SET book_name=?, author=?, category=?,author_into=?, price=?, stock=?, cover=?, \`desc\`=?, mulu=?, status=? 
        WHERE id=?`,
-      [book_name, author, category, price, stock, cover, desc, mulu, status, id]
+      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status, id]
     );
 
     res.json({ code: 200, msg: '图书修改成功' });
