@@ -7,6 +7,7 @@ const PORT = 3002;
 const userRouter = require('./router/user');
 const cartRouter = require('./router/cart');
 const bookRouter = require('./router/book');
+const newbookRouter = require('./router/newbook');
 const umentRouter = require('./router/userment');
 const payRouter = require('./router/payRouter');
 //中间件
@@ -26,17 +27,24 @@ const orderadmin = require('./router/orderment')
 
 const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
+const newbookguan = require('./router/newbookguanli');
+const bookcom = require('./router/bookComrute');
+const bookpaihang = require('./router/systembookpaihang');
 app.use('/api/user', userRouter);
 app.use('/api', orderRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/book', bookRouter);
+app.use('/api', newbookRouter);
 app.use('/api/userment', umentRouter);
 app.use('/api/announcement', announcementRouter);
 app.use('/api/bookguanli', bookguan);
+app.use('/api/newbookguanli', newbookguan);
 app.use('/api/pay', payRouter);
 app.use('/api', userdate);
+app.use('/api', bookcom);
 // 订单后台路由（前缀和前端的 /api/back/order 完全匹配）
 app.use('/api', orderadmin);
+app.use('/api', bookpaihang);
 //启动服务器
 app.listen(3002, () => {
   console.log(`后端服务器运行在：http://localhost:3002 ✅`);

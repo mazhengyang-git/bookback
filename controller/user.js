@@ -185,3 +185,93 @@ exports.loginBySmsCode = async (req, res) => {
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
+
+// ===================== 【新增1：验证码真实性核验接口 解决404报错 /api/user/verify-code】 =====================
+// 完全复用你现有的验证码缓存池，和发送短信、验证码登录逻辑100%统一
+exports.verifyCode = async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+
+    // 基础参数校验
+    if (!phone || !code) {
+      return res.json({ code: 400, msg: '参数不全' });
+    }
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return res.json({ code: 400, msg: '手机号格式错误' });
+    }
+
+    // 校验缓存里的验证码是否存在、匹配、未过期
+    if (!verifyCodeCache[phone] || verifyCodeCache[phone] !== code) {
+      return res.json({ code: 400, msg: '短信验证码错误或已过期' });
+    }
+
+    // 验证码校验成功
+    res.json({ code: 200, msg: '验证码核验成功' });
+  } catch (err) {
+    console.error(err);
+    res.json({ code: 500, msg: '服务器校验失败' });
+  }
+};
+
+// ===================== 【新增2：修改/绑定手机号接口 /api/user/bind-phone】 =====================
+// 带登录Token鉴权，更新数据库用户手机号，完全适配你user表结构
+exports.bindPhone = async (req, res) => {
+  try {
+    const { phone: newPhone } = req.body;
+    // 1. 校验登录Token（和你所有用户接口鉴权逻辑完全统一）
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json({ code: 401, msg: '请先登录' });
+
+    const decoded = jwt.verify(token, 'abc123def456');
+    const userId = decoded.id;
+
+    // 2. 新手机号格式校验
+    if (!newPhone || !/^1[3-9]\d{9}$/.test(newPhone)) {
+      return res.json({ code: 400, msg: '请输入正确的11位手机号' });
+    }
+
+    // 3. 数据库更新当前登录用户的绑定手机号
+    await pool.execute(
+      'UPDATE user SET phone = ? WHERE id = ?',
+      [newPhone, userId]
+    );
+
+    res.json({ code: 200, msg: '绑定手机号修改成功' });
+  } catch (err) {
+    console.error(err);
+    res.json({ code: 500, msg: '服务器错误，手机号修改失败' });
+  }
+};
+
+// ===================== 【新增3：获取图书随机3条评价】=====================
+exports.getRandomComments = async (req, res) => {
+  try {
+    const { bookId } = req.body;
+    if (!bookId) {
+      return res.json({ code: 400, msg: '图书ID不能为空' });
+    }
+
+    // 1. 先获取总评论数
+    const [countRes] = await pool.execute(
+      'SELECT COUNT(*) AS total FROM comment WHERE book_id = ?',
+      [bookId]
+    );
+    const total = countRes[0].total;
+
+    if (total === 0) {
+      return res.json({ code: 200, data: [] });
+    }
+
+    // 2. 随机获取3条评论
+    // 注意：不同数据库随机排序语法不同，以下为 MySQL 语法
+    const [comments] = await pool.execute(
+      'SELECT * FROM comment WHERE book_id = ? ORDER BY RAND() LIMIT 3',
+      [bookId]
+    );
+
+    res.json({ code: 200, data: comments });
+  } catch (err) {
+    console.error('获取随机评论失败：', err);
+    res.json({ code: 500, msg: '服务器错误，获取随机评论失败' });
+  }
+};
