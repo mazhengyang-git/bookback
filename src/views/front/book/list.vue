@@ -53,9 +53,42 @@
       style="width: clamp(160px, 15vw, 200px)"
       @change="loadBookList"
     >
-      <el-option label="全部" value="全部" />
-      <el-option label="硬科幻" value="硬科幻" />
-      <el-option label="软科幻" value="软科幻" />
+      <el-option label="全部类别" value="全部" />
+
+      <el-option label="太空歌剧" value="太空歌剧" />
+      <el-option label="赛博朋克" value="赛博朋克" />
+      <el-option label="时间旅行" value="时间旅行" />
+      <el-option label="智能纪元" value="智能纪元" />
+      <el-option label="外星文明" value="外星文明" />
+      <el-option label="末世废土" value="末世废土" />
+      <el-option label="星际灾厄" value="星际灾厄" />
+
+      <el-option label="虚幻惊悚" value="虚幻惊悚" />
+      <el-option label="星系攻略" value="星系攻略" />
+      <el-option label="次元交互" value="次元交互" />
+      <el-option label="梦灵空间" value="梦灵空间" />
+
+      <el-option label="自然谜团" value="自然谜团" />
+      <el-option label="平行宇宙" value="平行宇宙" />
+      <el-option label="意识陷落" value="意识陷落" />
+    </el-select>
+    <el-select
+      v-model="selectedAAuthor"
+      placeholder="请选择作者"
+      style="width: clamp(104px, 15vw, 130px)"
+      @change="loadBookList"
+      popper-append-to-body
+      :popper-style="{ width: '' }"
+    >
+      <el-option label="全部作者" value="全部" />
+
+      <el-option label="刘慈欣" value="刘慈欣" />
+      <el-option label="[美]艾萨克·阿西莫夫" value="[美]艾萨克·阿西莫夫" />
+      <el-option label="[波]斯坦尼斯瓦夫·莱姆" value="[波]斯坦尼斯瓦夫·莱姆" />
+      <el-option label="[美]安迪•威尔" value="[美]安迪•威尔" />
+      <el-option label="[美]特德·姜" value="[美]特德·姜" />
+      <el-option label="[韩]金草叶" value="[韩]金草叶" />
+      <el-option label="" value="" />
     </el-select>
 
     <el-input
@@ -79,12 +112,7 @@
   <!-- 图书列表容器 -->
   <div class="book-list-container">
     <div class="book-card-list">
-      <el-card
-        v-for="book in showBooks"
-        :key="book.id"
-        class="book-card"
-        @click="$router.push(`/book/${book.id}`)"
-      >
+      <el-card v-for="book in showBooks" :key="book.id" class="book-card">
         <div class="book-card-content">
           <!--@vue-ignore-->
           <img
@@ -92,13 +120,17 @@
             referrerpolicy="no-referrer"
             alt="图书封面"
             class="book-cover"
+            @click="$router.push(`/book/${book.id}`)"
             @error="(e) => (e.target.src = '/img/default-book.jpg')"
           />
           <div class="book-info">
-            <h3 class="book-name">{{ book.name || '未知图书' }}</h3>
+            <h3 class="book-name">
+              {{ book.name || '未知图书' }}
+            </h3>
             <p class="book-author">作者：{{ book.author || '未知作者' }}</p>
             <p class="book-category">分类：{{ book.category || '未知分类' }}</p>
             <p class="book-price">¥{{ formatPrice(book.price) }}</p>
+            <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
             <el-button
               type="primary"
               size="large"
@@ -108,6 +140,9 @@
               查看详情
             </el-button>
           </div>
+        </div>
+        <div style="position: absolute; left: 646px; top: 10px; width: 86%">
+          <bookping :book-id="book.id" />
         </div>
       </el-card>
     </div>
@@ -144,6 +179,7 @@ import { getBookListApi } from '@/api/front/book'
 import type { Book } from '@/types/index'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter, useRoute } from 'vue-router'
+import bookping from '@/views/front/book/抽离评价.vue'
 //@ts-ignore
 let timeleave: NodeJS.Timeout | null = null
 const showhover = ref(false)
@@ -174,9 +210,11 @@ const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
-
+const selectedAAuthor = ref('全部')
 const selectedCategory = ref('全部')
+const selectedAuthor = ref('')
 const allBooks = ref<Book[]>([]) // 原始全部图书数据
+
 const searchKeyword = ref('')
 // 存储【筛选+一次性随机打乱】后的完整列表（切换页码不改动）
 const filteredBooks = ref<Book[]>([])
@@ -186,26 +224,31 @@ const showBooks = ref<Book[]>([]) // 当前页面展示的图书
 const currentPage = ref(1) // 当前页码，默认第1页
 const pageSize = ref(6) // 每页只显示6本图书
 const total = ref(0) // 筛选之后的总图书数量
+
 // 自动计算总页数
 const totalPage = computed(() => {
   return Math.ceil(total.value / pageSize.value)
 })
-// ========================================================
-
 // 加载图书列表（筛选 + 随机打乱 → 只执行一次）
 const loadBookList = async () => {
   try {
-    const res = await getBookListApi(selectedCategory.value)
+    //selectedAuthor.value = ''
+    const res = await getBookListApi('全部')
+
     //@ts-ignore
-    allBooks.value = res.code === 200 ? res.data || [] : []
+    allBooks.value = res.code === 200 ? res.data || [] : [] //@ts-ignore
+
     // 加载完数据重置页码到第1页
     currentPage.value = 1
     // 筛选 + 仅此处执行一次随机打乱
     doFilterAndShuffle()
   } catch (error) {
     allBooks.value = []
+
     filteredBooks.value = []
+
     showBooks.value = []
+
     total.value = 0
   }
 }
@@ -218,7 +261,10 @@ const doFilterAndShuffle = () => {
     const matchName = keyword ? (book.name?.toLowerCase() || '').includes(keyword) : true
     const matchCategory =
       selectedCategory.value === '全部' || book.category === selectedCategory.value
-    return matchName && matchCategory
+    const matchAuthor = !selectedAuthor.value || book.author === selectedAuthor.value
+    const matchAAuthor = selectedAAuthor.value === '全部' || book.author === selectedAAuthor.value
+
+    return matchName && matchCategory && matchAuthor && matchAAuthor
   })
 
   // 2. 随机打乱（执行一次！切换页码不再打乱）
@@ -229,6 +275,7 @@ const doFilterAndShuffle = () => {
 
   // 3. 存储打乱后的完整列表
   filteredBooks.value = filtered
+
   total.value = filtered.length
   // 4. 分页切片
   doPaginationSlice()
@@ -270,10 +317,12 @@ onMounted(() => {
   // 接收路由参数（分类+搜索关键词）
   const cat = route.query.category as string
   const keyword = route.query.keyword as string
-
+  const author = route.query.author as string
+  const aauthor = route.query.aauthor as string
   if (cat) selectedCategory.value = cat
   if (keyword) searchKeyword.value = keyword
-
+  if (author) selectedAuthor.value = author
+  if (aauthor) selectedAAuthor.value = aauthor
   // 加载列表
   loadBookList()
   // 页面加载完成关闭遮罩
@@ -281,13 +330,44 @@ onMounted(() => {
     allImagesLoaded.value = true
   }, 0.1)
 })
+// 监听路由变化（点击标签跳转时，自动更新筛选）
+import { watch } from 'vue'
+watch(
+  () => route.query,
+  (newQuery) => {
+    // 路由变了，重新赋值参数
+    selectedCategory.value = (newQuery.category as string) || '全部'
+    searchKeyword.value = (newQuery.keyword as string) || ''
+    selectedAuthor.value = (newQuery.author as string) || ''
+
+    // 重新加载筛选
+    doFilterAndShuffle()
+  },
+  { deep: true },
+)
 </script>
 <style scoped>
 /*基础响应式配置*/
 :root {
   font-size: 16px;
 }
+/* 简介：2行显示 + 末尾省略号 */
+.book-desc {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  color: #666;
+  margin-bottom: 0.5rem;
 
+  /* 核心：2行省略号 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+  line-height: 1.4;
+  max-height: 2.8em;
+}
 /* 遮罩样式 */
 .black-mask {
   position: fixed;
@@ -306,8 +386,16 @@ onMounted(() => {
 .home-top-nav {
   width: 100%;
   height: 3.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 0.0625rem solid rgba(64, 158, 255, 0.2);
+  opacity: 0.9;
+  background: linear-gradient(
+    180deg,
+    rgba(215, 213, 213, 0.98) 0%,
+    rgba(160, 158, 158, 0.612) 50%,
+    rgba(215, 213, 213, 0.98) 100%
+  );
+  border-bottom: 1px solid rgba(5, 44, 84, 0.3);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -441,7 +529,9 @@ onMounted(() => {
 
 .syws {
   display: flex;
-  background: linear-gradient(0deg, #5073c7 0%, #121a28 100%);
+  background: linear-gradient(0deg, #ffffff 0%, #022d8a 100%);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+  transition: all 0.3s ease;
   border-radius: 0.375rem;
   padding: 0.375rem 0.875rem;
   align-items: center;
@@ -455,7 +545,8 @@ onMounted(() => {
   line-height: 1.2;
 }
 .syses:hover {
-  color: #29a7ef;
+  color: #ec8f33;
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
 }
 
 /* 筛选栏 */
@@ -464,7 +555,7 @@ onMounted(() => {
   max-width: 1200px;
   margin: 1.25rem auto;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, #f0f2f5 25%, #e1d7ce 50%, #f0f2f5 25%);
+  background: linear-gradient(135deg, #f0f2f5 25%, #dce1e3cd 50%, #f0f2f5 25%);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -497,7 +588,7 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.25rem 1.25rem 4rem 1.25rem; /* 底部加大内边距 */
-  background-color: #d3d7dc;
+  background-color: #eaeceec5;
   min-height: calc(100vh - 3.75rem - 80px);
   position: relative;
   margin-top: -30px;
@@ -508,21 +599,23 @@ onMounted(() => {
 
 .book-card-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 45vw, 270px), 1fr));
+  grid-template-columns: repeat(1, 1fr);
+  width: 100%;
   gap: 1.25rem;
   margin-bottom: 1.5rem; /* 缩小卡片底部间距 */
   margin-bottom: 0px;
+  margin-left: 40px;
 }
 
 .book-card {
-  cursor: pointer;
   background: #fff !important;
   border: none !important;
   transition: all 0.3s;
+  width: 1000px;
 }
 .book-card:hover {
-  background: #f4f2f2 !important;
-  box-shadow: 0 4px 12px rgba(251, 73, 2, 0.3);
+  background: #f3f1f1 !important;
+  box-shadow: 0 4px 12px rgba(227, 226, 226, 0.866);
 }
 
 .book-card-content {
@@ -531,6 +624,7 @@ onMounted(() => {
 }
 
 .book-cover {
+  cursor: pointer;
   user-select: none !important;
   -webkit-user-select: none !important;
   width: clamp(80px, 15vw, 100px);
@@ -551,6 +645,7 @@ onMounted(() => {
   font-size: clamp(1rem, 2vw, 1.125rem);
   font-weight: bold;
   color: #333;
+
   margin-bottom: 0.5rem;
   white-space: nowrop;
 }
@@ -576,7 +671,8 @@ onMounted(() => {
 }
 
 .add-cart-btn {
-  width: 100%;
+  cursor: pointer;
+  width: 130px;
   background: #e6a23c !important;
   border-color: #e6a23c !important;
   font-size: clamp(1rem, 2vw, 1.125rem);

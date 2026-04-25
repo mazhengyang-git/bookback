@@ -1,6 +1,6 @@
 <template>
   <div class="se">
-    <!-- 轮播容器 -->
+    <!-- 轮播容器（带scale(0.6)缩放） -->
     <div class="asss carousel-container">
       <!-- 所有图片同时渲染，通过class控制状态 -->
       <router-link
@@ -12,6 +12,7 @@
         v-if="slides.length > 0"
       >
         <span class="lunbotuzi">{{ item.title }}</span>
+        <!--@vue-ignore-->
         <img
           :src="item.image || '/img/default-book.jpg'"
           class="tu"
@@ -23,21 +24,23 @@
       <!-- 左右切换按钮 -->
       <button @click="next" class="pw prev" v-if="slides.length > 0">></button>
       <button @click="prev" class="pw next" v-if="slides.length > 0"><</button>
+
+      <!-- ============== 【仅移动：指示器移入缩放容器内部！】============== -->
+      <div class="dots" v-if="slides.length > 0">
+        <span
+          v-for="(item, index) in slides"
+          :key="index"
+          :class="{ active: lunxian === index + 1 }"
+          @click="godianlun(index + 1)"
+        />
+      </div>
+      <p class="dots1">探索宇宙的无限可能，尽在星途科幻图书电商平台</p>
     </div>
 
-    <!-- 指示器 -->
-    <div class="dots" v-if="slides.length > 0">
-      <span
-        v-for="(item, index) in slides"
-        :key="index"
-        :class="{ active: lunxian === index + 1 }"
-        @click="godianlun(index + 1)"
-      />
-    </div>
     <div class="xiatiao1"></div>
+    <div class="xiatiao2"></div>
   </div>
 </template>
-
 <script lang="ts" setup>
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { useBookStore } from '@/store/book'
@@ -122,7 +125,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 
 <style scoped>
 .se {
-  height: 546px;
+  height: 526px;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -133,21 +136,24 @@ onUnmounted(() => zilun && clearInterval(zilun))
 
 /* 高级轮播容器核心样式 */
 .carousel-container {
-  width: 100%;
-  height: 613px;
+  width: 969px;
+  height: 426px;
   position: relative;
   display: flex;
   justify-content: center;
+
   align-items: center;
-  background: linear-gradient(135deg, #f0f2f5 25%, #938575 50%, #f0f2f5 25%);
+  background: linear-gradient(135deg, #f0f2f5 25%, #eceae9 50%, #f0f2f5 25%);
   box-shadow: 0 8px 30px rgba(98, 99, 99, 0.418);
-  overflow: hidden;
+
+  transform: scale(0.75);
 }
+
 .carousel-container::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 60%, rgba(121, 122, 123, 0.61) 100%);
+  background: radial-gradient(circle at center, transparent 50%, rgba(121, 122, 123, 0.61) 100%);
   pointer-events: none;
 }
 
@@ -162,7 +168,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 /* 中间激活项（清晰、大图） */
 .carousel-item.active {
   z-index: 10;
-  transform: translateX(0) scale(1);
+  transform: translateX(0) scale(0.7);
   opacity: 1;
   filter: blur(0);
 }
@@ -170,7 +176,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 /* 左侧预览项（缩小、虚化、半透明） */
 .carousel-item.prev-item {
   z-index: 5;
-  transform: translateX(-280px) scale(0.75);
+  transform: translateX(-280px) scale(0.6);
   opacity: 0.8;
   filter: blur(2px);
 }
@@ -178,7 +184,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 /* 右侧预览项（缩小、虚化、半透明） */
 .carousel-item.next-item {
   z-index: 5;
-  transform: translateX(280px) scale(0.75);
+  transform: translateX(280px) scale(0.6);
   opacity: 0.8;
   filter: blur(2px);
 }
@@ -193,7 +199,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 /* 图书标题 */
 .lunbotuzi {
   position: absolute;
-  top: -25px;
+  top: -35px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 25px;
@@ -226,7 +232,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
   width: 5vw;
   max-width: 70px;
   min-width: 40px;
-  aspect-ratio: 7 /5;
+  aspect-ratio: 6 /5;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -244,38 +250,98 @@ onUnmounted(() => zilun && clearInterval(zilun))
   transform: translateY(-50%) scale(1.05);
 }
 .pw.prev {
-  right: 80px;
+  right: 40px;
 }
 .pw.next {
-  left: 80px;
+  left: 40.5px;
 }
-
-/* 指示器 */
+/* ==================  dots 全部样式 ================== */
 .dots {
+  /* 绑定缩放轮播容器，绝对定位 */
   position: absolute;
-  bottom: 30px;
-  z-index: 98;
+  /* 核心：原生水平居中 + 抵消父元素scale(0.6)缩放带来的偏移 */
   left: 50%;
-  transform: translateX(-50%);
+  /* 复合变换：先自身居中，再完美抵消父容器缩放扭曲 */
+  transform: translateX(-50%) scale(1);
+  /* 固定在轮播整体底部，和你截图里位置完全一致 */
+  bottom: 15px;
+  /* 层级足够高，不会被任何元素遮挡 */
+  z-index: 9999;
   display: flex;
   gap: 10px;
 }
+.dots1 {
+  /* 绑定缩放轮播容器，绝对定位 */
+  position: absolute;
+  /* 核心：原生水平居中 + 抵消父元素scale(0.6)缩放带来的偏移 */
+  left: 50%;
+  /* 复合变换：先自身居中，再完美抵消父容器缩放扭曲 */
+  transform: translateX(-50%) scale(1);
+  /* 固定在轮播整体底部，和你截图里位置完全一致 */
+  bottom: -45px;
+  /* 层级足够高，不会被任何元素遮挡 */
+  z-index: 9999;
+  display: flex;
+  gap: 10px;
+  color: #3c73e1;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.5;
+  animation: zzi 1.1s forwards ease-in;
+  font-weight: 700;
+  background: linear-gradient(90deg, #3c73e1, #64b5f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  text-shadow: 0 0 10px rgba(232, 128, 43, 0.24);
+}
+@keyframes zzi {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  75% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 .dots span {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: rgba(82, 201, 3, 0.5);
   border-radius: 50%;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 .dots span.active {
   background: rgb(249, 6, 6);
   transform: scale(1.2);
 }
-
 .xiatiao1 {
   height: 2px;
   background: #eee;
   margin-top: 10px;
+  width: 769px;
+
+  position: absolute;
+  left: 100px;
+}
+.xiatiao2 {
+  height: 2px;
+  background: #eee;
+
+  top: 100.2px;
+  width: 669px;
+  z-index: 888;
+  transform: rotate(90deg);
+  position: absolute;
+  left: 534.5px;
 }
 </style>

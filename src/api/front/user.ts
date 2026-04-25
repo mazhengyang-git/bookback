@@ -58,3 +58,20 @@ export function loginByCode(data) {
     data,
   })
 }
+
+export function verifyPaySmsCode(data: { phone: string; code: string }) {
+  return request<Response>({
+    url: '/api/user/verify-code', // 后端核验验证码专用接口
+    method: 'post',
+    data,
+  })
+}
+export const bindPhone = (newPhone: string) => {
+  return request({
+    url: '/api/user/bind-phone',
+    method: 'post',
+    data: {
+      phone: newPhone,
+    },
+  })
+}

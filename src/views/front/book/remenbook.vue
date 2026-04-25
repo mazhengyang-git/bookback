@@ -1,0 +1,350 @@
+<template>
+  <div class="monthly-hot-books">
+    <!-- 模块标题 -->
+    <h2 class="section-title">每月热门图书榜</h2>
+
+    <!-- 加载中 -->
+    <div v-if="bookStore?.loading" class="loading-tip">
+      <el-skeleton :rows="3" animated />
+    </div>
+
+    <!-- 空数据兜底 -->
+    <div v-else-if="!finalBooks.length" class="empty-tip">
+      <el-empty description="暂无榜单数据" />
+    </div>
+
+    <!-- 榜单列表 -->
+    <div v-else class="hot-books-list">
+      <div
+        v-for="(book, index) in finalBooks"
+        :key="book.id"
+        class="book-item"
+        @click="handleItemClick(book)"
+      >
+        <!-- 排名序号 -->
+        <span class="rank" :class="{ 'top-three': index < 3 }">{{ book.rank }}</span>
+
+        <!-- 图书封面 -->
+        <img
+          :src="book.cover || '/img/default-book.jpg'"
+          referrerpolicy="no-referrer"
+          alt="图书封面"
+          class="book-cover"
+          @error="(e) => (e.target.src = '/img/default-book.jpg')"
+        />
+
+        <!-- 图书信息 -->
+        <div class="book-info">
+          <h3 class="book-name">{{ book.name || '未知图书' }}</h3>
+          <p class="book-author">作者：{{ book.author || '未知作者' }}</p>
+          <p class="book-price">¥{{ formatPrice(book.price) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+// 【关键修复】补充 ref 导入
+import { ref, computed, onMounted } from 'vue'
+import { ElEmpty, ElSkeleton } from 'element-plus'
+import { useBookStore } from '@/store/book'
+import type { Book } from '@/types/index'
+import router from '@/router'
+import { getSystemConfig } from '@/api/back/config'
+const bookStore = useBookStore()
+
+// ====================== 【核心配置】置顶图书ID（默认1,3,5,7,8为前五） ======================
+// 【修改】从后端获取置顶ID，不再硬编码
+const topBookIds = ref<(number | string)[]>([])
+const configLoading = ref(true)
+// ===============================================================================================
+const loadTopBookIds = async () => {
+  try {
+    const res = await getSystemConfig('home_top_book_ids')
+    //@ts-ignore
+    if (res.code === 200 && res.data) {
+      //@ts-ignore
+      topBookIds.value = res.data.config_value || [1, 3, 5, 7, 8] // 兜底默认值
+    }
+  } catch (error) {
+    console.error('加载排行榜配置失败，使用默认值')
+    topBookIds.value = [1, 3, 5, 7, 8] // 加载失败时的兜底
+  } finally {
+    configLoading.value = false
+  }
+}
+/** 图书榜单项类型定义（继承项目 Book 类型） */
+export interface MonthlyHotBookItem extends Book {
+  rank: number
+  [key: string]: any
+}
+
+/** 组件入参 */
+const props = defineProps<{
+  /** 自定义榜单数据（优先级最高） */
+  books?: MonthlyHotBookItem[]
+  /** 自定义置顶ID（优先级高于内部默认） */
+  topIds?: (number | string)[]
+}>()
+
+/** 组件抛出事件 */
+const emit = defineEmits<{
+  /** 点击图书项事件 */
+  click: [book: MonthlyHotBookItem]
+}>()
+
+/** 内置默认数据（兜底用） */
+const defaultBooks: MonthlyHotBookItem[] = [
+  {
+    id: 21,
+    rank: 1,
+    name: '三体',
+    author: '刘慈欣',
+    price: 99.0,
+    category: '',
+    cover: '',
+    desc: '',
+    stock: 0,
+    mulu: '',
+    author_into: '',
+  },
+  {
+    id: 22,
+    rank: 2,
+    name: '流浪地球',
+    author: '刘慈欣',
+    price: 45.0,
+    category: '',
+    cover: '',
+    desc: '',
+    stock: 0,
+    mulu: '',
+    author_into: '',
+  },
+  {
+    id: 23,
+    rank: 3,
+    name: '北京折叠',
+    author: '郝景芳',
+    price: 35.0,
+    category: '',
+    cover: '',
+    desc: '',
+    stock: 0,
+    mulu: '',
+    author_into: '',
+  },
+  {
+    id: 24,
+    rank: 4,
+    name: '深渊上的火',
+    author: '弗诺·文奇',
+    price: 58.0,
+    category: '',
+    cover: '',
+    desc: '',
+    stock: 0,
+    mulu: '',
+    author_into: '',
+  },
+  {
+    id: 25,
+    rank: 5,
+    name: '星船伞兵',
+    author: '罗伯特·海因莱因',
+    price: 42.0,
+    category: '',
+    cover: '',
+    desc: '',
+    stock: 0,
+    mulu: '',
+    author_into: '',
+  },
+]
+
+/** 最终使用的置顶ID */
+const finalTopIds = computed(() => (props.topIds?.length ? props.topIds : topBookIds.value))
+
+/** 从 store 处理后的榜单数据 */
+const storeBooks = computed<MonthlyHotBookItem[]>(() => {
+  if (!bookStore?.bookList?.length) return []
+
+  // 1. 提取置顶图书并按配置顺序排列
+  const allBooks = JSON.parse(JSON.stringify(bookStore.bookList)) as Book[]
+  const topBooks: MonthlyHotBookItem[] = []
+  const topIdSet = new Set(finalTopIds.value.map((id) => String(id)))
+
+  finalTopIds.value.forEach((topId, index) => {
+    const strTopId = String(topId)
+    const book = allBooks.find((b) => String(b.id) === strTopId)
+    if (book) {
+      topBooks.push({ ...book, rank: index + 1 })
+    }
+  })
+
+  // 2. 剩余图书随机抽取补充（最多补5个）
+  const remainingBooks = allBooks.filter((b) => !topIdSet.has(String(b.id)))
+  const randomBooks: MonthlyHotBookItem[] = []
+  // 数组长度为0时跳过打乱，避免报错
+  if (remainingBooks.length > 0) {
+    for (let i = remainingBooks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[remainingBooks[i], remainingBooks[j]] = [remainingBooks[j], remainingBooks[i]]
+    }
+  }
+  remainingBooks.slice(0, Math.max(0, 5 - topBooks.length)).forEach((book, index) => {
+    randomBooks.push({ ...book, rank: topBooks.length + index + 1 })
+  })
+
+  // 3. 合并返回
+  return [...topBooks, ...randomBooks]
+})
+
+/** 最终渲染的图书数据（优先级：props.books > store处理后 > 默认数据） */
+const finalBooks = computed(() => {
+  if (props.books?.length) return props.books
+  if (storeBooks.value.length) return storeBooks.value
+  return defaultBooks
+})
+
+/** 价格格式化 */
+const formatPrice = (price: unknown): string => {
+  const num = Number(price) || 0
+  return num.toFixed(2)
+}
+
+/** 图书项点击处理 */
+const handleItemClick = (book: MonthlyHotBookItem) => {
+  router.push(`/book/${book.id}`)
+}
+
+// 初始化时加载 store 数据
+onMounted(async () => {
+  await loadTopBookIds()
+  // 再加载图书数据
+  if (!bookStore?.bookList?.length) {
+    bookStore?.fetchBookList?.().catch(() => {})
+  }
+})
+</script>
+
+<style scoped>
+.monthly-hot-books {
+  width: 115%;
+  padding: clamp(15px, 2vw, 20px);
+  margin: clamp(30px, 3.5vw, 40px) 0;
+
+  border-radius: clamp(8px, 1vw, 12px);
+  box-sizing: border-box;
+}
+
+/* 标题样式 */
+.section-title {
+  text-align: center;
+  font-size: clamp(21px, 2.5vw, 25px);
+  font-weight: 600;
+  color: #409eff;
+  margin: 0 0 clamp(25px, 3vw, 30px);
+  padding-bottom: clamp(8px, 1vw, 10px);
+  position: relative;
+}
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(120px, 15vw, 150px);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #409eff, transparent);
+}
+
+/* 加载/空数据提示 */
+.loading-tip,
+.empty-tip {
+  text-align: center;
+  padding: clamp(40px, 5vw, 60px) 0;
+}
+
+/* 榜单列表容器 */
+.hot-books-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(15px, 1.8vw, 20px);
+  width: 100%;
+  max-width: 1200px;
+  min-height: 300px;
+  margin: 0 auto;
+}
+
+/* 单条图书卡片 */
+.book-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(15px, 2vw, 20px);
+  padding: clamp(15px, 2vw, 20px);
+  background: #ffffff;
+  border-radius: clamp(12px, 1.5vw, 16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.126);
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+.book-item:hover {
+  transform: translateX(5px);
+}
+
+/* 排名数字 */
+.rank {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 700;
+  color: #999;
+  min-width: clamp(40px, 4vw, 50px);
+  text-align: center;
+  line-height: 1;
+  transition: color 0.3s;
+}
+/* 前三名高亮 */
+.rank.top-three {
+  color: #409eff;
+  text-shadow: 0 0 10px rgba(64, 158, 255, 0.3);
+}
+
+/* 图书封面样式 */
+.book-cover {
+  width: clamp(60px, 6vw, 80px);
+  height: clamp(90px, 9vw, 120px);
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+/* 图书信息区域 */
+.book-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 8px);
+}
+/* 【修复】文字颜色太浅导致看不见的问题 */
+.book-name {
+  font-size: clamp(19px, 1.8vw, 23px);
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
+}
+.book-author {
+  font-size: clamp(16px, 1.2vw, 17px);
+  color: #666666;
+  margin: 0;
+}
+.book-price {
+  font-size: clamp(17px, 1.5vw, 19px);
+  font-weight: 700;
+  color: #e6a23c;
+  margin: clamp(4px, 0.5vw, 6px) 0 0;
+}
+</style>

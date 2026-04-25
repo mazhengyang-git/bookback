@@ -66,7 +66,12 @@
       <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('orderguan')">
         订单管理
       </button>
-
+      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookpaihang')">
+        图书排行
+      </button>
+      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('newbook')">
+        新书速递
+      </button>
       <button
         link
         @click="switchTab('useradmin')"
@@ -103,6 +108,12 @@
       <div class="sub-page-container bookguan" v-if="activeTab === 'orderguan'">
         <orderadmin />
       </div>
+      <div class="sub-page-container bookguan" v-if="activeTab === 'bookpaihang'">
+        <bookpai />
+      </div>
+      <div class="sub-page-container bookguan" v-if="activeTab === 'newbook'">
+        <newbook />
+      </div>
     </div>
 
     <div class="router-view-container">
@@ -119,15 +130,19 @@ import { useRouter } from 'vue-router'
 import notice from '@/views/back/notice/index.vue'
 import userment from '@/views/back/userment/index.vue'
 import bookdetail from '@/views/back/book/index.vue'
+import newbook from '@/views/back/book/newbook.vue'
 import orderadmin from '@/views/back/order/index.vue'
 import useradmin from '@/views/back/user/index.vue'
+import bookpai from '@/views/back/book/bookpaihang.vue'
 const title = '后台首页'
 const userStore = useUserStore()
 const router = useRouter()
 
 const activeTab = ref('notice')
 
-const switchTab = (tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan') => {
+const switchTab = (
+  tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan' | 'bookpaihang' | 'newbook',
+) => {
   activeTab.value = activeTab.value === tab ? '' : tab
 }
 

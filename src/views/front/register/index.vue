@@ -16,7 +16,7 @@
           label-width="80px"
           class="register-form"
         >
-          <el-form-item label-width="85" style="font-weight: 700" label="用户名" prop="username">
+          <el-form-item label-width="85" style="font-weight: 700" label="账号" prop="username">
             <el-input
               style="font-weight: 700"
               maxlength="13"
@@ -26,6 +26,7 @@
               show-word-limit
             />
           </el-form-item>
+
           <el-form-item style="font-weight: 700" label="密码" label-width="85" prop="password">
             <el-input
               label-width="85"
@@ -37,6 +38,7 @@
               show-password
             />
           </el-form-item>
+
           <el-form-item
             label-width="85"
             style="font-weight: 700"
@@ -51,6 +53,22 @@
               show-password
             />
           </el-form-item>
+
+          <!-- ================== 图片验证码 ================== -->
+          <el-form-item label="验证" prop="captcha">
+            <div class="captcha-row">
+              <el-input
+                v-model="registerForm.captcha"
+                placeholder="请输入图片验证码"
+                maxlength="4"
+                style="flex: 1"
+              />
+              <div style="color: #000" class="captcha-img" @click="refreshCaptcha">
+                {{ captchaCode }}
+              </div>
+            </div>
+          </el-form-item>
+
           <el-form-item label-width="85" style="font-weight: 700" label="用户类型">
             <el-radio-group v-model="registerForm.role" @change="handleRoleChange">
               <el-radio style="font-weight: 700" value="buyer">买家</el-radio>
@@ -59,7 +77,6 @@
             </el-radio-group>
           </el-form-item>
 
-          <!-- 管理员密钥验证（仅管理员显示） -->
           <el-form-item
             style="font-weight: 700"
             label="管理密钥"
@@ -105,20 +122,33 @@ import { register } from '@/api/front/user'
 const router = useRouter()
 const registerFormRef = ref<FormInstance>()
 
-// 表单数据（适配后端role字段：buyer/seller/admin）
+// ================== 【核心修复】captcha 放入表单对象 ==================
 const registerForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
   role: 'buyer' as 'buyer' | 'seller' | 'admin',
   adminKey: '',
+  captcha: '', // 图片验证码
 })
 
-// 管理员注册密钥
 const ADMIN_REGISTER_KEY = 'admin123456'
 
-// ===================== 核心：用户名校验规则 =====================
-//合法手机号前3位（真实号段）
+// ================== 图片验证码 ==================
+const captchaCode = ref('')
+const chars = '0123456789ABCDEFGHIJKLMNPQRSTWXYZ'
+
+const generateCaptcha = () => {
+  let code = ''
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  captchaCode.value = code
+}
+const refreshCaptcha = () => generateCaptcha()
+generateCaptcha()
+
+// 手机号/账号校验
 const validMobilePrefixes = [
   '130',
   '131',
@@ -166,46 +196,30 @@ const validMobilePrefixes = [
   '198',
   '199',
 ]
-
-// 校验：账号规则（1字母+5数字）
 const isValidAccount = (str: string): boolean => {
-  // 统计字母数量
   const letterMatch = str.match(/[a-zA-Z]/g)
   const letterCount = letterMatch ? letterMatch.length : 0
-  // 统计数字数量
   const digitMatch = str.match(/\d/g)
   const digitCount = digitMatch ? digitMatch.length : 0
-
-  // 仅允许字母+数字
   const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str)
-
-  // 核心规则：字母 1~2 个 + 数字 ≥5 个 + 纯字母数字
-  const validLetter = letterCount >= 1 && letterCount <= 2
-  const validDigit = digitCount >= 5
-
-  return validLetter && validDigit && onlyLetterAndDigit
+  return letterCount >= 1 && letterCount <= 2 && digitCount >= 5 && onlyLetterAndDigit
 }
-// 校验：正规11位手机号
 const isValidPhone = (phone: string): boolean => {
   if (!/^\d{11}$/.test(phone)) return false
   const prefix = phone.slice(0, 3)
   return validMobilePrefixes.includes(prefix)
 }
 
-// 表单校验规则
+// ================== 【核心修复】验证码加入表单校验 ==================
 const registerRules = reactive<FormRules>({
   username: [
     { required: true, message: '请输入用户名/手机号', trigger: 'blur' },
     { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
     {
-      validator: (rule: any, value: string, callback: any) => {
-        if (!value) return callback()
-        // 满足任意一种格式即可
-        if (isValidAccount(value) || isValidPhone(value)) {
-          callback()
-        } else {
-          callback(new Error('格式：1字母+5位数字 或 11位正规手机号'))
-        }
+      validator: (rule, value, cb) => {
+        if (!value) return cb()
+        if (isValidAccount(value) || isValidPhone(value)) cb()
+        else cb(new Error('格式：1字母+5数字 或 11位手机号'))
       },
       trigger: 'blur',
     },
@@ -217,94 +231,61 @@ const registerRules = reactive<FormRules>({
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
     {
-      validator: (_rule: any, value: string, callback: any) => {
-        if (!value) {
-          callback(new Error('请确认密码'))
-        } else if (value !== registerForm.password) {
-          callback(new Error('两次密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur',
+      validator: (_, v, cb) =>
+        v === registerForm.password ? cb() : cb(new Error('两次密码不一致')),
     },
   ],
-  adminKey: [
+  captcha: [
+    { required: true, message: '请输入图片验证码', trigger: 'blur' },
     {
-      required: true,
-      message: '请输入管理员注册密钥',
-      trigger: 'blur',
-      validator: (_rule: any, value: string, callback: any) => {
-        if (registerForm.role === 'admin') {
-          if (!value) {
-            callback(new Error('请输入管理员注册密钥'))
-          } else if (value !== ADMIN_REGISTER_KEY) {
-            callback(new Error('管理员密钥错误'))
-          } else {
-            callback()
-          }
-        } else {
-          callback()
-        }
+      validator: (rule, value, cb) => {
+        if (value?.toUpperCase() === captchaCode.value) cb()
+        else cb(new Error('图片验证码错误'))
       },
+      trigger: 'blur',
     },
   ],
+  adminKey: [{ required: true, message: '请输入管理员密钥', trigger: 'blur' }],
 })
 
-// 角色切换清空密钥
 const handleRoleChange = () => {
-  if (registerForm.role !== 'admin') {
-    registerForm.adminKey = ''
-  }
+  if (registerForm.role !== 'admin') registerForm.adminKey = ''
 }
 
-// 注册逻辑
+// ================== 注册逻辑（修复版） ==================
 const handleRegister = async () => {
-  if (!registerFormRef.value) {
-    ElMessage.error('表单初始化失败，请刷新页面')
-    return
-  }
+  if (!registerFormRef.value) return ElMessage.error('表单异常')
 
-  let valid = false
   try {
     await registerFormRef.value.validate()
-    valid = true
-  } catch (err) {
-    ElMessage.warning('请完善注册信息')
+  } catch {
+    ElMessage.warning('请完善信息')
+    refreshCaptcha()
     return
   }
 
-  if (!valid) return
-
-  // 管理员密钥校验
   if (registerForm.role === 'admin' && registerForm.adminKey !== ADMIN_REGISTER_KEY) {
-    ElMessage.error('管理员密钥错误，无法注册')
+    ElMessage.error('管理员密钥错误')
+    refreshCaptcha()
     return
   }
 
   try {
-    // 调用后端注册接口，传递role字段
     const res = await register({
       username: registerForm.username,
       password: registerForm.password,
       role: registerForm.role,
     })
-    if (!res) {
-      ElMessage.error('注册失败：接口无返回数据')
-      return
-    }
-    //@ts-ignore
     if (res.code === 200) {
-      //@ts-ignore
-      ElMessage.success(res.msg || '注册成功')
+      ElMessage.success('注册成功')
       router.push('/login')
     } else {
-      //@ts-ignore
       ElMessage.error(res.msg || '注册失败')
+      refreshCaptcha()
     }
-  } catch (err) {
-    console.error('注册接口异常：', err)
-    ElMessage.error('注册失败：服务异常，请稍后重试')
+  } catch (e) {
+    ElMessage.error('服务异常')
+    refreshCaptcha()
   }
 }
 </script>
@@ -330,24 +311,22 @@ button {
   width: 100%;
   height: 100vh !important;
   background: url(/public/img/flzc.jpg);
-  background-color: #ffffff !important;
+  background-color: #fff !important;
   background-size: cover;
-  background-position: center; /* 向上偏移 */
+  background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
-
 .gwy {
   position: absolute;
   margin-top: -20.7px;
   margin-left: -20.5px;
   z-index: 10;
-  padding: 0 5px 0 5px;
+  padding: 0 5px;
 }
 .register-container {
   width: 100%;
   height: 100vh;
-
   display: flex;
   justify-content: center;
   align-items: center;
@@ -357,12 +336,32 @@ button {
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 8px;
-  border: 1px solid rgb(0, 0, 0);
+  border: 1px solid #000;
 }
 .register-form {
   margin-top: 20px;
 }
 .register-btn {
   width: 100%;
+}
+
+.captcha-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.captcha-img {
+  width: 100px;
+  height: 38px;
+  line-height: 38px;
+  text-align: center;
+  background: #f5f5f5;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  user-select: none !important;
 }
 </style>

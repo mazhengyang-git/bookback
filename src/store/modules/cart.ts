@@ -8,6 +8,7 @@ interface CartItem {
   count: number // 数量
   cover: string // 封面
   spec: string // 规格
+  stock: number // 🔥 新增：商品库存（关键！用于限制购买数量）
 }
 
 export const useCartStore = defineStore('cart', {
@@ -16,7 +17,7 @@ export const useCartStore = defineStore('cart', {
     cartPriceTotal: 0 as number,
   }),
   actions: {
-    // 添加购物车项（匹配后端字段）
+    // 添加购物车项（自动接收 stock 库存字段）
     addToCart(item: CartItem) {
       this.currentCart.push(item)
       this.calcTotalPrice()

@@ -46,6 +46,7 @@
           <el-input-number
             v-model="item.count"
             :min="1"
+            :max="item.stock"
             class="count-num"
             @change="(val) => handleUpdateCount(item.cartId, val)"
             size="default"
@@ -73,6 +74,209 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useCartStore } from '@/store/cart'
+import { useUserStore } from '@/store/user'
+import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/cart'
+
+// 🔥 导入你图书详情页用的【获取图书详情接口】
+import { getBookDetailApi } from '@/api/front/book'
+
+const cartStore = useCartStore()
+const userStore = useUserStore()
+const router = useRouter()
+const allImagesLoaded = ref(false)
+
+//勾选相关
+const checkedIds = ref<number[]>([])
+const isAllChecked = ref(false)
+
+//计算：选中商品总价
+const selectedTotal = computed(() => {
+  return cartStore.currentCart
+    .filter((item) => checkedIds.value.includes(item.cartId))
+    .reduce((sum, item) => sum + item.price * item.count, 0)
+})
+
+// 输入框更新数量 + 库存校验
+const handleUpdateCount = async (cartId: number, count: number) => {
+  try {
+    const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
+    if (!targetItem) return
+
+    if (count > targetItem.stock) {
+      ElMessage.warning(`库存不足，最多可购买 ${targetItem.stock} 本`)
+      cartStore.updateCount(cartId, targetItem.stock)
+      return
+    }
+    if (count < 1) {
+      cartStore.updateCount(cartId, 1)
+      return
+    }
+
+    await updateCartCount(cartId, count)
+    cartStore.updateCount(cartId, count)
+    cartStore.calcTotalPrice()
+  } catch (error) {
+    ElMessage.error('修改数量失败')
+  }
+}
+
+//单个勾选
+const handleItemCheck = (cartId: number, checked: boolean) => {
+  if (checked) {
+    checkedIds.value.push(cartId)
+  } else {
+    checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
+  }
+  isAllChecked.value = checkedIds.value.length === cartStore.currentCart.length
+}
+
+//全选 / 取消全选
+const handleCheckAll = (checked: boolean) => {
+  if (checked) {
+    checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
+  } else {
+    checkedIds.value = []
+  }
+}
+
+onMounted(() => {
+  loadCartData()
+  setTimeout(() => {
+    allImagesLoaded.value = true
+  }, 50)
+})
+
+// 🔥 🔥 🔥 核心修复：加载购物车 + 请求【真实图书库存】（和详情页完全一致）
+const loadCartData = async () => {
+  if (!userStore.token) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+
+  try {
+    const res = await getCartList()
+    //@ts-ignore
+    if (res.code === 200 && res.data) {
+      cartStore.clearCart()
+
+      // 遍历购物车每一项
+      for (const item of res.data) {
+        // 1. 先获取【该图书的真实详情 + 真实库存】
+        const bookRes = await getBookDetailApi(item.goodsId)
+        const realStock = bookRes.data?.stock || 999
+
+        // 2. 加入购物车，携带【真实库存】
+        cartStore.addToCart({
+          cartId: item.id,
+          id: item.goodsId,
+          name: item.bookName,
+          price: Number(item.bookPrice || item.price) || 0,
+          count: item.quantity || item.count,
+          cover: item.bookCover || item.cover,
+          spec: item.spec || '平装版',
+          stock: realStock, // 🔥 真实库存！不是999了
+        })
+      }
+
+      cartStore.calcTotalPrice()
+      checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
+      isAllChecked.value = true
+    }
+  } catch (error: any) {}
+}
+
+// 减少数量
+const handleReduce = async (cartId: number) => {
+  const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
+  if (!targetItem) return
+
+  if (targetItem.count <= 1) {
+    try {
+      await deleteCartItem(cartId)
+      cartStore.deleteItem(cartId)
+      cartStore.calcTotalPrice()
+      checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
+      ElMessage.success('删除成功')
+    } catch (error) {
+      ElMessage.error('删除失败')
+    }
+    return
+  }
+
+  try {
+    await updateCartCount(cartId, targetItem.count - 1)
+    cartStore.updateCount(cartId, targetItem.count - 1)
+    cartStore.calcTotalPrice()
+  } catch (error) {
+    ElMessage.error('修改数量失败')
+  }
+}
+
+// 增加数量（限制真实库存）
+const handleAdd = async (item: any) => {
+  if (item.count + 1 > item.stock) {
+    ElMessage.warning(`库存不足，最多可购买 ${item.stock} 本`)
+    return
+  }
+
+  try {
+    await updateCartCount(item.cartId, item.count + 1)
+    cartStore.updateCount(item.cartId, item.count + 1)
+    cartStore.calcTotalPrice()
+  } catch (error) {
+    ElMessage.error('修改数量失败')
+  }
+}
+
+// 删除商品
+const handleDelete = async (cartId: number) => {
+  try {
+    await deleteCartItem(cartId)
+    cartStore.deleteItem(cartId)
+    cartStore.calcTotalPrice()
+    checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
+    ElMessage.success('删除成功')
+  } catch (error) {
+    ElMessage.error('删除失败')
+  }
+}
+
+// 清空购物车
+const handleClear = async () => {
+  try {
+    await clearCart()
+    cartStore.clearCart()
+    checkedIds.value = []
+    ElMessage.success('清空购物车成功')
+  } catch (error) {
+    ElMessage.error('清空购物车失败')
+  }
+}
+
+// 支付
+const handlePay = () => {
+  const selectedItems = cartStore.currentCart.filter((item) =>
+    checkedIds.value.includes(item.cartId),
+  )
+  if (selectedItems.length === 0) {
+    ElMessage.warning('请先勾选要结算的商品')
+    return
+  }
+  const xuanzhongid = checkedIds.value.join(',')
+  router.push({
+    path: '/pay',
+    query: {
+      cartIds: xuanzhongid,
+    },
+  })
+}
+</script>
 <style scoped>
 * {
   margin: 0;
@@ -327,180 +531,3 @@ button {
   }
 }
 </style>
-
-<script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { useCartStore } from '@/store/cart'
-import { useUserStore } from '@/store/user'
-import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/cart'
-
-const cartStore = useCartStore()
-const userStore = useUserStore()
-const router = useRouter()
-const allImagesLoaded = ref(false)
-
-//勾选相关
-const checkedIds = ref<number[]>([])
-const isAllChecked = ref(false)
-
-//计算：选中商品总价
-const selectedTotal = computed(() => {
-  return cartStore.currentCart
-    .filter((item) => checkedIds.value.includes(item.cartId))
-    .reduce((sum, item) => sum + item.price * item.count, 0)
-})
-
-// 输入框更新数量
-const handleUpdateCount = async (cartId: number, count: number) => {
-  try {
-    await updateCartCount(cartId, count)
-    cartStore.updateCount(cartId, count)
-    cartStore.calcTotalPrice()
-  } catch (error) {
-    ElMessage.error('修改数量失败')
-  }
-}
-
-//单个勾选
-const handleItemCheck = (cartId: number, checked: boolean) => {
-  if (checked) {
-    checkedIds.value.push(cartId)
-  } else {
-    checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
-  }
-  //同步全选状态
-  isAllChecked.value = checkedIds.value.length === cartStore.currentCart.length
-}
-
-//全选 / 取消全选
-const handleCheckAll = (checked: boolean) => {
-  if (checked) {
-    checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
-  } else {
-    checkedIds.value = []
-  }
-}
-
-onMounted(() => {
-  console.log('页面刷新，开始加载购物车数据')
-  loadCartData()
-  setTimeout(() => {
-    allImagesLoaded.value = true
-  }, 0.1)
-})
-
-const loadCartData = async () => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    return
-  }
-
-  try {
-    const res = await getCartList()
-    //@ts-ignore
-    if (res.code === 200 && res.data) {
-      cartStore.clearCart()
-      res.data.forEach((item: any) => {
-        cartStore.addToCart({
-          cartId: item.id,
-          id: item.goodsId,
-          name: item.bookName,
-          price: Number(item.bookPrice || item.price) || 0,
-          count: item.quantity || item.count,
-          cover: item.bookCover || item.cover,
-          spec: item.spec || '平装版',
-        })
-      })
-      cartStore.calcTotalPrice()
-
-      //默认全选
-      checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
-      isAllChecked.value = true
-    }
-  } catch (error: any) {}
-}
-
-// 减少数量（数量=1时删除商品，完全保留原有逻辑）
-const handleReduce = async (cartId: number) => {
-  const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
-  if (!targetItem) return
-
-  if (targetItem.count <= 1) {
-    try {
-      await deleteCartItem(cartId)
-      cartStore.deleteItem(cartId)
-      cartStore.calcTotalPrice()
-      checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
-      ElMessage.success('删除成功')
-    } catch (error) {
-      ElMessage.error('删除失败')
-    }
-    return
-  }
-
-  try {
-    await updateCartCount(cartId, targetItem.count - 1)
-    cartStore.updateCount(cartId, targetItem.count - 1)
-    cartStore.calcTotalPrice()
-  } catch (error) {
-    ElMessage.error('修改数量失败')
-  }
-}
-
-// 增加数量
-const handleAdd = async (item: any) => {
-  try {
-    await updateCartCount(item.cartId, item.count + 1)
-    cartStore.updateCount(item.cartId, item.count + 1)
-    cartStore.calcTotalPrice()
-  } catch (error) {
-    ElMessage.error('修改数量失败')
-  }
-}
-
-// 删除商品
-const handleDelete = async (cartId: number) => {
-  try {
-    await deleteCartItem(cartId)
-    cartStore.deleteItem(cartId)
-    cartStore.calcTotalPrice()
-    checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
-    ElMessage.success('删除成功')
-  } catch (error) {
-    ElMessage.error('删除失败')
-  }
-}
-
-// 清空购物车
-const handleClear = async () => {
-  try {
-    await clearCart()
-    cartStore.clearCart()
-    checkedIds.value = []
-    ElMessage.success('清空购物车成功')
-  } catch (error) {
-    ElMessage.error('清空购物车失败')
-  }
-}
-
-// 支付
-const handlePay = () => {
-  const selectedItems = cartStore.currentCart.filter((item) =>
-    checkedIds.value.includes(item.cartId),
-  )
-  if (selectedItems.length === 0) {
-    ElMessage.warning('请先勾选要结算的商品')
-    return
-  }
-  const xuanzhongid = checkedIds.value.join(',')
-  router.push({
-    path: '/pay',
-    query: {
-      cartIds: xuanzhongid,
-    },
-  })
-}
-</script>

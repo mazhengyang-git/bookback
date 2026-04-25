@@ -105,17 +105,17 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getAdminBookList, addBook, updateBook, deleteBook } from '@/api/back/book'
-import type { Book } from '@/types/index'
+import { getAdminBookList, addBook, updateBook, deleteBook } from '@/api/back/newbook'
+import type { newBook } from '@/types/index'
 
 const loading = ref(false)
-const bookList = ref<Book[]>([])
+const bookList = ref<newBook[]>([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const bookFormRef = ref()
 
 // 表单数据
-const bookForm = reactive<Book>({
+const bookForm = reactive<newBook>({
   id: 0, //@ts-ignore
   book_name: '',
   author: '',
@@ -183,7 +183,7 @@ const handleAdd = () => {
 }
 
 // 编辑
-const handleEdit = (row: Book) => {
+const handleEdit = (row: newBook) => {
   bookFormRef.value?.resetFields()
   Object.assign(bookForm, row)
   isEdit.value = true

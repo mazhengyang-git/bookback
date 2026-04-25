@@ -136,6 +136,18 @@ const routes = [
         component: () => import('@/views/back/order/index.vue'),
         meta: { requiresAuth: true, requiresAdmin: true },
       },
+      {
+        path: 'bookpaihang',
+        name: 'BookPaihangadmin',
+        component: () => import('@/views/back/book/bookpaihang.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+      },
+      {
+        path: 'newbook',
+        name: 'newbookadmin',
+        component: () => import('@/views/back/book/newbook.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+      },
     ],
   },
   // 卖家中心
