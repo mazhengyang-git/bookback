@@ -538,7 +538,33 @@ const confirmPayVerify = async () => {
   }
 }
 
-// ================== 真正支付 ==================
+// 获取source参数
+const source = route.query.source || 'normal'
+
+// 🔥 修改：loadDirectPayGoodsInfo 接口调用，传source
+const loadDirectPayGoodsInfo = async () => {
+  try {
+    const bookId = Number(route.query.bookId) || 0
+    const buyCount = Number(route.query.buyCount) || 0
+    if (!bookId || !buyCount) {
+      ElMessage.warning('参数异常')
+      loading.value = false
+      return
+    }
+
+    // 🔥 传 source 给后端
+    const res = await getDirectPayGoodsInfo(bookId, buyCount, source)
+    if (res.code === 200 && res.data) {
+      payGoods.value = { ...res.data }
+    }
+  } catch (error) {
+    ElMessage.error('获取信息失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 🔥 修改：doRealPay 接口调用，传source
 const doRealPay = async () => {
   submitting.value = true
   try {
@@ -550,14 +576,8 @@ const doRealPay = async () => {
       return
     }
 
-    const addressPayload = {
-      province: addressForm.region[0],
-      city: addressForm.region[1],
-      district: addressForm.region[2],
-      detail: addressForm.detail,
-    }
-
-    const res = await submitDirectPay(bookId, buyCount)
+    // 传 source 给支付接口
+    const res = await submitDirectPay(bookId, buyCount, source)
     if (res?.code === 200) {
       ElMessage.success('支付成功！')
       router.push('/user')
@@ -569,28 +589,6 @@ const doRealPay = async () => {
     ElMessage.error('支付请求异常')
   } finally {
     submitting.value = false
-  }
-}
-
-// 获取商品信息
-const loadDirectPayGoodsInfo = async () => {
-  try {
-    const bookId = Number(route.query.bookId) || 0
-    const buyCount = Number(route.query.buyCount) || 0
-    if (!bookId || !buyCount) {
-      ElMessage.warning('参数异常')
-      loading.value = false
-      return
-    }
-
-    const res = await getDirectPayGoodsInfo(bookId, buyCount)
-    if (res.code === 200 && res.data) {
-      payGoods.value = { ...res.data }
-    }
-  } catch (error) {
-    ElMessage.error('获取信息失败')
-  } finally {
-    loading.value = false
   }
 }
 

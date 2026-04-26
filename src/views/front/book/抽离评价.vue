@@ -2,7 +2,6 @@
   <div class="book-comment-container">
     <!-- 图书整体评分头部 -->
     <div class="comment-header">
-      <h3 class="comment-title">图书评分</h3>
       <div class="score-summary">
         <!-- 五星评分展示 -->
         <el-rate
@@ -104,7 +103,7 @@ watch(
   margin-top: 10px;
   height: 100px;
   padding: 12px;
-  background-color: #fff;
+
   border-radius: 8px;
   border: 1px solid #eee;
 }

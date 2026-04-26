@@ -266,14 +266,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
-import {
-  RouteLocationAsPathGeneric,
-  RouteLocationAsRelativeGeneric,
-  useRoute,
-  useRouter,
-} from 'vue-router'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
 import { getBookDetailApi } from '@/api/front/book'
 import type { Book } from '@/types/index'
 import { useCartStore } from '@/store/modules/cart'
@@ -281,26 +276,19 @@ import { useUserStore } from '@/store/modules/user'
 import request from '@/utils/request'
 import { getDirectPayGoodsInfo } from '@/api/front/pay'
 import BookComment from '@/views/front/book/bookcomment.vue'
+import { useBookStore1 } from '@/store/newbook'
 
-// ========== 【修复】删除不存在的 getRandomComments 导入！！！ ==========
-import {
-  checkCommentAuth,
-  getBookAvgScore,
-  getCommentList,
-  addComment,
-} from '@/api/front/bookComment'
+import { getBookAvgScore, getCommentList } from '@/api/front/bookComment'
 
 const router = useRouter()
 const allImagesLoaded = ref(false)
 const commentVisible = ref(false)
 
-// 格式化价格
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
 
-// 导航下拉菜单
 let timeleave: NodeJS.Timeout | null = null
 const showhover = ref(false)
 function mouseleve() {
@@ -314,23 +302,18 @@ function mouseshow() {
   if (timeleave) clearTimeout(timeleave)
   showhover.value = true
 }
-function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
+function go(path: string) {
   setTimeout(() => {
     router.push(path)
-  }, 10)
+  }, 1)
 }
 
-// ========== 评价模块 响应式数据 ==========
 const localAvgScore = ref<number>(0.0)
 const commentTotalCount = ref<number>(0)
 const randomComments = ref<any[]>([])
 
-// ========== 【核心修复】获取评分+随机评论 函数 ==========
-// 全部改用你路由自带的 bookId，彻底删除所有错误的 props.bookId
-const fetchScoreAndRandomComments = async () => {
-  if (!bookId || !book.value) return
-
-  // 1. 获取图书综合平均分、评价总人数
+const fetchScoreAndRandomComments = async (bookId: number) => {
+  if (!bookId) return
   try {
     const scoreRes = await getBookAvgScore(bookId)
     if (scoreRes.code === 200) {
@@ -341,13 +324,10 @@ const fetchScoreAndRandomComments = async () => {
     console.error('获取图书评分失败', err)
   }
 
-  // 2. 获取全部评论 → 前端原生JS随机打乱，截取前3条（**不需要新增任何后端接口**）
   try {
     const listRes = await getCommentList(bookId)
     if (listRes.code === 200 && Array.isArray(listRes.data)) {
-      // 数组随机洗牌算法
       const shuffledList = [...listRes.data].sort(() => Math.random() - 0.5)
-      // 只截取最多3条
       randomComments.value = shuffledList.slice(0, 3)
     }
   } catch (err) {
@@ -355,13 +335,11 @@ const fetchScoreAndRandomComments = async () => {
   }
 }
 
-// 图书封面放大缩放功能（原有全部保留）
 const handlePreviewShow = () => {
   nextTick(() => {
     const viewer = document.querySelector('.el-image-viewer__wrapper') as HTMLElement
     const canvas = document.querySelector('.el-image-viewer__canvas') as HTMLElement
     const img = document.querySelector('.el-image-viewer__img') as HTMLElement
-
     if (!viewer || !canvas || !img) return
 
     const MAX_SCALE = 1.53
@@ -449,24 +427,23 @@ const handlePreviewShow = () => {
   })
 }
 
-// 退出登录
 const handleLogout = () => {
   userStore.logout()
   ElMessage.success('退出成功')
   router.push('/login')
 }
 
-// 路由、基础数据
 const route = useRoute()
-const bookId = Number(route.params.id) // 从路由获取图书ID，全程用这个，不用props！
+const bookId = computed(() => Number(route.params.id))
+const source = computed(() => String(route.query.source || 'normal'))
 const cartStore = useCartStore()
 const userStore = useUserStore()
+const bookStore1 = useBookStore1() // 引入新书Store
 
 const loading = ref(true)
 const book = ref<Book | null>(null)
 const buyCount = ref(1)
 
-// 简介/目录展开收起变量
 const isMuluExpanded1 = ref(false)
 const showMuluExpand1 = ref(false)
 const isDescExpanded = ref(false)
@@ -477,24 +454,38 @@ const descRef = ref<HTMLElement | null>(null)
 const muluRef = ref<HTMLElement | null>(null)
 const muluRef1 = ref<HTMLElement | null>(null)
 
-// 加载图书基础详情
+// 核心：根据source加载图书数据（普通书/新书）
 const loadBookDetail = async () => {
+  allImagesLoaded.value = false
+  const currentBookId = bookId.value
+  const currentSource = source.value
   try {
-    const res = await getBookDetailApi(bookId)
-    if (res.code === 200 && res.data) {
-      book.value = res.data
+    if (currentSource === 'new') {
+      // 从新书表newbook加载数据
+      await bookStore1.fetchBookList()
+      book.value = bookStore1.bookList1.find((item) => item.id === currentBookId)
     } else {
-      ElMessage.error('获取图书信息失败')
+      // 从普通图书接口加载数据
+      const res = await getBookDetailApi(currentBookId)
+      if (res.code === 200 && res.data) {
+        book.value = res.data
+      }
+    }
+
+    if (!book.value) {
+      ElMessage.error('未找到该图书数据')
     }
   } catch (error) {
     ElMessage.error('网络异常，请重试')
     console.error(error)
   } finally {
     loading.value = false
+    nextTick(() => {
+      allImagesLoaded.value = true
+    })
   }
 }
 
-// 加入购物车
 const addToCart = async () => {
   if (!book.value) {
     ElMessage.warning('图书信息加载失败，无法加入购物车')
@@ -517,6 +508,7 @@ const addToCart = async () => {
       goodsId: book.value.id,
       num: buyCount.value,
       spec: '平装版',
+      source: source, // 加上这一行
     })
     cartStore.addToCart({
       id: book.value.id,
@@ -526,6 +518,7 @@ const addToCart = async () => {
       cover: book.value.cover || '/img/default-book.jpg',
       cartId: 0,
       spec: '',
+      source: source, //前端购物车项里存source
     })
     ElMessage.success({ message: '加入购物车成功', offset: 80 })
   } catch (err) {
@@ -534,7 +527,7 @@ const addToCart = async () => {
   }
 }
 
-// 直接立即支付
+// 修复后的立即支付方法
 const handlePay = async () => {
   if (!userStore.token) {
     ElMessage.warning('请先登录后再支付')
@@ -545,54 +538,81 @@ const handlePay = async () => {
     ElMessage.warning('图书信息加载失败，无法支付')
     return
   }
-  const stock = Number(book.value.stock) || 0
-  if (buyCount.value > stock) {
-    ElMessage.error(`库存不足！该图书仅剩${stock}本`)
-    return
+  // 新书不校验库存
+  if (source !== 'new') {
+    const stock = Number(book.value.stock) || 0
+    if (buyCount.value > stock) {
+      ElMessage.error(`库存不足！该图书仅剩${stock}本`)
+      return
+    }
   }
 
-  try {
-    await getDirectPayGoodsInfo(book.value.id, buyCount.value)
-    router.push({
-      path: '/pay/direct',
-      query: {
-        bookId: book.value.id.toString(),
-        buyCount: buyCount.value.toString(),
-      },
-    })
-  } catch (error) {
-    console.error('直付跳转失败：', error)
-    ElMessage.error('支付跳转失败，请稍后重试')
-  }
+  // 直接跳转，不需要提前调用接口
+  router.push({
+    path: '/pay/direct',
+    query: {
+      bookId: book.value.id.toString(),
+      buyCount: buyCount.value.toString(),
+      source: source,
+    },
+  })
 }
-
-// ========== 【修复】onMounted 代码格式全部规整，分行书写 ==========
-onMounted(() => {
+onMounted(async () => {
   window.scrollTo(0, 0)
-  if (bookId) {
-    loadBookDetail().then(() => {
-      nextTick(() => {
-        // 展开收起判断
-        if (descRef.value) {
-          showDescExpand.value = descRef.value.scrollHeight > descRef.value.clientHeight
-        }
-        if (muluRef.value) {
-          showMuluExpand.value = muluRef.value.scrollHeight > muluRef.value.clientHeight
-        }
-        if (muluRef1.value) {
-          showMuluExpand1.value = muluRef1.value.scrollHeight > muluRef1.value.clientHeight
-        }
-        // 加载评分+随机评论
-        fetchScoreAndRandomComments()
-      })
+  if (bookId.value) {
+    await loadBookDetail()
+    nextTick(() => {
+      if (descRef.value) {
+        showDescExpand.value = descRef.value.scrollHeight > descRef.value.clientHeight
+      }
+      if (muluRef.value) {
+        showMuluExpand.value = muluRef.value.scrollHeight > muluRef.value.clientHeight
+      }
+      if (muluRef1.value) {
+        showMuluExpand1.value = muluRef1.value.scrollHeight > muluRef1.value.clientHeight
+      }
+      fetchScoreAndRandomComments(bookId.value)
     })
   }
-  setTimeout(() => {
-    allImagesLoaded.value = true
-  }, 50)
+})
+
+const chuyu = ref(false)
+
+watch([bookId, source], async ([newBookId, newSource], [oldBookId, oldSource]) => {
+  if (!newBookId || (newBookId === oldBookId && newSource === oldSource)) return
+  loading.value = true
+  book.value = null
+  allImagesLoaded.value = false
+  await loadBookDetail()
+  nextTick(() => {
+    if (descRef.value) {
+      showDescExpand.value = descRef.value.scrollHeight > descRef.value.clientHeight
+    }
+    if (muluRef.value) {
+      showMuluExpand.value = muluRef.value.scrollHeight > muluRef.value.clientHeight
+    }
+    if (muluRef1.value) {
+      showMuluExpand1.value = muluRef1.value.scrollHeight > muluRef1.value.clientHeight
+    }
+    fetchScoreAndRandomComments(newBookId)
+  })
+  window.scrollTo(0, 0)
+})
+
+onMounted(() => {
+  if (!chuyu.value) {
+    requestIdleCallback(() => {
+      //预加载页面
+
+      import('@/views/front/book/list.vue')
+      import('@/views/front/user/index.vue')
+      import('@/views/front/cart/index.vue')
+      console.log('图书详情页预加载成功')
+    })
+    chuyu.value = true
+  }
 })
 </script>
-
 <style scoped>
 /* 基础响应式配置 */
 :root {

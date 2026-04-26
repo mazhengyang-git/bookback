@@ -119,7 +119,7 @@ onMounted(async () => {
   await initSlides()
   if (cdlun.value > 0) zilun = setInterval(next, 3000)
 })
-
+const chuyu = ref(false)
 onUnmounted(() => zilun && clearInterval(zilun))
 </script>
 

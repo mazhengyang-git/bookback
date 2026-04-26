@@ -145,13 +145,13 @@
         <lunbotu :key="refshua" />
       </div>
     </div>
-    <div class="hwy">
-      <div class="home-monthly-hot2">
-        <!-- 热门标签内部容器 -->
-        <div class="monthly-inner2">
-          <newbook :key="refreshKey1" />
-        </div>
+    <div class="home-monthly-hot2">
+      <!-- 热门标签内部容器 -->
+      <div class="monthly-inner2">
+        <newbook :key="refreshKey1" />
       </div>
+    </div>
+    <div class="hwy">
       <div class="home-monthly-hot1">
         <!-- 热门标签内部容器 -->
         <div class="monthly-inner1">
@@ -175,7 +175,20 @@
     <!-- 热门图书 -->
     <div class="home-hot-book">
       <div>
-        <h2 class="sci-fi-title" style="position: relative; left: -5%">热门科幻图书</h2>
+        <h2
+          class="sci-fi-title-custom"
+          style="
+            text-align: left;
+            width: 100%;
+            margin: 20px 0;
+            position: static;
+            left: auto;
+            right: auto;
+            padding-left: 50px;
+          "
+        >
+          热门科幻图书
+        </h2>
         <hr style="margin-bottom: 20px; width: 1115.9px; position: relative; left: 46px" />
       </div>
       <!-- 空数据提示 -->
@@ -334,6 +347,12 @@ const refreshKey1 = ref(0)
 // 你可以传自定义标签，不传就用子组件默认值
 const categoryTags = ref<any[]>([])
 const authorTags = ref<any[]>([])
+import { onBeforeRouteLeave } from 'vue-router'
+
+// 离开页面时自动回到顶部（解决返回不置顶）
+onBeforeRouteLeave(() => {
+  window.scrollTo(0, 0)
+})
 function mouseleve() {
   timeleave = setTimeout(() => {
     if (showhover.value === true) {
@@ -644,20 +663,28 @@ function loadImages() {
     })
 }
 // 初始化
-onMounted(async () => {
+const chuyu = ref(false)
+onMounted(() => {
   loadImages()
   getNotice()
-  requestIdleCallback(() => {
-    //预加载页面
-    import('@/views/front/book/detail.vue')
-    import('@/views/front/book/list.vue')
-    import('@/views/front/user/index.vue')
-    import('@/views/front/cart/index.vue')
-  })
-  await getHotBooks()
+  if (!chuyu.value) {
+    requestIdleCallback(() => {
+      //预加载页面
+      import('@/views/front/book/detail.vue')
+      import('@/views/front/book/list.vue')
+      import('@/views/front/user/index.vue')
+      import('@/views/front/cart/index.vue')
+      console.log('主页预加载成功')
+    })
+    chuyu.value = true
+  }
+  const bookjiazai = async () => {
+    await getHotBooks()
+  }
+  bookjiazai()
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.05) // 3秒后无论如何都隐藏遮罩
+  }, 0.1) // 3秒后无论如何都隐藏遮罩
 })
 </script>
 <style scoped>
@@ -669,8 +696,47 @@ onMounted(async () => {
   margin: 0;
   padding: 0;
   width: 100%;
-
+  margin-top: 80px;
   height: auto;
+}
+/* 👇 完全独立的标题类，自带蓝线效果，位置可自由调整 */
+.sci-fi-title-custom {
+  /* 基础样式（和原来的 sci-fi-title 保持一致） */
+  text-align: center;
+  margin: clamp(20px, 2.5vw, 30px) 0;
+  color: #409eff;
+  font-size: 20px;
+  text-shadow: 0 0 clamp(8px, 1vw, 10px) rgba(64, 158, 255, 0.3);
+
+  background: linear-gradient(90deg, #409eff, #64b5f6, #409eff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+
+  animation: titlePulse1 2s infinite alternate;
+
+  /* 👇 关键：短蓝线伪元素，现在位置完全由你控制 */
+  position: relative;
+  padding-bottom: 8px; /* 给蓝线留出空间 */
+}
+@keyframes titlePulse1 {
+  0% {
+    text-shadow: 0 0 15px rgba(236, 218, 218, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 25px rgba(120, 121, 121, 0.768);
+  }
+}
+/* 👇 蓝线样式，和文字绑定，永不分离 */
+.sci-fi-title-custom::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0; /* 0 = 和文字左对齐，50% = 居中 */
+  width: 100px; /* 蓝线长度，可自由改 */
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #409eff, transparent);
+  border-radius: 2px;
 }
 /* 父容器：只做容器，不偏移、不嵌套缩放 */
 .home-monthly-hot {
@@ -679,9 +745,9 @@ onMounted(async () => {
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1400px;
+  top: -1366px;
   z-index: 188;
-  left: clamp(815px, 66vw, 1040px);
+  left: clamp(845px, 67.5vw, 1080px);
   /* 取消父级缩放，只让子组件缩放，彻底杜绝错位 */
   transform: none;
 }
@@ -691,7 +757,7 @@ onMounted(async () => {
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1200px;
+  top: -1240px;
   z-index: 188;
   left: clamp(1050px, 66vw, 1030px);
   transform: none;
@@ -700,10 +766,9 @@ onMounted(async () => {
   position: relative;
   width: 100%;
   height: auto;
-
-  top: -390px;
+  top: -100px;
   z-index: 188;
-  transition: all 0.3s ease;
+
   transform: none;
 }
 
@@ -733,7 +798,6 @@ onMounted(async () => {
   height: 100%;
   margin-left: 20px;
   transform-origin: top left;
-  margin-top: 30px;
 }
 
 /* 分割线：固定位置，不漂移 */
@@ -751,14 +815,11 @@ onMounted(async () => {
 
 /* 热门图书：取消疯狂偏移，彻底固定 */
 .home-hot-book {
-  padding: clamp(15px, 2vw, 9px);
   position: relative;
-  margin: 0 auto 100px;
-  transform: scale(0.8);
+
   transform-origin: top center;
   left: 0;
   top: 0;
-  overflow: hidden;
 }
 @media (max-width: 1000px) {
   .home-monthly-hot2 {
@@ -768,6 +829,7 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .home-monthly-hot2 {
     margin-left: -75px;
+    top: -300px;
   }
 }
 @media (max-width: 830px) {
@@ -779,12 +841,14 @@ onMounted(async () => {
   .home-monthly-hot2 {
     margin-left: -120px;
     transform: scale(0.93);
+    top: -300px;
   }
 }
 @media (max-width: 650px) {
   .home-monthly-hot2 {
     margin-left: -120px;
     transform: scale(0.86);
+    top: -330px;
   }
 }
 </style>
@@ -996,8 +1060,8 @@ button {
   line-height: clamp(50px, 5vw, 60px);
   position: relative;
   /* 偏移量响应式，保留原布局 */
-  left: clamp(-30px, -3.5vw, -40px);
-  top: clamp(-8px, -1vw, -10px);
+  left: clamp(-20px, -3.5vw, -30px);
+  top: clamp(-6.6px, -1vw, -9px);
 }
 .nav-center {
   display: flex;
@@ -1072,7 +1136,7 @@ button {
   height: clamp(700px, 45vw, 813px);
   background: white;
   position: relative;
-
+  top: 120px;
   border-radius: clamp(8px, 1vw, 12px);
   margin: clamp(15px, 2vw, 20px) 0;
 }
@@ -1101,7 +1165,6 @@ button {
   color: #409eff;
   font-size: 20px;
   text-shadow: 0 0 clamp(8px, 1vw, 10px) rgba(64, 158, 255, 0.3);
-  margin-left: clamp(-4%, 5vw, -5.75%);
 }
 .sci-fi-title1 {
   text-align: center;
@@ -1119,12 +1182,13 @@ button {
   text-shadow: 0 0 20px rgba(237, 254, 2, 0.4);
   animation: titlePulse 2s infinite alternate;
 }
+
 @keyframes titlePulse {
   0% {
-    text-shadow: 0 0 15px rgba(245, 118, 118, 0.3);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
   }
   100% {
-    text-shadow: 0 0 25px rgba(1, 15, 30, 0.768);
+    text-shadow: 0 0 25px rgba(78, 79, 79, 0.768);
   }
 }
 
@@ -1155,7 +1219,7 @@ button {
   cursor: pointer;
   transition: all 0.3s;
   text-align: center;
-  padding: clamp(10px, 1.2vw, 15px) clamp(8px, 1vw, 10px);
+  padding: clamp(9px, 1.2vw, 14px) clamp(8px, 1vw, 10px);
   overflow: visible !important; /*禁止卡片内滚动条*/
   display: flex;
   flex-direction: column;
@@ -1183,7 +1247,7 @@ button {
 
 /*滚动条极简样式（图书区域）*/
 .hot-book-list::-webkit-scrollbar {
-  height: clamp(15px, 1vw, 18px);
+  height: clamp(16px, 1vw, 19px);
 }
 .hot-book-list::-webkit-scrollbar-thumb {
   background: #409eff;
@@ -1362,9 +1426,9 @@ button {
 }
 
 .dzwy {
-  position: absolute;
+  position: relative;
   /* 偏移量响应式 */
-  margin-right: 66px;
+  margin-right: 116px;
   right: clamp(30px, 4.5vw, 0px);
 }
 .black-mask {
@@ -1451,15 +1515,32 @@ button {
 .home-hot-book {
   padding: clamp(15px, 2vw, 9px);
   position: relative;
-  margin-left: clamp(-40px, -4.5vw, -50.3px);
+  margin-left: clamp(-83px, -4.8vw, -86.3px);
   transform: scale(0.8);
-  margin-top: -90px;
-  left: -8px;
+
+  left: -9px;
 
   overflow: hidden;
   position: relative;
-  top: 610px;
+  top: 369px;
   margin-bottom: 500px;
+}
+
+@media (max-width: 900px) {
+  .home-hot-book {
+    top: -100px;
+  }
+}
+
+@media (max-width: 730px) {
+  .home-hot-book {
+    top: -120px;
+  }
+}
+@media (max-width: 650px) {
+  .home-hot-book {
+    top: -140px;
+  }
 }
 .hot-book-list {
   flex-wrap: wrap;
@@ -1705,82 +1786,82 @@ button {
 }
 @media (max-width: 1052px) {
   .home-monthly-hot1 {
-    left: 69vw !important;
+    left: 72vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 952px) {
   .home-monthly-hot1 {
-    left: 69vw !important;
+    left: 72vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 922px) {
   .home-monthly-hot1 {
-    left: 69vw !important;
+    left: 73vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 882px) {
   .home-monthly-hot1 {
-    left: 70vw !important;
+    left: 75vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 832px) {
   .home-monthly-hot1 {
-    left: 68.5vw !important;
+    left: 74.5vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 822px) {
   .home-monthly-hot1 {
-    left: 66vw !important;
+    left: 71vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 722px) {
   .home-monthly-hot1 {
-    left: 66.6vw !important;
+    left: 81.6vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 672px) {
   .home-monthly-hot1 {
-    left: 69vw !important;
+    left: 84vw !important;
     transition: left transform 0.3s ease;
   }
 }
 
 @media (max-width: 622px) {
   .home-monthly-hot1 {
-    left: 70vw !important;
+    left: 82vw !important;
     transition: left transform 0.3s ease;
   }
 }
 
-@media (max-width: 612px) {
+@media (max-width: 600px) {
   .home-monthly-hot1 {
-    left: 68vw !important;
+    left: 79.7vw !important;
     transition: left transform 0.3s ease;
   }
 }
 
 @media (max-width: 570px) {
   .home-monthly-hot1 {
-    left: 71.5vw !important;
+    left: 80.5vw !important;
     transition: all transform 0.3s ease;
   }
 }
 @media (max-width: 542px) {
   .home-monthly-hot1 {
-    left: 72.5vw !important;
+    left: 82.5vw !important;
     transition: all transform 0.3s ease;
   }
 }
 @media (max-width: 502px) {
   .home-monthly-hot1 {
-    left: 72vw !important;
+    left: 82vw !important;
     transition: all transform 0.3s ease;
   }
 }

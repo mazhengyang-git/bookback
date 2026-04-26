@@ -10,7 +10,7 @@
         v-for="book in newBooks"
         :key="book.id"
         class="new-book-item"
-        @click="go(`/book/${book.id}`)"
+        @click="go(`/book/${book.id}?source=new`)"
         v-loading="!book.id"
       >
         <!-- 左侧封面图 -->
@@ -55,11 +55,12 @@ const newBooks = ref<newBook[]>([])
 const slidesLoaded1 = ref(false)
 const bookStore1 = useBookStore1()
 
-// 路由跳转
+const router = useRouter()
+// 直接跳转，无需任何延迟，性能更好
 function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
   setTimeout(() => {
-    router1.push(path)
-  }, 10)
+    router.push(path)
+  }, 10) // 只延迟10毫秒，人感觉不到，但浏览器能缓过来
 }
 // 价格格式化
 const formatPrice = (price: any): string => {
@@ -89,9 +90,21 @@ const getNewBooks = async () => {
   }
 }
 
-// 页面初始化加载
-onMounted(async () => {
-  await getNewBooks()
+const chuyu = ref(false)
+onMounted(() => {
+  if (!chuyu.value) {
+    requestIdleCallback(() => {
+      //预加载页面
+      import('@/views/front/book/detail.vue')
+
+      console.log('新书速递预加载成功')
+    })
+    chuyu.value = true
+  }
+  const bookjiazai = async () => {
+    await getNewBooks()
+  }
+  bookjiazai()
 })
 </script>
 
@@ -111,7 +124,7 @@ onMounted(async () => {
 .sci-fi-title {
   text-align: center;
   left: 271px;
-  font-size: 20px;
+  font-size: 22px;
   background: linear-gradient(90deg, #409eff, #64b5f6, #409eff);
   background-clip: text;
   -webkit-background-clip: text;
@@ -121,10 +134,10 @@ onMounted(async () => {
 }
 @keyframes titlePulse {
   0% {
-    text-shadow: 0 0 15px rgba(245, 118, 118, 0.3);
+    text-shadow: 0 0 15px rgba(236, 218, 218, 0.3);
   }
   100% {
-    text-shadow: 0 0 25px rgba(1, 15, 30, 0.768);
+    text-shadow: 0 0 25px rgba(120, 121, 121, 0.768);
   }
 }
 

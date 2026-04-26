@@ -218,10 +218,22 @@ const formatPrice = (price: unknown): string => {
 const handleItemClick = (book: MonthlyHotBookItem) => {
   router.push(`/book/${book.id}`)
 }
-
+const chuyu = ref(false)
 // 初始化时加载 store 数据
-onMounted(async () => {
-  await loadTopBookIds()
+onMounted(() => {
+  if (!chuyu.value) {
+    requestIdleCallback(() => {
+      //预加载页面
+      import('@/views/front/book/detail.vue')
+
+      console.log('排行榜预加载成功')
+    })
+    chuyu.value = true
+  }
+  const bookjiazai = async () => {
+    await loadTopBookIds()
+  }
+  bookjiazai()
   // 再加载图书数据
   if (!bookStore?.bookList?.length) {
     bookStore?.fetchBookList?.().catch(() => {})

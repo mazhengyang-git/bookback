@@ -1,6 +1,5 @@
 <template>
   <div class="home-hot-tags">
-    <!--  ========== 第一组：热门标签（分类） ========== -->
     <h2 class="sci-fi-title">图书分类</h2>
     <div v-if="!finalCategoryTags.length" class="empty-tip">
       <el-empty description="暂无热门标签" />
@@ -16,7 +15,6 @@
       </el-tag>
     </div>
 
-    <!--  ========== 第二组：作者系列（独立） ========== -->
     <h2 class="sci-fi-title">作者系列</h2>
     <div v-if="!finalAuthorTags.length" class="empty-tip">
       <el-empty description="暂无作者系列" />
@@ -35,36 +33,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElEmpty, ElTag } from 'element-plus'
+import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
 
-import { useRouter } from 'vue-router'
-
-/** 统一标签类型 */
 export interface HotTagItem {
   id: number
   name: string
 }
+
 function randomPick<T>(arr: T[], count: number): T[] {
   const shuffled = [...arr].sort(() => 0.5 - Math.random())
   return shuffled.slice(0, count)
 }
-/** Props  */
+
 const props = defineProps<{
-  // 自定义【热门标签】数据
   categoryTags?: HotTagItem[]
-  // 自定义【作者系列】数据
   authorTags?: HotTagItem[]
 }>()
 
-/** 统一事件抛出 */
 const emit = defineEmits<{
   click: [type: 'category' | 'author', tag: HotTagItem]
 }>()
 
-// ==============================================
-// 1. 热门标签（分类）默认数据 + 计算属性
-// ==============================================
 const defaultCategoryTags: HotTagItem[] = [
   { id: 1, name: '太空歌剧' },
   { id: 2, name: '赛博朋克' },
@@ -73,7 +64,7 @@ const defaultCategoryTags: HotTagItem[] = [
   { id: 5, name: '星际灾厄' },
   { id: 6, name: '次元交互' },
   { id: 7, name: '梦灵空间' },
-  { id: 8, name: '平行宇宙' },
+  { id: 8, name: '自然谜团' },
   { id: 9, name: '虚幻惊悚' },
   { id: 10, name: '星系攻略' },
   { id: 11, name: '平行宇宙' },
@@ -81,14 +72,12 @@ const defaultCategoryTags: HotTagItem[] = [
   { id: 13, name: '智能纪元' },
   { id: 14, name: '时间旅行' },
 ]
+
 const finalCategoryTags = computed(() => {
   const cateshuju = props.categoryTags?.length ? props.categoryTags : defaultCategoryTags
   return randomPick(cateshuju, 8)
 })
 
-// ==============================================
-// 2. 作者系列 默认数据 + 计算属性
-// ==============================================
 const defaultAuthorTags: HotTagItem[] = [
   { id: 1, name: '刘慈欣' },
   { id: 2, name: '[美]艾萨克·阿西莫夫' },
@@ -97,26 +86,40 @@ const defaultAuthorTags: HotTagItem[] = [
   { id: 5, name: '[美]特德·姜' },
   { id: 6, name: '[韩]金草叶' },
 ]
+
 const finalAuthorTags = computed(() => {
   const authorshuju = props.authorTags?.length ? props.authorTags : defaultAuthorTags
   return randomPick(authorshuju, 5)
 })
+
 const router = useRouter()
-const go = (path: string) => router.push(path)
-// ==============================================
-// 点击事件
-// ==============================================
-/** 点击分类标签 → 跳分类页 */
+// 直接跳转，无需任何延迟，性能更好
+function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
+  setTimeout(() => {
+    router.push(path)
+  }, 10) // 只延迟10毫秒，人感觉不到，但浏览器能缓过来
+}
 const handleCategoryClick = (tag: HotTagItem) => {
   emit('click', 'category', tag)
   go(`/books?category=${tag.name}`)
 }
 
-/** 点击作者标签 → 跳作者筛选页 */
 const handleAuthorClick = (tag: HotTagItem) => {
   emit('click', 'author', tag)
-  go(`/books?author=${tag.name}`)
+  go(`/books?aauthor=${tag.name}`)
 }
+const chuyu = ref(false)
+onMounted(async () => {
+  if (!chuyu.value) {
+    requestIdleCallback(() => {
+      //预加载页面
+      import('@/views/front/book/detail.vue')
+
+      console.log('分类标签预加载成功')
+    })
+    chuyu.value = true
+  }
+})
 </script>
 
 <style scoped>
@@ -146,10 +149,10 @@ const handleAuthorClick = (tag: HotTagItem) => {
 /* 标题呼吸动画 完全不动 */
 @keyframes titlePulse {
   0% {
-    text-shadow: 0 0 15px rgba(245, 118, 118, 0.3);
+    text-shadow: 0 0 15px rgba(236, 218, 218, 0.3);
   }
   100% {
-    text-shadow: 0 0 25px rgba(247, 67, 7, 0.501);
+    text-shadow: 0 0 25px rgba(120, 121, 121, 0.768);
   }
 }
 

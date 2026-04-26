@@ -28,7 +28,11 @@ export const submitMockPay = (cartIds: number[] | string) => {
  * @param bookId 图书ID
  * @param buyCount 购买数量
  */
-export const getDirectPayGoodsInfo = (bookId: number, buyCount: number) => {
+export const getDirectPayGoodsInfo = (
+  bookId: number,
+  buyCount: number,
+  source: string = 'normal',
+) => {
   return request.post<{
     price(price: any): unknown
     count(count: any): unknown
@@ -43,18 +47,18 @@ export const getDirectPayGoodsInfo = (bookId: number, buyCount: number) => {
       count: number
       price: number
     }
-  }>('/api/pay/direct/info', { bookId, buyCount })
+  }>('/api/pay/direct/info', { bookId, buyCount, source })
 }
 /**
  * 【新增】提交详情页直付（生成订单，无购物车操作）
  * @param bookId 图书ID
  * @param buyCount 购买数量
  */
-export const submitDirectPay = (bookId: number, buyCount: number) => {
+export const submitDirectPay = (bookId: number, buyCount: number, source: string = 'normal') => {
   return request.post<{
     orderNo: any
     code: number
     msg: string
     data: { orderNo: string }
-  }>('/api/pay/direct/submit', { bookId, buyCount })
+  }>('/api/pay/direct/submit', { bookId, buyCount, source })
 }
