@@ -174,7 +174,7 @@
     </div>
     <!-- 热门图书 -->
     <div class="home-hot-book">
-      <div>
+      <div class="hot-book-back">
         <h2
           class="sci-fi-title-custom"
           style="
@@ -190,30 +190,31 @@
           热门科幻图书
         </h2>
         <hr style="margin-bottom: 20px; width: 1115.9px; position: relative; left: 46px" />
-      </div>
-      <!-- 空数据提示 -->
-      <div v-if="hotBooks.length === 0" class="empty-tip">
-        <el-empty description="暂无热门图书数据" />
-      </div>
-      <div v-else class="hot-book-list">
-        <el-card
-          v-for="book in hotBooks"
-          :key="book.id"
-          class="hot-book-card"
-          @click="go(`/book/${book.id}`)"
-          v-loading="!book.id"
-        >
-          <!--@vue-ignore-->
-          <img
-            :src="book.cover || '/img/default-book.jpg'"
-            alt="图书封面"
-            class="hot-book-cover"
-            @error="(e) => (e.target.src = '/img/default-book.jpg')"
-          />
-          <h3>{{ book.name || '未知图书' }}</h3>
-          <p>作者：{{ book.author || '未知作者' }}</p>
-          <p class="hot-book-price">¥{{ formatPrice(book.price) }}</p>
-        </el-card>
+
+        <!-- 空数据提示 -->
+        <div v-if="hotBooks.length === 0" class="empty-tip">
+          <el-empty description="暂无热门图书数据" />
+        </div>
+        <div v-else class="hot-book-list">
+          <el-card
+            v-for="book in hotBooks"
+            :key="book.id"
+            class="hot-book-card"
+            @click="go(`/book/${book.id}`)"
+            v-loading="!book.id"
+          >
+            <!--@vue-ignore-->
+            <img
+              :src="book.cover || '/img/default-book.jpg'"
+              alt="图书封面"
+              class="hot-book-cover"
+              @error="(e) => (e.target.src = '/img/default-book.jpg')"
+            />
+            <h3>{{ book.name || '未知图书' }}</h3>
+            <p>作者：{{ book.author || '未知作者' }}</p>
+            <p class="hot-book-price">¥{{ formatPrice(book.price) }}</p>
+          </el-card>
+        </div>
       </div>
     </div>
 
@@ -688,10 +689,8 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-/* ========== 仅优化组件错位的相关样式（其他完全保留原代码） ========== */
-/* ========== 终极根治：组件永不跑动，其他代码100%不动 ========== */
 .hwy {
-  /* 根治核心：取消绝对定位，回归正常文档流 */
+  /* 正常文档流 */
   position: absolute;
   margin: 0;
   padding: 0;
@@ -699,9 +698,8 @@ onMounted(() => {
   margin-top: 80px;
   height: auto;
 }
-/* 👇 完全独立的标题类，自带蓝线效果，位置可自由调整 */
+/* 完全独立的标题类，自带蓝线效果 */
 .sci-fi-title-custom {
-  /* 基础样式（和原来的 sci-fi-title 保持一致） */
   text-align: center;
   margin: clamp(20px, 2.5vw, 30px) 0;
   color: #409eff;
@@ -715,9 +713,9 @@ onMounted(() => {
 
   animation: titlePulse1 2s infinite alternate;
 
-  /* 👇 关键：短蓝线伪元素，现在位置完全由你控制 */
+  /* 短蓝线伪元素 */
   position: relative;
-  padding-bottom: 8px; /* 给蓝线留出空间 */
+  padding-bottom: 8px; /* 蓝线空间 */
 }
 @keyframes titlePulse1 {
   0% {
@@ -727,29 +725,83 @@ onMounted(() => {
     text-shadow: 0 0 25px rgba(120, 121, 121, 0.768);
   }
 }
-/* 👇 蓝线样式，和文字绑定，永不分离 */
+/* 蓝线样式和文字绑定 */
 .sci-fi-title-custom::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0; /* 0 = 和文字左对齐，50% = 居中 */
+  bottom: 840px;
+  left: 74.5px; /* 0 = 和文字左对齐，50% = 居中 */
   width: 100px; /* 蓝线长度，可自由改 */
   height: 2px;
   background: linear-gradient(90deg, transparent, #409eff, transparent);
   border-radius: 2px;
 }
-/* 父容器：只做容器，不偏移、不嵌套缩放 */
+/* 父容器 */
 .home-monthly-hot {
   position: relative;
   width: clamp(390px, 30vw, 540px);
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1366px;
+  top: -891px;
   z-index: 188;
   left: clamp(845px, 67.5vw, 1080px);
-  /* 取消父级缩放，只让子组件缩放，彻底杜绝错位 */
+  /* 子组件缩放*/
   transform: none;
+}
+@media (max-width: 1480px) {
+  .home-monthly-hot {
+    margin-left: 20px;
+  }
+}
+@media (max-width: 1430px) {
+  .home-monthly-hot {
+    left: 970px;
+  }
+}
+@media (max-width: 1380px) {
+  .home-monthly-hot {
+    left: 960px;
+  }
+}
+@media (max-width: 1330px) {
+  .home-monthly-hot {
+    left: 950px;
+  }
+}
+@media (max-width: 1278px) {
+  .home-monthly-hot {
+    left: 950px;
+  }
+}
+@media (max-width: 1238px) {
+  .home-monthly-hot {
+    left: 950px;
+  }
+}
+@media (max-width: 1208px) {
+  .home-monthly-hot {
+    left: 950px;
+  }
+}
+@media (max-width: 1178px) {
+  .home-monthly-hot {
+    left: 920px;
+  }
+}
+@media (max-width: 1108px) {
+  .home-monthly-hot {
+    left: 880px;
+  }
+}
+@media (max-width: 968px) {
+  .home-monthly-hot {
+    left: 840px;
+  }
+}
+@media (max-width: 768px) {
+  .home-monthly-hot {
+  }
 }
 .home-monthly-hot1 {
   position: relative;
@@ -757,7 +809,7 @@ onMounted(() => {
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1240px;
+  top: -1376px !important;
   z-index: 188;
   left: clamp(1050px, 66vw, 1030px);
   transform: none;
@@ -766,21 +818,21 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: auto;
-  top: -100px;
+  top: 30px;
   z-index: 188;
-
+  margin-bottom: 200px;
   transform: none;
 }
 
-/* 子容器：取消固定top！用margin占位，永远不跑 */
+/* 子容器：用margin占位 */
 .monthly-inner {
   position: static;
-  /* 保留你原来的缩放比例 */
+  /* 缩放比例 */
   transform: scale(0.73);
   width: 100%;
   height: 100%;
   transform-origin: top left;
-  /* 用margin替代固定top，窗口怎么变都不动 */
+
   margin-top: 0;
 }
 .monthly-inner1 {
@@ -800,27 +852,20 @@ onMounted(() => {
   transform-origin: top left;
 }
 
-/* 分割线：固定位置，不漂移 */
+/* 分割线：固定位置 */
 .xiatiao1 {
   height: 2px;
   background: #a9a7a7;
   margin: 10px 0;
   position: relative;
-  top: -1400px;
-  width: 465px;
+  top: -1490px;
+  width: 450px;
 
   left: clamp(890px, 66vw, 1050px);
   z-index: 88;
 }
 
-/* 热门图书：取消疯狂偏移，彻底固定 */
-.home-hot-book {
-  position: relative;
-
-  transform-origin: top center;
-  left: 0;
-  top: 0;
-}
+/* 热门图书 */
 @media (max-width: 1000px) {
   .home-monthly-hot2 {
     left: -27px;
@@ -829,7 +874,7 @@ onMounted(() => {
 @media (max-width: 900px) {
   .home-monthly-hot2 {
     margin-left: -75px;
-    top: -300px;
+    top: 30px;
   }
 }
 @media (max-width: 830px) {
@@ -841,18 +886,16 @@ onMounted(() => {
   .home-monthly-hot2 {
     margin-left: -120px;
     transform: scale(0.93);
-    top: -300px;
+    top: 30px;
   }
 }
 @media (max-width: 650px) {
   .home-monthly-hot2 {
     margin-left: -120px;
     transform: scale(0.86);
-    top: -330px;
+    top: 30px;
   }
 }
-</style>
-<style scoped>
 .hywy {
   position: static;
   margin-right: 90px;
@@ -900,7 +943,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.98);
     right: 121px;
-    top: -12.8vh;
+    top: -8.8vh;
     transition:
       top,
       right,
@@ -911,7 +954,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.95);
     right: 136px;
-    top: -14vh;
+    top: -10vh;
     transition:
       top,
       right,
@@ -922,7 +965,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.9);
     right: 151px;
-    top: -16vh;
+    top: -11vh;
     transition:
       top,
       right,
@@ -933,7 +976,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.86);
     right: 157px;
-    top: -17vh;
+    top: -12vh;
     transition:
       top,
       right,
@@ -944,7 +987,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.82);
     right: 162px;
-    top: -17.8vh;
+    top: -12.8vh;
     transition:
       top,
       right,
@@ -955,7 +998,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.75);
     right: 177px;
-    top: -20.8vh;
+    top: -14.8vh;
     transition:
       top,
       right,
@@ -966,7 +1009,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.69);
     right: 183px;
-    top: -22.8vh;
+    top: -15vh;
     transition:
       top,
       right,
@@ -977,7 +1020,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.69);
     right: 177px;
-    top: -23.2vh;
+    top: -16.5vh;
     transition:
       top,
       right,
@@ -988,7 +1031,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.64);
     right: 177px;
-    top: -25.2vh;
+    top: -18.2vh;
     transition:
       top,
       right,
@@ -999,7 +1042,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.59);
     right: 169px;
-    top: -27vh;
+    top: -19.6vh;
     transition:
       top,
       right,
@@ -1010,7 +1053,7 @@ onMounted(() => {
   .banner-content {
     transform: scale(0.55);
     right: 166px;
-    top: -28.7vh;
+    top: -20.7vh;
     transition:
       top,
       right,
@@ -1121,16 +1164,7 @@ button {
 }
 
 /*页面整体：固定最大宽度，所有非图书区域永久固定不滚动*/
-.home-container {
-  width: 100%;
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 0 clamp(10px, 2vw, 20px);
-
-  overflow: visible;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
+/* 页面容器：在后面合并 */
 .home-banner {
   /* 轮播高度响应式 */
   height: clamp(700px, 45vw, 813px);
@@ -1212,6 +1246,7 @@ button {
   justify-content: start;
   margin-left: clamp(15px, 2vw, 25px);
   position: relative;
+  left: -10px;
 }
 
 .hot-book-card {
@@ -1237,6 +1272,7 @@ button {
   margin: 0 auto clamp(10px, 1.2vw, 15px);
   border-radius: clamp(3px, 0.3vw, 4px);
   flex-shrink: 0; /*封面*/
+  box-shadow: 0 0 20px rgba(153, 163, 174, 0.4);
 }
 .hot-book-price {
   color: #e6a23c;
@@ -1377,12 +1413,8 @@ button {
 .ssr {
   color: #000000 !important;
 }
-.home-container {
-  width: 100%;
-  background: white;
-  background-attachment: fixed;
-}
-
+/* 页面容器：在后面合并 */
+/* 导航栏：在后面合并 */
 .home-top-nav {
   display: flex;
 
@@ -1480,10 +1512,7 @@ button {
   align-items: center;
   gap: clamp(8px, 1vw, 10px);
 }
-.home-banner {
-  margin: clamp(15px, 2vw, 20px) 0;
-  position: relative;
-}
+/* 轮播区域：在后面合并 */
 
 @keyframes cardShine {
   0% {
@@ -1544,21 +1573,8 @@ button {
 }
 .hot-book-list {
   flex-wrap: wrap;
-  gap: clamp(15px, 1.8vw, 20px);
-}
-.hot-book-card {
-  width: clamp(200px, 20vw, 240px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.9) 100%);
-  border: 1px solid rgba(64, 158, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 
-  position: relative;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.hot-book-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 12px 35px rgba(143, 141, 141, 0.574);
-  border-color: rgba(0, 0, 0, 0.4);
+  gap: clamp(15px, 1.8vw, 20px);
 }
 .hot-book-cover {
   width: 100%;
@@ -1568,13 +1584,6 @@ button {
 }
 .hot-book-card:hover .hot-book-cover {
   box-shadow: 0 0 20px rgba(153, 163, 174, 0.4);
-}
-.hot-book-price {
-  background: linear-gradient(90deg, #e6a23c, #fbbf24);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent !important;
-  text-shadow: 0 0 8px rgba(230, 162, 60, 0.3);
 }
 /*滚动条视觉*/
 .hot-book-list::-webkit-scrollbar-thumb {
@@ -1636,7 +1645,7 @@ button {
   right: clamp(15px, 2vw, 20px);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 99;
+  z-index: 199999;
   padding: clamp(4px, 1vw, 5px) clamp(10px, 1.5vw, 12px);
   background: linear-gradient(35deg, #1481e6, #ec5823);
   border: none;
@@ -1653,23 +1662,12 @@ button {
 }
 
 /* 读书活动 */
-.home-reading-events {
-  padding: clamp(15px, 2vw, 20px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
 .events-list {
   display: flex;
   flex-direction: column;
   gap: clamp(15px, 1.8vw, 20px);
   max-width: 800px;
   margin: 0 auto;
-}
-.event-card {
-  padding: clamp(15px, 2vw, 20px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  border: 1px solid rgba(64, 158, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  border-radius: clamp(8px, 1vw, 12px);
 }
 .event-time {
   color: #666;
@@ -1816,7 +1814,7 @@ button {
 }
 @media (max-width: 822px) {
   .home-monthly-hot1 {
-    left: 71vw !important;
+    left: 77vw !important;
     transition: left transform 0.3s ease;
   }
 }
@@ -1855,35 +1853,24 @@ button {
 }
 @media (max-width: 542px) {
   .home-monthly-hot1 {
-    left: 82.5vw !important;
+    left: 84.5vw !important;
     transition: all transform 0.3s ease;
   }
 }
 @media (max-width: 502px) {
   .home-monthly-hot1 {
-    left: 82vw !important;
+    left: 86vw !important;
     transition: all transform 0.3s ease;
   }
 }
 
 /* 图书资讯 */
-.home-book-news {
-  padding: clamp(15px, 2vw, 20px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
 .news-list {
   display: flex;
   flex-direction: column;
   gap: clamp(15px, 1.8vw, 20px);
   max-width: 800px;
   margin: 0 auto;
-}
-.news-item {
-  padding: clamp(15px, 2vw, 20px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  border: 1px solid rgba(64, 158, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  border-radius: clamp(8px, 1vw, 12px);
 }
 .news-time {
   color: #666;
@@ -1893,28 +1880,11 @@ button {
 }
 
 /* 科幻图书250 */
-.home-sci-fi-250 {
-  padding: clamp(15px, 2vw, 20px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
 .sci-fi-250-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, clamp(200px, 20vw, 240px));
   gap: clamp(15px, 1.8vw, 20px);
   justify-content: center;
-}
-.sci-fi-250-card {
-  cursor: pointer;
-  transition: all 0.3s;
-  text-align: center;
-  padding: clamp(10px, 1.2vw, 15px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  border: 1px solid rgba(64, 158, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-.sci-fi-250-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 .sci-fi-250-cover {
   width: clamp(100px, 10vw, 120px);
@@ -1973,5 +1943,295 @@ button {
   margin-top: -1px; /* 消除按钮之间的1px白边缝隙，上下完美拼接 */
   /* 完全删除旧代码所有硬编码 left 偏移！！！ */
   left: unset !important;
+}
+</style>
+
+<style scoped>
+/* 整合导入组件CSS：按钮交互效果 + 大厂风格视觉优化 */
+/* 增强的按钮交互效果 */
+.syws {
+  transition: all 0.2s ease-out;
+}
+
+.syws:hover {
+  transform: translateY(-1px);
+}
+
+/* 增强的豆包按钮效果 */
+.doubao-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.doubao-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 15px rgba(64, 158, 255, 0.5);
+}
+
+/* ========== 大厂风格视觉优化 ========== */
+
+/* 页面背景：干净的浅灰色 */
+.home-container {
+  /* 布局 */
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 clamp(10px, 2vw, 20px);
+  overflow: visible;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  background-color: #dededf6c;
+  /* 视觉效果 */
+}
+
+/* 轮播区域：合并所有效果 */
+.home-banner {
+  /* 轮播高度响应式 */
+  height: clamp(700px, 45vw, 813px);
+  background: #ffffff;
+  position: relative;
+  top: 120px;
+  border-radius: 12px;
+  margin: clamp(15px, 2vw, 20px) 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* 热门图书区域 */
+.home-hot-book {
+  /* 布局 */
+  position: relative;
+  transform-origin: top center;
+
+  top: 0;
+  padding: clamp(15px, 2vw, 9px);
+  margin-left: clamp(-83px, -4.8vw, -86.3px);
+  transform: scale(0.8);
+  left: -9px;
+
+  /* 视觉效果 */
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.521);
+  width: 112vw;
+  border-radius: 12px;
+}
+
+/* 图书卡片：合并所有效果 */
+.hot-book-card {
+  /* 基础布局 */
+  width: clamp(200px, 15vw, 460px);
+  cursor: pointer;
+  text-align: center;
+
+  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  /* 七彩边框效果 */
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2px;
+}
+
+.hot-book-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: linear-gradient(
+    45deg,
+    #575656,
+    #f2eeee,
+    #575656,
+    #f2eeee,
+    #ff7f00,
+    #f2eeee,
+    #575656,
+    #f2eeee
+  );
+  background-size: 400% 400%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rainbow-border 4s ease infinite;
+}
+
+@keyframes rainbow-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.hot-book-card > * {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border-radius: 10px;
+}
+
+.hot-book-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.614);
+  transform: translateY(-2px);
+}
+
+/* 图书封面 */
+.hot-book-cover {
+  /* 尺寸和布局 */
+  width: 100%;
+  height: clamp(195px, 17vw, 240px);
+  object-fit: cover;
+  margin: 0 auto clamp(10px, 1.2vw, 15px);
+
+  /* 视觉效果 */
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.785);
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.hot-book-card:hover .hot-book-cover {
+  transform: scale(1.08);
+}
+
+/* 价格：合并所有效果 */
+.hot-book-price {
+  color: #1d1d1f;
+  font-weight: 600;
+  background: linear-gradient(90deg, #e6a23c, #fbbf24);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(230, 162, 60, 0.3);
+  margin-top: clamp(8px, 1vw, 10px);
+  font-size: clamp(14px, 1.2vw, 16px);
+}
+
+/* 读书活动区域 */
+.home-reading-events {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: clamp(20px, 2.5vw, 30px);
+  margin: clamp(30px, 3.5vw, 40px) 0;
+}
+
+/* 活动卡片 */
+.event-card {
+  /* 布局 */
+  padding: clamp(15px, 2vw, 20px);
+
+  /* 视觉效果 */
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.event-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 图书资讯区域 */
+.home-book-news {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: clamp(20px, 2.5vw, 30px);
+  margin: clamp(30px, 3.5vw, 40px) 0;
+}
+
+/* 资讯卡片 */
+.news-item {
+  /* 布局 */
+  padding: clamp(15px, 2vw, 20px);
+
+  /* 视觉效果 */
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.news-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 科幻250区域 */
+.home-sci-fi-250 {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: clamp(20px, 2.5vw, 30px);
+  margin: clamp(30px, 3.5vw, 40px) 0;
+}
+
+/* 科幻250卡片 */
+.sci-fi-250-card {
+  /* 布局 */
+  cursor: pointer;
+  text-align: center;
+  padding: clamp(10px, 1.2vw, 15px);
+
+  /* 视觉效果 */
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.sci-fi-250-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 标题：合并所有效果 */
+.sci-fi-title {
+  /* 基础样式 */
+  text-align: center;
+  margin: clamp(20px, 2.5vw, 30px) 0;
+  color: #409eff;
+  font-size: 20px;
+  text-shadow: 0 0 clamp(8px, 1vw, 10px) rgba(64, 158, 255, 0.3);
+
+  /* 渐变效果 */
+  background: linear-gradient(90deg, #409eff, #64b5f6, #409eff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+
+  /* 定位和下划线 */
+  position: relative;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.sci-fi-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: #0071e3;
+  border-radius: 2px;
 }
 </style>

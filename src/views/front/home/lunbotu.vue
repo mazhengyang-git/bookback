@@ -128,6 +128,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
   height: 526px;
   width: 100%;
   max-width: 1200px;
+
   margin: 0 auto;
   position: relative;
   user-select: none;
@@ -141,7 +142,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
   position: relative;
   display: flex;
   justify-content: center;
-
+  bottom: -20px;
   align-items: center;
   background: linear-gradient(135deg, #f0f2f5 25%, #eceae9 50%, #f0f2f5 25%);
   box-shadow: 0 8px 30px rgba(98, 99, 99, 0.418);

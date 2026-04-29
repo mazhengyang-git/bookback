@@ -84,7 +84,7 @@
 
       <el-input
         v-model="authorSearch"
-        placeholder="作者搜索"
+        placeholder="按作者搜索"
         class="filter-control"
         @keyup.enter="doFilterAndShuffle"
         @clear="doFilterAndShuffle"
@@ -93,7 +93,7 @@
 
       <el-input
         v-model="searchKeyword"
-        placeholder="输入图书名称搜索（如：三体）"
+        placeholder="按图书名称搜索（如：三体）"
         class="filter-control"
         @keyup.enter="handleSearch"
         @clear="handleClearSearch"
@@ -116,6 +116,7 @@
             placeholder="最低价"
             style="width: 110px"
             @input="doFilterAndShuffle"
+            @clear="handlePriceClear"
             clearable
             min="0"
           />
@@ -126,6 +127,7 @@
             placeholder="最高价"
             style="width: 110px"
             @input="doFilterAndShuffle"
+            @clear="handlePriceClear"
             clearable
             min="0"
           />
@@ -271,10 +273,64 @@ const pageSize = ref(6)
 const total = ref(0)
 const showType = ref('normal')
 const shouldShufflePage = ref(false)
+const hasRandomizedInitialPage = ref(false)
+const defaultListSnapshot = ref<{
+  filteredBooks: Book[]
+  showBooks: Book[]
+  currentPage: number
+} | null>(null)
 
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
+}
+
+const normalizePrice = (value: any): number | null => {
+  if (value === '' || value === null || value === undefined) return null
+  const num = Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
+const getBookAvgScore = (book: Book) => Number((book as any).avg_score ?? (book as any).avgScore ?? 0)
+
+const restoreDefaultSnapshot = (): boolean => {
+  if (!defaultListSnapshot.value) return false
+  filteredBooks.value = [...defaultListSnapshot.value.filteredBooks]
+  showBooks.value = [...defaultListSnapshot.value.showBooks]
+  currentPage.value = defaultListSnapshot.value.currentPage
+  total.value = filteredBooks.value.length
+  shouldShufflePage.value = false
+  return true
+}
+
+const isDefaultFilterState = () => {
+  const keyword = searchKeyword.value.trim()
+  const sanitizedMinPrice = normalizePrice(minPrice.value)
+  const sanitizedMaxPrice = normalizePrice(maxPrice.value)
+  return (
+    selectedCategory.value === '全部' &&
+    selectedAAuthor.value === '全部' &&
+    !authorSearch.value &&
+    !keyword &&
+    selectedTags.value.length === 0 &&
+    sanitizedMinPrice === null &&
+    sanitizedMaxPrice === null &&
+    !sortBy.value
+  )
+}
+
+const handlePriceClear = () => {
+  if (!Number.isFinite(minPrice.value as number)) {
+    minPrice.value = null
+  }
+  if (!Number.isFinite(maxPrice.value as number)) {
+    maxPrice.value = null
+  }
+  currentPage.value = 1
+  if (isDefaultFilterState() && restoreDefaultSnapshot()) {
+    return
+  }
+  doFilterAndShuffle()
 }
 
 // 排序切换
@@ -283,6 +339,7 @@ const handleSort = (type: 'asc' | 'desc') => {
     // 再次点击相同价格排序：取消当前排序
     sortBy.value = ''
     paixu.value = ''
+    shouldShufflePage.value = true
   } else {
     sortBy.value = 'price'
     currentSortDirection.value = type
@@ -296,6 +353,7 @@ const handleSort = (type: 'asc' | 'desc') => {
 const handleRatingSort = () => {
   if (sortBy.value === 'rating') {
     sortBy.value = ''
+    shouldShufflePage.value = true
   } else {
     sortBy.value = 'rating'
   }
@@ -308,6 +366,9 @@ const handleRatingSort = () => {
 const showNormalBooks = () => {
   showType.value = 'normal'
   paixu.value = ''
+  if (!sortBy.value) {
+    shouldShufflePage.value = true
+  }
   doFilterAndShuffle()
 }
 
@@ -315,6 +376,9 @@ const showNormalBooks = () => {
 const showNewBooks = () => {
   showType.value = 'new'
   paixu.value = ''
+  if (!sortBy.value) {
+    shouldShufflePage.value = true
+  }
   doFilterAndShuffle()
 }
 
@@ -326,6 +390,7 @@ const refreshAllData = async () => {
 
   try {
     currentPage.value = 1
+    defaultListSnapshot.value = null
     shouldShufflePage.value = true
 
     // 1. 重新拉取后端最新数据（刷新时不显示遮罩）
@@ -380,8 +445,10 @@ const doFilterAndShuffle = () => {
     const matchTags =
       selectedTags.value.length === 0 || selectedTags.value.includes(book.category || '')
     const bookPrice = Number(book.price) || 0
-    const matchMinPrice = minPrice.value === null || bookPrice >= minPrice.value
-    const matchMaxPrice = maxPrice.value === null || bookPrice <= maxPrice.value
+    const sanitizedMinPrice = normalizePrice(minPrice.value)
+    const sanitizedMaxPrice = normalizePrice(maxPrice.value)
+    const matchMinPrice = sanitizedMinPrice === null || bookPrice >= sanitizedMinPrice
+    const matchMaxPrice = sanitizedMaxPrice === null || bookPrice <= sanitizedMaxPrice
     return (
       matchName &&
       matchCategory &&
@@ -394,6 +461,11 @@ const doFilterAndShuffle = () => {
   })
 
   // 2. 如果是刷新操作则打乱顺序，否则保持当前过滤结果顺序
+  if (isDefaultFilterState() && defaultListSnapshot.value && !shouldShufflePage.value) {
+    restoreDefaultSnapshot()
+    return
+  }
+
   filteredBooks.value = shouldShufflePage.value
     ? [...filtered].sort(() => Math.random() - 0.5)
     : filtered
@@ -409,7 +481,7 @@ const doPaginationSlice = () => {
 
   // 3. 对当前页进行排序（仅作用于当前页内容）
   if (sortBy.value === 'rating') {
-    pageItems.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+    pageItems.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
   } else if (sortBy.value === 'price') {
     if (currentSortDirection.value === 'asc') {
       pageItems.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
@@ -419,10 +491,21 @@ const doPaginationSlice = () => {
   }
 
   showBooks.value = pageItems
+
+  if (isDefaultFilterState()) {
+    defaultListSnapshot.value = {
+      filteredBooks: [...filteredBooks.value],
+      showBooks: [...showBooks.value],
+      currentPage: currentPage.value,
+    }
+  }
 }
 
 const handleSearch = () => {
   currentPage.value = 1
+  if (!sortBy.value && !isDefaultFilterState()) {
+    shouldShufflePage.value = true
+  }
   doFilterAndShuffle()
 }
 
@@ -430,6 +513,9 @@ const handlePageChange = () => doPaginationSlice()
 const handleClearSearch = () => {
   searchKeyword.value = ''
   currentPage.value = 1
+  if (isDefaultFilterState() && restoreDefaultSnapshot()) {
+    return
+  }
   doFilterAndShuffle()
 }
 
@@ -452,6 +538,11 @@ onMounted(async () => {
   if (cat) selectedCategory.value = cat
   if (keyword) searchKeyword.value = keyword
   if (aauthor) selectedAAuthor.value = aauthor
+
+  if (!hasRandomizedInitialPage.value) {
+    shouldShufflePage.value = true
+    hasRandomizedInitialPage.value = true
+  }
 
   doFilterAndShuffle()
   nextTick(() => {
@@ -486,6 +577,9 @@ watch(
     maxPrice,
   ],
   () => {
+    if (!sortBy.value && !isDefaultFilterState()) {
+      shouldShufflePage.value = true
+    }
     doFilterAndShuffle()
   },
 )

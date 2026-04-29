@@ -88,9 +88,12 @@ onMounted(() => {
   background: linear-gradient(135deg, #ffffff 0%, #d5d5d6 100%);
   box-shadow: 4px 0 4px rgba(241, 4, 4, 0.17);
   transition: right 0.4s ease;
-  z-index: 190000;
+  z-index: 199999;
   display: flex;
   flex-direction: column;
+}
+.notice-drawer.close {
+  right: -400px;
 }
 .notice-drawer.open {
   right: 0;

@@ -82,6 +82,20 @@
             :unstable-disable-deprecated-warning="true"
             >退出登录</el-button
           >
+          <div style="margin-top: 30px; font-weight: 600">
+            <span> 个人签名:{{ jieshouput }}</span
+            ><el-button
+              @click="updetaqm"
+              style="margin-left: 172px; margin-bottom: 10px"
+              type="primary"
+              >保存签名</el-button
+            ><br /><el-input
+              v-model="inputtext"
+              type="textarea"
+              :rows="8"
+              style="width: 300px; text-align: left"
+            />
+          </div>
         </template>
       </el-card>
 
@@ -313,7 +327,8 @@ let smsTimer: any = null
 const chars = '0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ'
 const captchaCode = ref('')
 const showCaptcha = ref(false)
-
+const inputtext = ref(``)
+const jieshouput = ref(``)
 const generateCaptcha = () => {
   let code = ''
   for (let i = 0; i < 4; i++) {
@@ -322,7 +337,10 @@ const generateCaptcha = () => {
   captchaCode.value = code
 }
 const refreshCaptcha = () => generateCaptcha()
-
+function updetaqm() {
+  jieshouput.value = inputtext.value
+  inputtext.value = ''
+}
 // 表单数据
 const editPhoneForm = ref({
   oldSmsCode: '', // 原手机短信验证码

@@ -208,3 +208,96 @@ onMounted(async () => {
   padding: clamp(40px, 5vw, 60px) 0;
 }
 </style>
+
+<style scoped>
+.hot-tag {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.hot-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hot-tag:hover::before {
+  opacity: 1;
+}
+
+/* 增强的悬停效果 */
+.hot-tag:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.5);
+  opacity: 1;
+}
+
+.home-hot-tags {
+  border-radius: 12px;
+  box-shadow:
+    0 2.8px 2.2px rgba(0, 0, 0, 0.02),
+    0 6.7px 5.3px rgba(0, 0, 0, 0.028),
+    0 2.5px 5px rgba(0, 0, 0, 0.035),
+    0 2.3px 7.9px rgba(0, 0, 0, 0.042),
+    0 1.8px 3.4px rgba(0, 0, 0, 0.05),
+    0 1px 30px rgba(0, 0, 0, 0.07);
+
+  /* 调高透明度，更容易看出毛玻璃 */
+  background: rgba(255, 255, 255, 0.35);
+  /* 适度模糊，不要太大太糊 */
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+
+  /* 关键：强制创建层叠上下文，解决被遮挡不生效 */
+  isolation: isolate;
+  position: relative;
+}
+/* 添加Apple风格的平滑动画 */
+.hot-tag {
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 添加Google Material Design的涟漪效果 */
+.hot-tag {
+  position: relative;
+  overflow: hidden;
+}
+
+.hot-tag::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.hot-tag:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+</style>

@@ -360,3 +360,68 @@ onMounted(() => {
   margin: clamp(4px, 0.5vw, 6px) 0 0;
 }
 </style>
+
+<style scoped>
+.section-title {
+  text-shadow: 0 0 8px rgba(64, 158, 255, 0.3);
+  animation: titleGlow 2s infinite alternate;
+}
+
+@keyframes titleGlow {
+  0% {
+    text-shadow: 0 0 8px rgba(64, 158, 255, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(64, 158, 255, 0.5);
+  }
+}
+
+/* 增强的卡片效果 */
+.book-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.book-item:hover {
+  transform: translateY(-3px) translateX(5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 增强的排名效果 */
+.rank {
+  position: relative;
+}
+
+.rank.top-three::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(64, 158, 255, 0.2) 0%, rgba(64, 158, 255, 0) 70%);
+  border-radius: 50%;
+}
+
+/* 增强的封面效果 */
+.book-cover {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.book-item:hover .book-cover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 增强的价格效果 */
+.book-price {
+  background: linear-gradient(90deg, #e6a23c, #fbbf24);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+</style>
