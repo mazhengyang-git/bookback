@@ -151,11 +151,21 @@ const addComment = async (req, res) => {
       `SELECT IFNULL(AVG(score),0.0) AS avg, COUNT(id) AS count FROM book_comment WHERE book_id = ?`,
       [bookId]
     );
+    const avgScore = Number(avgData[0].avg) || 0;
+    const commentCount = Number(avgData[0].count) || 0;
+
+    // ✅ 更新【普通图书表】
     await pool.execute(
       `UPDATE book SET avg_score = ?, comment_count = ? WHERE id = ?`,
-      [Number(avgData[0].avg) || 0, Number(avgData[0].count) || 0, bookId]
+      [avgScore, commentCount, bookId]
     );
-    console.log('图书评分数据更新成功');
+    // ✅ 新增：同步更新【新书表】（兼容双表，评分实时生效）
+    await pool.execute(
+      `UPDATE newbook SET avg_score = ?, comment_count = ? WHERE id = ?`,
+      [avgScore, commentCount, bookId]
+    );
+    
+    console.log('普通图书+新书表 评分数据同步更新成功');
     console.log('==========【提交评价接口】结束 ==========\n');
 
     res.json({ code: 200, msg: '评价提交成功', data: null });
@@ -164,5 +174,4 @@ const addComment = async (req, res) => {
     res.status(500).json({ code: 500, msg: '评价提交失败', data: null });
   }
 };
-
 module.exports = { checkCommentAuth, getBookAvgScore, getCommentList, addComment };

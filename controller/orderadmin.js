@@ -1,10 +1,9 @@
 const pool = require('../config/db');
 
-// 获取所有订单（后台）- 修正版：字段别名+联表查询
+// 管理员获取所有订单（新书+普通书）
 exports.adminGetAllOrders = async (req, res) => {
   try {
     const { status } = req.query;
-    // 联表查询获取用户/图书名；字段别名驼峰
     let sql = `
       SELECT 
         o.id,
@@ -13,50 +12,51 @@ exports.adminGetAllOrders = async (req, res) => {
         o.total_price AS totalPrice,
         o.status,
         o.create_time AS createTime,
+        o.source,
         u.username,
-        b.book_name AS bookName
+        b.book_name AS bookName,
+        n.book_name AS newBookName
       FROM \`order\` o
       LEFT JOIN \`user\` u ON o.user_id = u.id
-      LEFT JOIN \`book\` b ON o.book_id = b.id
+      LEFT JOIN \`book\` b ON o.book_id = b.id AND o.source = 'normal'
+      LEFT JOIN \`newbook\` n ON o.book_id = n.id AND o.source = 'new'
     `;
     let params = [];
 
-    // 状态筛选
     if (status && status !== '全部') {
       sql += ` WHERE o.status = ?`;
       params.push(status);
     }
 
-    // 倒序获取订单
     sql += ` ORDER BY o.create_time DESC`;
     const [rows] = await pool.execute(sql, params);
 
-    res.json({
-      code: 200,
-      msg: '获取成功',
-      data: rows
-    });
+    // 格式化书名
+    const data = rows.map(item => ({
+      ...item,
+      bookName: item.source === 'new' ? item.newBookName : item.bookName || '未知图书'
+    }))
+
+    res.json({ code: 200, msg: '获取成功', data });
   } catch (err) {
     console.error(err);
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
+
+// 管理员修改订单状态
 exports.adminUpdateOrderStatus = async (req, res) => {
   try {
-    const { orderId, status } = req.body; // 前端传的是 orderId 和 status
-
-    // 1. 校验参数
+    const { orderId, status } = req.body;
     if (!orderId || !status) {
       return res.json({ code: 400, msg: '参数错误' });
     }
 
-    // 2. 更新订单状态
     const [result] = await pool.execute(
       'UPDATE `order` SET status = ? WHERE id = ?',
       [status, orderId]
     );
 
-    // 3. 判断是否更新成功
     if (result.affectedRows === 0) {
       return res.json({ code: 404, msg: '订单不存在' });
     }
