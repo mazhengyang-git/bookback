@@ -24,7 +24,7 @@ app.use(cors({
 const orderRouter = require('./router/orderRouter')
 const userdate = require('./router/userupdate')
 const orderadmin = require('./router/orderment')
-
+const hdzx=require('./router/活动资讯/hdzx')
 const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
 const newbookguan = require('./router/newbookguanli');
@@ -42,6 +42,7 @@ app.use('/api/newbookguanli', newbookguan);
 app.use('/api/pay', payRouter);
 app.use('/api', userdate);
 app.use('/api', bookcom);
+app.use('/api', hdzx);
 // 订单后台路由（前缀和前端的 /api/back/order 完全匹配）
 app.use('/api', orderadmin);
 app.use('/api', bookpaihang);

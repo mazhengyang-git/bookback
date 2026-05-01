@@ -154,12 +154,12 @@ const addComment = async (req, res) => {
     const avgScore = Number(avgData[0].avg) || 0;
     const commentCount = Number(avgData[0].count) || 0;
 
-    // ✅ 更新【普通图书表】
+    // 更新【普通图书表】
     await pool.execute(
       `UPDATE book SET avg_score = ?, comment_count = ? WHERE id = ?`,
       [avgScore, commentCount, bookId]
     );
-    // ✅ 新增：同步更新【新书表】（兼容双表，评分实时生效）
+    // 同步更新【新书表】（评分实时生效）
     await pool.execute(
       `UPDATE newbook SET avg_score = ?, comment_count = ? WHERE id = ?`,
       [avgScore, commentCount, bookId]

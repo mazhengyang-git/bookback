@@ -86,7 +86,7 @@ exports.getUserInfo = async (req, res) => {
     if (!token) return res.json({ code: 401, msg: '未登录' });
 
     const decoded = jwt.verify(token, 'abc123def456');
-    const [rows] = await pool.execute('SELECT id,username,role,phone FROM user WHERE id = ?', [decoded.id]);
+    const [rows] = await pool.execute('SELECT id,username,role,phone,sign FROM user WHERE id = ?', [decoded.id]);
 
     if (rows.length === 0) return res.json({ code: 401, msg: '用户不存在' });
 
@@ -186,8 +186,8 @@ exports.loginBySmsCode = async (req, res) => {
   }
 };
 
-// ===================== 【新增1：验证码真实性核验接口 解决404报错 /api/user/verify-code】 =====================
-// 完全复用你现有的验证码缓存池，和发送短信、验证码登录逻辑100%统一
+// ===================== 验证码真实性核验接口 解决404报错 /api/user/verify-code =====================
+
 exports.verifyCode = async (req, res) => {
   try {
     const { phone, code } = req.body;
@@ -213,8 +213,8 @@ exports.verifyCode = async (req, res) => {
   }
 };
 
-// ===================== 【新增2：修改/绑定手机号接口 /api/user/bind-phone】 =====================
-// 带登录Token鉴权，更新数据库用户手机号，完全适配你user表结构
+// ===================== 修改/绑定手机号接口 /api/user/bind-phone=====================
+
 exports.bindPhone = async (req, res) => {
   try {
     const { phone: newPhone } = req.body;
@@ -243,6 +243,58 @@ exports.bindPhone = async (req, res) => {
   }
 };
 
+//获取个人签名接口
+exports.getSign = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json({ code: 401, msg: '请先登录' });
+
+    const decoded = jwt.verify(token, 'abc123def456');
+    const userId = decoded.id;
+
+    const [rows] = await pool.execute('SELECT sign FROM user WHERE id = ?', [userId]);
+    if (rows.length === 0) {
+      return res.json({ code: 404, msg: '用户不存在' });
+    }
+
+    res.json({ code: 200, msg: '获取个人签名成功', data: { sign: rows[0].sign } });
+  } catch (err) {
+    console.error(err);
+    res.json({ code: 500, msg: '服务器错误，获取个人签名失败' });
+  }
+};
+
+// ===================== 修改/保存个人签名 /api/user/usersign】 =====================
+
+exports.updasign = async (req, res) => {
+  try {
+    const { sign: newSign } = req.body;
+    // 1. 校验登录Token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json({ code: 401, msg: '请先登录' });
+
+    const decoded = jwt.verify(token, 'abc123def456');
+    const userId = decoded.id;
+const urlReg = /(http|https):\/\/|www\.|\.(com|cn|net|org|top|xyz|vip|io)/i;
+    // 2. 个人签名格式校验
+    if (urlReg.test(newSign)) {
+      return res.json({ code: 400, msg: '禁止填写网址链接' });
+    }
+ if (newSign&&newSign.length>255) {
+      return res.json({ code: 400, msg: '个人签名不能超过255个字符' });
+    }
+    // 3. 数据库更新当前登录用户的个人签名
+    await pool.execute(
+      'UPDATE user SET sign = ? WHERE id = ?',
+      [newSign ?? '', userId]
+    );
+
+    res.json({ code: 200, msg: '个人签名保存成功' });
+  } catch (err) {
+    console.error(err);
+    res.json({ code: 500, msg: '服务器错误，个人签名保存失败' });
+  }
+};
 // ===================== 【新增3：获取图书随机3条评价】=====================
 exports.getRandomComments = async (req, res) => {
   try {

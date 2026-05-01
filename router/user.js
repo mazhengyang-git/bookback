@@ -11,5 +11,7 @@ router.post('/send-code', userController.sendSmsCode);     // 发送验证码
 router.post('/login-by-code', userController.loginBySmsCode); // 验证码登录
 router.post('/verify-code', userController.verifyCode);
 router.post('/bind-phone', userController.bindPhone);
+router.post('/sign', userController.getSign);
+router.post('/updasign', userController.updasign);
 router.post('/get-random-comments', userController.getRandomComments);
 module.exports = router;
