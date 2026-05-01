@@ -82,7 +82,7 @@ const defaultAuthorTags: HotTagItem[] = [
   { id: 1, name: '刘慈欣' },
   { id: 2, name: '[美]艾萨克·阿西莫夫' },
   { id: 3, name: '[波]斯坦尼斯瓦夫·莱姆' },
-  { id: 4, name: '[美]安迪•威尔' },
+  { id: 4, name: '[美]安迪.威尔' },
   { id: 5, name: '[美]特德·姜' },
   { id: 6, name: '[韩]金草叶' },
 ]

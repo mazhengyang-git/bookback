@@ -86,6 +86,12 @@ const routes = [
     component: () => import('@/views/front/order/detail.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/huodong',
+    name: 'homehuodong',
+    component: () => import('@/views/front/home/huodong.vue'),
+    //meta: { requiresAuth: true },
+  },
   // 管理员后台（需要管理员权限）
   {
     path: '/admin',

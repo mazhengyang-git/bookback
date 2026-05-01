@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 import type { User } from '@/types/index'
+import { sign } from 'jsonwebtoken'
 
 // 定义登录接口返回类型（精准匹配后端返回格式）
 interface LoginResponse {
@@ -73,5 +74,20 @@ export const bindPhone = (newPhone: string) => {
     data: {
       phone: newPhone,
     },
+  })
+}
+export const updasign = (sign: string) => {
+  return request({
+    url: '/api/user/updasign',
+    method: 'post',
+    data: {
+      sign: sign,
+    },
+  })
+}
+export const getSign = () => {
+  return request({
+    url: '/api/user/sign',
+    method: 'post',
   })
 }

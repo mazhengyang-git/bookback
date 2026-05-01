@@ -1,7 +1,6 @@
 <template>
-  <Transition name="fade">
-    <div v-show="!allImagesLoaded" class="black-mask"></div>
-  </Transition>
+  <!-- 和商城一样的平滑加载控制 → 已删除黑遮罩 -->
+
   <div class="home-top-nav">
     <div class="nav-left">
       <h2 class="logo1 sci-fi-title1">星途科幻图书</h2>
@@ -11,32 +10,58 @@
         <div class="syws">
           <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
         </div>
+        <div class="syws">
+          <el-button link class="syses" @click="$router.push('/huodong')">活动资讯</el-button>
+        </div>
       </div>
     </div>
     <div class="nav-right1">
       <div v-if="!userStore.isLogin">
-        <el-button type="primary" link @click="$router.push('/login')">登录</el-button>
-        <el-button type="primary" link @click="$router.push('/register')">注册</el-button>
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/login')"
+          >登录</el-button
+        >
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/register')"
+          >注册</el-button
+        >
       </div>
       <div v-else class="login-bar">
         <span
+          class="welcome-text"
           style="
             user-select: none !important;
             -webkit-user-select: none !important;
-            color: green;
-            font-size: 22px;
+
+            font-size: 24px;
             position: relative;
             left: 10px;
           "
           >欢迎：{{ userStore.user?.username }}</span
         >
-        <el-button link @click="$router.push('/user')"
+        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')"
           ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
         >
-        <el-button link @click="$router.push('/cart')"
-          ><img style="width: 24px; height: auto" src="/img/购物车.png" />购物车</el-button
+        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')"
+          ><img
+            class="gwdh"
+            style="width: 26px; height: auto; margin-right: 3px"
+            src="/img/购物车.png"
+          />购物车</el-button
         >
-        <el-button type="danger" link @click="handleLogout">退出</el-button>
+        <el-button
+          style="color: white; background-color: red; position: relative; font-size: 15px"
+          type="danger"
+          link
+          @click="handleLogout"
+          >退出</el-button
+        >
       </div>
     </div>
   </div>
@@ -174,7 +199,8 @@
     </div>
   </div>
 
-  <div class="book-list-container">
+  <!-- 图书列表区域 -->
+  <div v-if="!loading" class="book-list-container">
     <div class="book-card-list">
       <el-card v-for="book in showBooks" :key="book.id" class="book-card">
         <div class="book-card-content">
@@ -183,7 +209,7 @@
             referrerpolicy="no-referrer"
             alt="图书封面"
             class="book-cover"
-            @click="router.push(`/book/${book.id}?source=${showType}`)"
+            @click="handleBookClick(book)"
             @error="(e) => (e.target.src = '/img/default-book.jpg')"
           />
           <div class="book-info">
@@ -196,14 +222,15 @@
               type="primary"
               size="large"
               class="add-cart-btn"
-              @click.stop="router.push(`/book/${book.id}?source=${showType}`)"
+              @click.stop="handleBookClick(book)"
             >
               查看详情
             </el-button>
           </div>
         </div>
+        <!--  v-if 防止列表渲染时星星闪烁 -->
         <div style="position: absolute; left: 646px; top: 10px; width: 86%">
-          <bookping :book-id="book.id" />
+          <bookping v-if="book.id != null" :book-id="book.id" />
         </div>
       </el-card>
     </div>
@@ -227,6 +254,9 @@
       />
     </div>
   </div>
+
+  <!-- 加载中 -->
+  <div v-else class="loading-tip">加载中...</div>
 </template>
 
 <script setup lang="ts">
@@ -245,7 +275,20 @@ const router = useRouter()
 const route = useRoute()
 const bookStore1 = useBookStore1()
 
-const allImagesLoaded = ref(false)
+// 图书点击 —— 极速跳转
+const handleBookClick = (book: Book) => {
+  const path = `/book/${book.id}?source=${showType.value}`
+  if (router.currentRoute.value.path.startsWith('/book/')) {
+    router.replace(path)
+    location.reload()
+  } else {
+    router.push(path)
+  }
+}
+
+// 加载状态（和详情页完全一致）
+const loading = ref(true)
+
 const paixu = ref('')
 const sortBy = ref<'price' | 'rating' | ''>('')
 const currentSortDirection = ref<'asc' | 'desc'>('asc')
@@ -291,7 +334,8 @@ const normalizePrice = (value: any): number | null => {
   return Number.isFinite(num) ? num : null
 }
 
-const getBookAvgScore = (book: Book) => Number((book as any).avg_score ?? (book as any).avgScore ?? 0)
+const getBookAvgScore = (book: Book) =>
+  Number((book as any).avg_score ?? (book as any).avgScore ?? 0)
 
 const restoreDefaultSnapshot = (): boolean => {
   if (!defaultListSnapshot.value) return false
@@ -336,7 +380,6 @@ const handlePriceClear = () => {
 // 排序切换
 const handleSort = (type: 'asc' | 'desc') => {
   if (sortBy.value === 'price' && currentSortDirection.value === type) {
-    // 再次点击相同价格排序：取消当前排序
     sortBy.value = ''
     paixu.value = ''
     shouldShufflePage.value = true
@@ -393,12 +436,8 @@ const refreshAllData = async () => {
     defaultListSnapshot.value = null
     shouldShufflePage.value = true
 
-    // 1. 重新拉取后端最新数据（刷新时不显示遮罩）
     await Promise.all([loadBookList(false), loadNewBookList()])
-
-    // 2. 重新执行筛选+排序+分页
     doFilterAndShuffle()
-
     ElMessage.success({ message: '刷新成功！', offset: 80 })
   } catch (err) {
     ElMessage.error({ message: '刷新失败', offset: 80 })
@@ -406,9 +445,9 @@ const refreshAllData = async () => {
     isRefreshing.value = false
   }
 }
-// 加载普通图书数据
+
+// 加载普通图书
 const loadBookList = async (showMask = true) => {
-  if (showMask) allImagesLoaded.value = false
   try {
     const res = await getBookListApi('全部')
     allBooks.value = res.code === 200 ? res.data || [] : []
@@ -417,7 +456,7 @@ const loadBookList = async (showMask = true) => {
   }
 }
 
-// 加载新书数据
+// 加载新书
 const loadNewBookList = async () => {
   try {
     await bookStore1.fetchBookList()
@@ -429,11 +468,9 @@ const loadNewBookList = async () => {
 
 // 筛选+排序+分页
 const doFilterAndShuffle = () => {
-  // 根据当前类型选择数据源
   const sourceList = showType.value === 'new' ? [...newBookList.value] : [...allBooks.value]
   const keyword = searchKeyword.value.trim().toLowerCase()
 
-  // 1. 先筛选
   const filtered = sourceList.filter((book) => {
     const matchName = keyword ? book.name?.toLowerCase().includes(keyword) : true
     const matchCategory =
@@ -460,7 +497,6 @@ const doFilterAndShuffle = () => {
     )
   })
 
-  // 2. 如果是刷新操作则打乱顺序，否则保持当前过滤结果顺序
   if (isDefaultFilterState() && defaultListSnapshot.value && !shouldShufflePage.value) {
     restoreDefaultSnapshot()
     return
@@ -477,15 +513,14 @@ const doFilterAndShuffle = () => {
 // 分页切片
 const doPaginationSlice = () => {
   const start = (currentPage.value - 1) * pageSize.value
-  const pageItems = filteredBooks.value.slice(start, start + pageSize.value)
+  let pageItems = filteredBooks.value.slice(start, start + pageSize.value)
 
-  // 3. 对当前页进行排序（仅作用于当前页内容）
   if (sortBy.value === 'rating') {
     pageItems.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
   } else if (sortBy.value === 'price') {
     if (currentSortDirection.value === 'asc') {
       pageItems.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
-    } else if (currentSortDirection.value === 'desc') {
+    } else {
       pageItems.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0))
     }
   }
@@ -510,12 +545,11 @@ const handleSearch = () => {
 }
 
 const handlePageChange = () => doPaginationSlice()
+
 const handleClearSearch = () => {
   searchKeyword.value = ''
   currentPage.value = 1
-  if (isDefaultFilterState() && restoreDefaultSnapshot()) {
-    return
-  }
+  if (isDefaultFilterState() && restoreDefaultSnapshot()) return
   doFilterAndShuffle()
 }
 
@@ -525,12 +559,12 @@ const handleLogout = () => {
   router.push('/login')
 }
 
+// 初始化加载（和详情页完全统一）
 onMounted(async () => {
-  // 初始化加载数据
-  await loadBookList()
-  await loadNewBookList()
+  loading.value = true
 
-  // 接收路由参数
+  await Promise.all([loadBookList(), loadNewBookList()])
+
   const cat = route.query.category as string
   const keyword = route.query.keyword as string
   const aauthor = route.query.aauthor as string
@@ -545,12 +579,11 @@ onMounted(async () => {
   }
 
   doFilterAndShuffle()
-  nextTick(() => {
-    allImagesLoaded.value = true
-  })
+
+  loading.value = false
 })
 
-// 监听路由参数变化
+// 监听路由
 watch(
   () => route.query,
   (newQuery) => {
@@ -558,14 +591,11 @@ watch(
     selectedAAuthor.value = (newQuery.aauthor as string) || '全部'
     searchKeyword.value = (newQuery.keyword as string) || ''
     doFilterAndShuffle()
-    nextTick(() => {
-      allImagesLoaded.value = true
-    })
   },
   { deep: true },
 )
 
-// 监听筛选条件变化（关键修复：实时筛选新书/普通书）
+// 监听筛选
 watch(
   [
     selectedCategory,
@@ -584,12 +614,11 @@ watch(
   },
 )
 
+// 预加载保留
 const chuyu = ref(false)
 onMounted(() => {
   if (!chuyu.value) {
     requestIdleCallback(() => {
-      //预加载页面
-
       import('@/views/front/book/detail.vue')
       import('@/views/front/user/index.vue')
       import('@/views/front/cart/index.vue')
@@ -601,6 +630,24 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.gwdh {
+  animation: gwdh 2s infinite;
+}
+@keyframes gwdh {
+  0%,
+  100% {
+    transform: scale(1) rotate3d(0, 0, 0, 0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate3d(0, 1, 1, 12deg);
+  }
+  75% {
+    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
+  }
+}
 /*基础响应式配置*/
 :root {
   font-size: 16px;
@@ -621,19 +668,6 @@ onMounted(() => {
   word-break: break-all;
   line-height: 1.4;
   max-height: 2.8em;
-}
-/* 遮罩样式 */
-.black-mask {
-  position: fixed;
-  inset: 0;
-  background: #eae8e8;
-  z-index: 19999;
-}
-.fade-leave-active {
-  opacity: 1;
-}
-.fade-leave-to {
-  opacity: 0;
 }
 
 /* 顶部导航栏 */
@@ -666,7 +700,10 @@ onMounted(() => {
 
 .sejb {
   position: relative;
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  left: -9px;
   flex-direction: column;
   align-items: center;
   z-index: 9996 !important;
@@ -751,6 +788,7 @@ onMounted(() => {
 .nav-right1 {
   width: 23.75rem;
   flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -783,7 +821,7 @@ onMounted(() => {
 
 .syws {
   display: flex;
-  background: linear-gradient(0deg, #ffffff 0%, #022d8a 100%);
+  background: #ffffff;
   border: 1px solid rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
   border-radius: 0.375rem;
@@ -793,7 +831,7 @@ onMounted(() => {
 }
 
 .syses {
-  color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
   font-size: clamp(1rem, 2vw, 1.125rem);
   text-decoration: none;
   line-height: 1.2;

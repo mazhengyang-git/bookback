@@ -3,7 +3,13 @@
     <div v-show="!allImagesLoaded" class="black-mask"></div>
   </Transition>
 
-  <div class="doubao-entrance" ref="doubaoBtn" @mousedown="handleMouseDown" draggable="false">
+  <div
+    v-cloak
+    class="doubao-entrance"
+    ref="doubaoBtn"
+    @mousedown="handleMouseDown"
+    draggable="false"
+  >
     <a
       href="https://www.doubao.com"
       target="_blank"
@@ -15,130 +21,8 @@
       <img class="doubao" src="/img/doubao.png" alt="豆包" draggable="false" />
     </a>
   </div>
-  <div class="home-top-nav">
-    <div class="nav-left">
-      <h2 class="logo sci-fi-title">星途科幻图书</h2>
-    </div>
-    <div class="nav-center">
-      <el-button class="sx" type="primary" @click="shoubookshuaxin">刷新页面</el-button>
-      <div class="sejb">
-        <div class="syws">
-          <el-button link class="syse" @click="go('/home')">首页</el-button>
-        </div>
-      </div>
-      <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
-        <div class="syws">
-          <el-button link class="syse1" @click="go('/books')">图书商城</el-button>
-          <span class="acwy">
-            <!-- 严格按照截图从上到下顺序，14个分类完整无重复、路由100%对应 -->
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=太空歌剧')"
-              >太空歌剧</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=赛博朋克')"
-              >赛博朋克</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=时间旅行')"
-              >时间旅行</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=智能纪元')"
-              >智能纪元</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=外星文明')"
-              >外星文明</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=末世废土')"
-              >末世废土</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=星际灾厄')"
-              >星际灾厄</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=虚幻惊悚')"
-              >虚幻惊悚</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=星系攻略')"
-              >星系攻略</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=次元交互')"
-              >次元交互</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=梦灵空间')"
-              >梦灵空间</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=自然谜团')"
-              >自然谜团</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=平行宇宙')"
-              >平行宇宙</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=意识陷落')"
-              >意识陷落</el-button
-            >
-          </span>
-        </div>
-      </div>
-      <el-input
-        v-model="searchKeyword"
-        placeholder="搜索并进入图书商城"
-        class="ssr"
-        style="width: 280px; margin-right: 20px"
-        @keyup.enter="handleToBookSearch"
-        @clear="searchKeyword = ''"
-        clearable
-      >
-        <template #suffix>
-          <el-icon class="search-icon1" @click="handleToBookSearch">
-            <Search />
-          </el-icon>
-        </template>
-      </el-input>
-    </div>
-    <div class="nav-right">
-      <!-- 未登录 -->
-      <div class="dzwy" v-if="!userStore.isLogin">
-        <el-button style="padding: 5px" class="szi" type="primary" link @click="go('/login')"
-          >登录</el-button
-        >
-        <el-button style="padding: 5px" class="szi" type="primary" link @click="go('/register')"
-          >注册</el-button
-        >
-      </div>
-      <!-- 已登录 -->
-      <div v-else class="login-bar">
-        <el-button style="position: relative; background-color: #d5d3d0" link @click="go('/user')"
-          ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
-        >
-        <el-button style="position: relative; background-color: #d5d3d0" link @click="go('/cart')"
-          ><img
-            class="gwdh"
-            style="width: 24px; height: auto"
-            src="/img/购物车.png"
-          />购物车</el-button
-        >
-        <el-button
-          style="color: white; background-color: red; position: relative"
-          type="danger"
-          link
-          @click="handleLogout"
-          >退出</el-button
-        >
-        <span
-          style="
-            position: relative;
-            color: green;
-            font-size: 16px;
-
-            font-weight: 700;
-            z-index: 3000 !important;
-          "
-          class="hywy"
-          >欢迎：{{ userStore.user?.username }}</span
-        >
-      </div>
-    </div>
-  </div>
+  <HomeTopNav @refresh="shoubookshuaxin" />
   <div class="home-container">
-    <!-- 顶部导航栏 -->
-
     <!-- 轮播 （增加v-if避免空数据渲染） -->
     <div class="home-banner" v-if="slidesLoaded">
       <div class="banner-content">
@@ -162,8 +46,6 @@
           />
         </div>
       </div>
-
-      <div class="xiatiao1"></div>
 
       <div class="home-monthly-hot">
         <!-- 热门图书排行内部容器 -->
@@ -199,6 +81,7 @@
           <el-card
             v-for="book in hotBooks"
             :key="book.id"
+            style="margin-left: 40px !important"
             class="hot-book-card"
             @click="go(`/book/${book.id}`)"
             v-loading="!book.id"
@@ -215,62 +98,6 @@
             <p class="hot-book-price">¥{{ formatPrice(book.price) }}</p>
           </el-card>
         </div>
-      </div>
-    </div>
-
-    <!-- 【新增】读书活动 -->
-    <div class="home-reading-events">
-      <h2 class="sci-fi-title">读书活动</h2>
-      <div v-if="readingEvents.length === 0" class="empty-tip">
-        <el-empty description="暂无读书活动" />
-      </div>
-      <div v-else class="events-list">
-        <el-card v-for="event in readingEvents" :key="event.id" class="event-card">
-          <h3>{{ event.title }}</h3>
-          <p class="event-time">时间：{{ event.time }}</p>
-          <p>{{ event.content }}</p>
-        </el-card>
-      </div>
-    </div>
-
-    <!-- 【新增】图书资讯 -->
-    <div class="home-book-news">
-      <h2 class="sci-fi-title">图书资讯</h2>
-      <div v-if="bookNews.length === 0" class="empty-tip">
-        <el-empty description="暂无图书资讯" />
-      </div>
-      <div v-else class="news-list">
-        <div v-for="news in bookNews" :key="news.id" class="news-item">
-          <h3>{{ news.title }}</h3>
-          <p>{{ news.content }}</p>
-          <span class="news-time">{{ news.time }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 【新增】科幻图书250 -->
-    <div class="home-sci-fi-250">
-      <h2 class="sci-fi-title">科幻图书250</h2>
-      <div v-if="sciFi250.length === 0" class="empty-tip">
-        <el-empty description="暂无数据" />
-      </div>
-      <div v-else class="sci-fi-250-list">
-        <el-card
-          v-for="book in sciFi250"
-          :key="book.id"
-          class="sci-fi-250-card"
-          @click="go(`/book/${book.id}`)"
-        >
-          <img
-            :src="book.cover || '/img/default-book.jpg'"
-            alt="图书封面"
-            class="sci-fi-250-cover"
-            @error="(e) => (e.target.src = '/img/default-book.jpg')"
-          />
-          <h3>{{ book.name || '未知图书' }}</h3>
-          <p>作者：{{ book.author || '未知作者' }}</p>
-          <p class="sci-fi-250-price">¥{{ formatPrice(book.price) }}</p>
-        </el-card>
       </div>
     </div>
 
@@ -297,398 +124,333 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElEmpty } from 'element-plus'
 import type { Book } from '@/types/index'
 import { useUserStore } from '@/store/modules/user'
 import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
 import { useBookStore } from '@/store/book'
-import { Hide, Search } from '@element-plus/icons-vue'
 import lunbotu from '@/views/front/home/lunbotu.vue'
 import { getAnnouncementList } from '@/api/front/announcement'
 import type { Announcement } from '@/types/index'
 import remenbook from '@/views/front/book/remenbook.vue'
 import remenbiaoqian from '@/views/front/biaoqian/biaoqian.vue'
 import newbook from '@/views/front/home/xinbook.vue'
-const allImagesLoaded = ref(false)
-// 初始化变量
+import HomeTopNav from '@/views/front/home/hometopnav.vue'
 import notice from '@/views/front/home/notice.vue'
+
 const userStore = useUserStore()
 const router = useRouter()
 const bookStore = useBookStore()
 
+// 跳转
+function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
+  const pathStr = path as string
+  if (router.currentRoute.value.path.startsWith('/book/')) {
+    window.location.href = pathStr
+  } else {
+    router.push(path)
+  }
+}
+
 const hotBooks = ref<Book[]>([])
 const refshua = ref(0)
-const searchKeyword = ref<string>('')
 const slidesLoaded = ref(false)
-const bgSrc = bookStore
-const showNotice = ref(false) //  boolean
-// 公告列表
+const showNotice = ref(false)
 const noticeList = ref<Announcement[]>([])
+
+// 拖拽相关
 const doubaoBtn = ref(null)
 const doubaoBtn1 = ref(null)
 const isDragging = ref(false)
-const hasDragged1 = ref(false) //@ts-ignore
-const hasDragged = ref(false) //@ts-ignore
+const hasDragged = ref(false)
 const startPos = ref({ x: 0, y: 0 })
 const currentPos = ref({ x: 6, y: 110 })
 const DRAG_THRESHOLD = 5
-const isDragging1 = ref(false)
 
+const isDragging1 = ref(false)
+const hasDragged1 = ref(false)
 const currentPos1 = ref({ x: 6, y: 380 })
 const DRAG_THRESHOLD1 = 5
-// 安全跳转：解决首次点击卡顿/转圈
-//@ts-ignore
-let timeleave: NodeJS.Timeout | null = null
-const showhover = ref(false)
 
-//biaoqianzichuancan
+// 子组件刷新
 const refreshKey = ref(0)
 const refreshKey1 = ref(0)
-// 你可以传自定义标签，不传就用子组件默认值
 const categoryTags = ref<any[]>([])
 const authorTags = ref<any[]>([])
-import { onBeforeRouteLeave } from 'vue-router'
 
-// 离开页面时自动回到顶部（解决返回不置顶）
+// 遮罩层
+const allImagesLoaded = ref(false)
+
+// 离开页面回到顶部
+import { onBeforeRouteLeave } from 'vue-router'
 onBeforeRouteLeave(() => {
   window.scrollTo(0, 0)
 })
-function mouseleve() {
-  timeleave = setTimeout(() => {
-    if (showhover.value === true) {
-      showhover.value = false
-    }
-  }, 450)
-}
-function mouseshow() {
-  if (timeleave) clearTimeout(timeleave)
-  showhover.value = true
-}
-function notandmouse() {
-  if (hasDragged1.value) {
-    //@ts-ignore
-    handleLinkClick1()
-    showNotice.value === true
-    return
-  }
-  if (showNotice.value === true) {
-    showNotice.value = false
-    return
-  } else {
-    openNotice()
-  }
-} //@ts-ignore
-// 获取公告
-const getNotice = async () => {
-  const res = await getAnnouncementList()
-  // @ts-ignore
-  if (res.code === 200) {
-    // @ts-ignore
-    noticeList.value = res.data
-  }
-}
-function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
-  setTimeout(() => {
-    router.push(path)
-  }, 10) // 只延迟10毫秒，人感觉不到，但浏览器能缓过来
-}
-// 拆分鼠标按下事件（区分拖动/点击）
-//@ts-ignore
-const handleMouseDown = (e) => {
-  isDragging.value = true
-  hasDragged.value = false
-  const startX = e.clientX
-  const startY = e.clientY
-  const initialLeft = currentPos.value.x
-  const initialTop = currentPos.value.y //@ts-ignore
-  const handleMouseMove = (e) => {
-    const deltaX = e.clientX - startX
-    const deltaY = e.clientY - startY
-    if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
-      hasDragged.value = true
-    }
-    currentPos.value.x = initialLeft + deltaX
-    currentPos.value.y = initialTop + deltaY
-    if (doubaoBtn.value) {
-      //@ts-ignore
-      doubaoBtn.value.style.left = currentPos.value.x + 'px' //@ts-ignore
-      doubaoBtn.value.style.top = currentPos.value.y + 'px'
-    }
-  }
-  const handleMouseUp = () => {
-    isDragging.value = false
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
-  }
-  // 添加全局事件
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
-} //@ts-ignore
-const handleMouseDown1 = (p) => {
-  isDragging1.value = true
-  hasDragged1.value = false
-  const startX1 = p.clientX
-  const startY1 = p.clientY
-  const initialLeft1 = currentPos1.value.x
-  const initialTop1 = currentPos1.value.y //@ts-ignore
-  const handleMouseMove1 = (e) => {
-    const deltaX1 = e.clientX - startX1
-    const deltaY1 = e.clientY - startY1
-    if (Math.abs(deltaX1) > DRAG_THRESHOLD1 || Math.abs(deltaY1) > DRAG_THRESHOLD1) {
-      hasDragged1.value = true
-    }
-    currentPos1.value.x = initialLeft1 + deltaX1
-    currentPos1.value.y = initialTop1 + deltaY1
-    if (doubaoBtn1.value) {
-      //@ts-ignore
-      doubaoBtn1.value.style.left = currentPos1.value.x + 'px' //@ts-ignore
-      doubaoBtn1.value.style.top = currentPos1.value.y + 'px' //@ts-ignore
-      doubaoBtn1.value.style.right = 'unset' //@ts-ignore
-      doubaoBtn1.value.style.transform = 'unset'
-    }
-  }
-  const handleMouseUp1 = () => {
-    isDragging1.value = false
-    document.removeEventListener('mousemove', handleMouseMove1)
-    document.removeEventListener('mouseup', handleMouseUp1)
-  }
-  // 添加全局事件
-  document.addEventListener('mousemove', handleMouseMove1)
-  document.addEventListener('mouseup', handleMouseUp1)
-}
-//@ts-ignore
-const handleLinkClick = (e) => {
-  if (hasDragged.value) {
-    e.preventDefault()
-    e.stopPropagation()
-    return false
-  }
-} //@ts-ignore
-const handleLinkClick1 = (p) => {
-  if (hasDragged1.value) {
-    p.preventDefault()
-    p.stopPropagation()
-    return false
-  }
+
+// ==================== 预加载 ====================
+const preloaded = ref(false)
+const preloadPages = async () => {
+  if (preloaded.value) return
+  try {
+    // 提前加载高频页面
+    await Promise.all([
+      import('@/views/front/book/detail.vue'),
+      import('@/views/front/book/list.vue'),
+      import('@/views/front/user/index.vue'),
+      import('@/views/front/cart/index.vue'),
+    ])
+    console.log('✅ 页面预加载完成')
+  } catch (e) {}
+  preloaded.value = true
 }
 
-// 打开/关闭
-const openNotice = () => (showNotice.value = true)
-const closeNotice = () => (showNotice.value = false)
-// 需要监听的图片元素
-const imagesToLoad = [bgSrc, bookStore]
-// 价格格式化函数
+// 浏览器空闲时立刻预加载
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(preloadPages, { timeout: 2000 })
+} else {
+  setTimeout(preloadPages, 1000)
+}
+
+// ==================== 图片预加载 ====================
+const preloadImages = () => {
+  const imgList = ['/img/doubao.png', '/img/default-book.jpg']
+  const tasks = imgList.map((src) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.src = src
+      img.onload = resolve
+      img.onerror = resolve
+    })
+  })
+  Promise.all(tasks).finally(() => {
+    allImagesLoaded.value = true
+  })
+}
+
+// ==================== 公告 ====================
+const getNotice = async () => {
+  try {
+    const res = await getAnnouncementList()
+    // @ts-ignore
+    if (res?.code === 200) noticeList.value = res.data
+  } catch (e) {}
+}
+
+// ==================== 热门图书 ====================
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
 
-// 随机抽取图书
-const getRandomBooks = (list: Book[], count: number = 4): Book[] => {
-  if (!list || list.length === 0) return []
-  const tempList = JSON.parse(JSON.stringify(list)) as Book[]
-  const result: Book[] = []
-  for (let i = 0; i < count && tempList.length; i++) {
-    const randomIndex = Math.floor(Math.random() * tempList.length)
-    result.push(tempList.splice(randomIndex, 1)[0])
+const getRandomBooks = (list: Book[], count = 10): Book[] => {
+  if (!list?.length) return []
+  const arr = [...list]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
-  return result
+  return arr.slice(0, count)
 }
 
-// 获取热门图书（异步函数）
 const getHotBooks = async () => {
   try {
     await bookStore.fetchBookList()
-    const fullList = bookStore.bookList || []
-    const list = getRandomBooks(fullList, 10)
-
-    if (list.length > 0) {
-      for (let i = list.length - 1; i > 0; i--) {
-        const j: number = Math.floor(Math.random() * (i + 1))
-        const temp = list[i]
-        list[i] = list[j]
-        list[j] = temp
-      }
-    }
-
-    hotBooks.value = list
-    slidesLoaded.value = true
-  } catch (error) {
-    //console.error('获取图书失败', error)
-    //ElMessage.error('加载热门图书失败，请稍后重试')
+    hotBooks.value = getRandomBooks(bookStore.bookList || [], 10)
+  } catch (e) {
     hotBooks.value = []
+  } finally {
     slidesLoaded.value = true
   }
 }
 
-// 读书活动
-const readingEvents = ref([
-  {
-    id: 1,
-    title: '《三体》线上共读会',
-    time: '2026-04-25 19:00',
-    content: '一起探讨三体宇宙的奥秘',
-  },
-  {
-    id: 2,
-    title: '科幻作家沙龙：未来世界的构建',
-    time: '2026-05-01 14:00',
-    content: '邀请知名科幻作家分享创作经验',
-  },
-])
+// // 科幻图书
+// const sciFi250 = ref<Book[]>([
+//   {
+//     id: 31,
+//     name: '银河帝国全集',
+//     author: '艾萨克·阿西莫夫',
+//     price: 299.0,
+//     cover: '/img/default-book.jpg',
+//     category: '',
+//     desc: '',
+//     stock: 0,
+//     mulu: '',
+//     author_into: '',
+//   },
+//   {
+//     id: 32,
+//     name: '基地三部曲',
+//     author: '艾萨克·阿西莫夫',
+//     price: 128.0,
+//     cover: '/img/default-book.jpg',
+//     category: '',
+//     desc: '',
+//     stock: 0,
+//     mulu: '',
+//     author_into: '',
+//   },
+//   {
+//     id: 33,
+//     name: '机器人短篇全集',
+//     author: '艾萨克·阿西莫夫',
+//     price: 89.0,
+//     cover: '/img/default-book.jpg',
+//     category: '',
+//     desc: '',
+//     stock: 0,
+//     mulu: '',
+//     author_into: '',
+//   },
+//   {
+//     id: 34,
+//     name: '2001太空漫游',
+//     author: '阿瑟·C·克拉克',
+//     price: 55.0,
+//     cover: '/img/default-book.jpg',
+//     category: '',
+//     desc: '',
+//     stock: 0,
+//     mulu: '',
+//     author_into: '',
+//   },
+//   {
+//     id: 35,
+//     name: '与拉玛相会',
+//     author: '阿瑟·C·克拉克',
+//     price: 48.0,
+//     cover: '/img/default-book.jpg',
+//     category: '',
+//     desc: '',
+//     stock: 0,
+//     mulu: '',
+//     author_into: '',
+//   },
+// ])
 
-// 图书资讯
-const bookNews = ref([
-  {
-    id: 1,
-    title: '刘慈欣新作即将发布',
-    content: '据悉，刘慈欣的最新科幻小说将于明年年初出版，讲述人类与外星文明的首次接触。',
-    time: '2026-04-18',
-  },
-  {
-    id: 2,
-    title: '《沙丘》第二部电影定档',
-    content: '《沙丘2》电影宣布定档2026年12月，继续讲述保罗·厄崔迪的传奇故事。',
-    time: '2026-04-15',
-  },
-])
-
-// 科幻250
-const sciFi250 = ref<Book[]>([
-  {
-    id: 31,
-    name: '银河帝国全集',
-    author: '艾萨克·阿西莫夫',
-    price: 299.0,
-    cover: '/img/default-book.jpg',
-    category: '',
-    desc: '',
-    stock: 0,
-    mulu: '',
-    author_into: '',
-  },
-  {
-    id: 32,
-    name: '基地三部曲',
-    author: '艾萨克·阿西莫夫',
-    price: 128.0,
-    cover: '/img/default-book.jpg',
-    category: '',
-    desc: '',
-    stock: 0,
-    mulu: '',
-    author_into: '',
-  },
-  {
-    id: 33,
-    name: '机器人短篇全集',
-    author: '艾萨克·阿西莫夫',
-    price: 89.0,
-    cover: '/img/default-book.jpg',
-    category: '',
-    desc: '',
-    stock: 0,
-    mulu: '',
-    author_into: '',
-  },
-  {
-    id: 34,
-    name: '2001太空漫游',
-    author: '阿瑟·C·克拉克',
-    price: 55.0,
-    cover: '/img/default-book.jpg',
-    category: '',
-    desc: '',
-    stock: 0,
-    mulu: '',
-    author_into: '',
-  },
-  {
-    id: 35,
-    name: '与拉玛相会',
-    author: '阿瑟·C·克拉克',
-    price: 48.0,
-    cover: '/img/default-book.jpg',
-    category: '',
-    desc: '',
-    stock: 0,
-    mulu: '',
-    author_into: '',
-  },
-])
-
-// 刷新页面
+// 刷新
 const shoubookshuaxin = () => {
   getHotBooks()
   refshua.value++
-  refreshKey.value++ // 改变 key → 强制子组件重新随机
+  refreshKey.value++
   refreshKey1.value++
 }
 
-// 退出登录
-const handleLogout = () => {
-  userStore.logout()
-  ElMessage.success('退出成功')
-  router.push('/login')
-}
+// ==================== 拖拽逻辑 ====================
+const handleMouseDown = (e: MouseEvent) => {
+  isDragging.value = true
+  hasDragged.value = false
+  const startX = e.clientX
+  const startY = e.clientY
+  const left = currentPos.value.x
+  const top = currentPos.value.y
 
-// 搜索跳转
-const handleToBookSearch = () => {
-  const keyword = searchKeyword.value.trim()
-  if (!keyword) {
-    ElMessage.info('请输入图书名称关键词')
-    return
+  const move = (e: MouseEvent) => {
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+      hasDragged.value = true
+    }
+    currentPos.value.x = left + dx
+    currentPos.value.y = top + dy
+    if (doubaoBtn.value) {
+      // @ts-ignore
+      doubaoBtn.value.style.left = currentPos.value.x + 'px'
+      // @ts-ignore
+      doubaoBtn.value.style.top = currentPos.value.y + 'px'
+    }
   }
-  router.push({ path: '/books', query: { keyword } })
-  searchKeyword.value = ''
+
+  const up = () => {
+    isDragging.value = false
+    document.removeEventListener('mousemove', move)
+    document.removeEventListener('mouseup', up)
+  }
+
+  document.addEventListener('mousemove', move)
+  document.addEventListener('mouseup', up)
 }
 
-function loadImages() {
-  const imagePromises = imagesToLoad.map((src) => {
-    //@ts-ignore
-    return new Promise((resolve, reject) => {
-      const img = new Image() //@ts-ignore
-      img.src = src
-      img.onload = resolve
-    })
-  })
+const handleMouseDown1 = (e: MouseEvent) => {
+  isDragging1.value = true
+  hasDragged1.value = false
+  const startX = e.clientX
+  const startY = e.clientY
+  const left = currentPos1.value.x
+  const top = currentPos1.value.y
 
-  Promise.all(imagePromises)
-    .then(() => {
-      allImagesLoaded.value = true
-    })
-    .catch(() => {
-      // 即使有图片加载失败，也继续显示内容
-      allImagesLoaded.value = true
-    })
+  const move = (e: MouseEvent) => {
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    if (Math.abs(dx) > DRAG_THRESHOLD1 || Math.abs(dy) > DRAG_THRESHOLD1) {
+      hasDragged1.value = true
+    }
+    currentPos1.value.x = left + dx
+    currentPos1.value.y = top + dy
+    if (doubaoBtn1.value) {
+      // @ts-ignore
+      doubaoBtn1.value.style.left = currentPos1.value.x + 'px'
+      // @ts-ignore
+      doubaoBtn1.value.style.top = currentPos1.value.y + 'px'
+      // @ts-ignore
+      doubaoBtn1.value.style.right = 'unset'
+      // @ts-ignore
+      doubaoBtn1.value.style.transform = 'unset'
+    }
+  }
+
+  const up = () => {
+    isDragging1.value = false
+    document.removeEventListener('mousemove', move)
+    document.removeEventListener('mouseup', up)
+  }
+
+  document.addEventListener('mousemove', move)
+  document.addEventListener('mouseup', up)
 }
-// 初始化
-const chuyu = ref(false)
-onMounted(() => {
-  loadImages()
+
+const handleLinkClick = (e: Event) => {
+  if (hasDragged.value) {
+    e.preventDefault()
+    return false
+  }
+}
+const handleLinkClick1 = (e: Event) => {
+  if (hasDragged1.value) {
+    e.preventDefault()
+    return false
+  }
+}
+
+// 公告开关
+const notandmouse = () => {
+  if (hasDragged1.value) return
+  showNotice.value = !showNotice.value
+}
+const openNotice = () => (showNotice.value = true)
+const closeNotice = () => (showNotice.value = false)
+
+// ==================== 初始化 ====================
+onMounted(async () => {
+  // 图片预加载（极快）
+  preloadImages()
+
+  // 加载公告
   getNotice()
-  if (!chuyu.value) {
-    requestIdleCallback(() => {
-      //预加载页面
-      import('@/views/front/book/detail.vue')
-      import('@/views/front/book/list.vue')
-      import('@/views/front/user/index.vue')
-      import('@/views/front/cart/index.vue')
-      console.log('主页预加载成功')
-    })
-    chuyu.value = true
-  }
-  const bookjiazai = async () => {
-    await getHotBooks()
-  }
-  bookjiazai()
+
+  // 加载图书
+  await getHotBooks()
+
+  // 兜底：防止遮罩卡死
   setTimeout(() => {
     allImagesLoaded.value = true
-  }, 0.1) // 3秒后无论如何都隐藏遮罩
+  }, 0.1)
 })
 </script>
 <style scoped>
+[v-cloak] {
+  display: none !important;
+}
 .hwy {
   /* 正常文档流 */
   position: absolute;
@@ -737,46 +499,30 @@ onMounted(() => {
   border-radius: 2px;
 }
 /* 父容器 */
-.home-monthly-hot {
-  position: relative;
-  width: clamp(390px, 30vw, 540px);
-  height: auto;
-  padding: 0;
-  margin: 0;
-  top: -891px;
-  z-index: 188;
-  left: clamp(845px, 67.5vw, 1080px);
-  /* 子组件缩放*/
-  transform: none;
-}
-@media (max-width: 1480px) {
-  .home-monthly-hot {
-    margin-left: 20px;
-  }
-}
+
 @media (max-width: 1430px) {
   .home-monthly-hot {
-    left: 970px;
+    left: 976px;
   }
 }
 @media (max-width: 1380px) {
   .home-monthly-hot {
-    left: 960px;
+    left: 969px;
   }
 }
 @media (max-width: 1330px) {
   .home-monthly-hot {
-    left: 950px;
+    left: 966px;
   }
 }
 @media (max-width: 1278px) {
   .home-monthly-hot {
-    left: 950px;
+    left: 960px;
   }
 }
 @media (max-width: 1238px) {
   .home-monthly-hot {
-    left: 950px;
+    left: 960px;
   }
 }
 @media (max-width: 1208px) {
@@ -786,42 +532,62 @@ onMounted(() => {
 }
 @media (max-width: 1178px) {
   .home-monthly-hot {
-    left: 920px;
+    left: 930px;
   }
 }
 @media (max-width: 1108px) {
   .home-monthly-hot {
-    left: 880px;
+    left: 900px;
   }
 }
 @media (max-width: 968px) {
   .home-monthly-hot {
-    left: 840px;
+    left: 890px;
+  }
+}
+@media (max-width: 868px) {
+  .home-monthly-hot {
+    left: 990;
   }
 }
 @media (max-width: 768px) {
   .home-monthly-hot {
+    left: 890px;
   }
 }
-.home-monthly-hot1 {
+.home-monthly-hot {
   position: relative;
   width: clamp(390px, 30vw, 540px);
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1376px !important;
+  top: 100px;
+  z-index: 188;
+  margin-left: 130px;
+  left: clamp(845px, 67.5vw, 880px);
+  /* 子组件缩放*/
+  transform: none;
+}
+.home-monthly-hot1 {
+  position: absolute;
+  width: clamp(390px, 30vw, 540px);
+  height: auto;
+  padding: 0;
+  margin: 0;
+  top: -1086px !important;
   z-index: 188;
   left: clamp(1050px, 66vw, 1030px);
   transform: none;
 }
 .home-monthly-hot2 {
-  position: relative;
+  position: absolute;
   width: 100%;
   height: auto;
-  top: 30px;
+  top: -10px;
   z-index: 188;
-  margin-bottom: 200px;
+
   transform: none;
+  margin-left: 80px;
 }
 
 /* 子容器：用margin占位 */
@@ -852,63 +618,64 @@ onMounted(() => {
   transform-origin: top left;
 }
 
-/* 分割线：固定位置 */
-.xiatiao1 {
-  height: 2px;
-  background: #a9a7a7;
-  margin: 10px 0;
-  position: relative;
-  top: -1490px;
-  width: 450px;
-
-  left: clamp(890px, 66vw, 1050px);
-  z-index: 88;
-}
-
 /* 热门图书 */
 @media (max-width: 1000px) {
   .home-monthly-hot2 {
-    left: -27px;
   }
 }
 @media (max-width: 900px) {
   .home-monthly-hot2 {
-    margin-left: -75px;
-    top: 30px;
+    margin-left: -10px;
+    top: -53px;
   }
 }
-@media (max-width: 830px) {
+@media (max-width: 850px) {
   .home-monthly-hot2 {
-    margin-left: -100px;
+    margin-left: -20px;
+    top: -113px;
+    transform: scale(0.93);
   }
 }
 @media (max-width: 730px) {
   .home-monthly-hot2 {
-    margin-left: -120px;
-    transform: scale(0.93);
-    top: 30px;
+    margin-left: -50px;
+    transform: scale(0.9);
+    top: -130px;
+  }
+}
+@media (max-width: 690px) {
+  .home-monthly-hot2 {
+    margin-left: -50px;
+    transform: scale(0.85);
+    top: -160px;
   }
 }
 @media (max-width: 650px) {
   .home-monthly-hot2 {
-    margin-left: -120px;
-    transform: scale(0.86);
-    top: 30px;
+    margin-left: -70px;
+    transform: scale(0.8);
+    top: -310px;
   }
 }
-.hywy {
-  position: static;
-  margin-right: 90px;
-  margin-left: 28px;
-}
-@media (max-width: 1402px) {
-  .xiatiao1 {
-    left: 890.5px !important;
+@media (max-width: 630px) {
+  .home-monthly-hot2 {
+    margin-left: -80px;
+    transform: scale(0.7);
+    top: -330px;
   }
 }
-@media (max-width: 1002px) {
-  .xiatiao1 {
-    left: 790.5px !important;
+@media (max-width: 600px) {
+  .home-monthly-hot2 {
+    margin-left: -90px;
+    transform: scale(0.7);
+    top: -350px;
+  }
+}
+@media (max-width: 580px) {
+  .home-monthly-hot2 {
+    margin-left: -80px;
+    transform: scale(0.6);
+    top: -450px;
   }
 }
 * {
@@ -1067,104 +834,8 @@ button {
   -webkit-user-select: auto !important;
 }
 
-/*导航栏：文字+完全居中对称+LOGO + 响应式缩放*/
-.home-top-nav {
-  /* 宽度响应式：最小700px，最大850px（原固定值），中间随屏幕缩放 */
-  width: clamp(700px, 70vw, 850px);
-  /* 高度响应式：最小50px，最大60px */
-  height: clamp(50px, 5vw, 60px);
-  background: rgba(212, 211, 211, 0.95);
-  border-bottom: 1px solid rgba(254, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 clamp(10px, 2vw, 20px);
-  top: 0;
-  position: fixed;
-  /* 偏移量响应式，保留原比例 */
-  margin-left: clamp(-10px, -1.2vw, -12.5px);
-  z-index: 199;
-  /* 行高跟随高度 */
-  line-height: clamp(50px, 5vw, 60px);
-}
-
-.nav-left {
-  /* 宽度响应式 */
-  width: clamp(180px, 20vw, 220px);
-  flex-shrink: 0;
-  text-align: left;
-}
-.logo {
-  color: #409eff;
-  /* LOGO文字响应式：最小18px，最大23px */
-  font-size: clamp(18px, 2vw, 23px);
-  white-space: nowrap;
-  line-height: clamp(50px, 5vw, 60px);
-  position: relative;
-  /* 偏移量响应式，保留原布局 */
-  left: clamp(-20px, -3.5vw, -30px);
-  top: clamp(-6.6px, -1vw, -9px);
-}
-.nav-center {
-  display: flex;
-  /* 间距响应式 */
-  gap: clamp(15px, 2vw, 25px);
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-width: fit-content;
-  position: relative;
-  left: 3%;
-  margin-right: 9%;
-}
-.nav-right {
-  /* 宽度响应式 */
-  width: 380px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  color: #e0e6ff;
-  /* 间距响应式 */
-  gap: clamp(8px, 1vw, 12px);
-  white-space: nowrap;
-}
-.login-bar {
-  display: flex;
-  position: relative;
-
-  align-items: center;
-
-  white-space: nowrap;
-}
-.login-bar span {
-  white-space: nowrap;
-  background: linear-gradient(135deg, #141414, #ff0000);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent !important;
-  text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
-}
-.login-bar1 {
-  display: flex;
-  position: relative;
-
-  align-items: center;
-
-  white-space: nowrap;
-}
-.login-bar1 span {
-  white-space: nowrap;
-  background: linear-gradient(135deg, #141414, #ff0000);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent !important;
-  text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
-}
-
 /*页面整体：固定最大宽度，所有非图书区域永久固定不滚动*/
-/* 页面容器：在后面合并 */
+/* 页面容器 */
 .home-banner {
   /* 轮播高度响应式 */
   height: clamp(700px, 45vw, 813px);
@@ -1246,7 +917,7 @@ button {
   justify-content: start;
   margin-left: clamp(15px, 2vw, 25px);
   position: relative;
-  left: -10px;
+  left: -19px;
 }
 
 .hot-book-card {
@@ -1334,13 +1005,6 @@ button {
   }
 }
 
-.sejb {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 .doubao {
   width: 40px;
   height: auto;
@@ -1410,59 +1074,7 @@ button {
   -webkit-user-drag: none !important;
   user-drag: none !important;
 }
-.ssr {
-  color: #000000 !important;
-}
 /* 页面容器：在后面合并 */
-/* 导航栏：在后面合并 */
-.home-top-nav {
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(14px, 3vw, 20px);
-  height: clamp(50px, 5vw, 60px);
-  border-bottom: 1px solid #eee;
-  animation: tiao 0.5s forwards ease-in;
-  opacity: 0.9;
-  background: linear-gradient(
-    180deg,
-    rgba(215, 213, 213, 0.98) 0%,
-    rgba(160, 158, 158, 0.612) 50%,
-    rgba(215, 213, 213, 0.98) 100%
-  );
-  border-bottom: 1px solid rgba(5, 44, 84, 0.3);
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  width: 100vw;
-  z-index: 88888;
-}
-.home-top-nav::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(210, 212, 210, 0.558), transparent);
-  animation: navShine 6s infinite linear;
-  z-index: -1;
-}
-@keyframes navShine {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-.dzwy {
-  position: relative;
-  /* 偏移量响应式 */
-  margin-right: 116px;
-  right: clamp(30px, 4.5vw, 0px);
-}
 .black-mask {
   position: fixed;
   inset: 0;
@@ -1593,51 +1205,6 @@ button {
 .hot-book-list::-webkit-scrollbar-track {
   background: rgba(18, 26, 40, 0.5);
 }
-/* ========== 导航按钮视觉 ========== */
-.syws {
-  background: linear-gradient(0deg, #ffffff 0%, #022d8a 100%);
-  border: 1px solid rgba(64, 158, 255, 0.3);
-  display: flex;
-
-  border-radius: clamp(4px, 0.5vw, 6px);
-  padding: clamp(4px, 0.5vw, 6px) clamp(10px, 1.2vw, 14px);
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-.syws:hover {
-  box-shadow: 0 0 10px rgba(64, 158, 255, 0.3);
-}
-/*导航按钮样式*/
-.syse,
-.syse1 {
-  color: #fff;
-  font-size: clamp(14px, 1.2vw, 16px);
-  text-decoration: none;
-  line-height: 1.2;
-  transition: all 0.3s ease;
-}
-.syse:hover,
-.syse1:hover {
-  color: #ec8f33;
-  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
-}
-.sx {
-  position: relative;
-  margin-left: 6px;
-  background: linear-gradient(0deg, #a7afc2 0%, #02488f 100%);
-  border: none !important;
-  box-shadow: 0 3px 10px rgba(64, 158, 255, 0.2);
-  transition: all 0.3s ease;
-  color: #fff !important;
-  right: clamp(20px, 2.5vw, 30px);
-  padding-left: clamp(2px, 0.3vw, 3px);
-  padding-right: clamp(2px, 0.3vw, 3px);
-}
-.sx:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(64, 158, 255, 0.3);
-}
 
 /* 公告按钮 */
 .notice-btn {
@@ -1661,73 +1228,6 @@ button {
   box-shadow: 0 6px 20px rgba(94, 94, 94, 0.5);
 }
 
-/* 读书活动 */
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(15px, 1.8vw, 20px);
-  max-width: 800px;
-  margin: 0 auto;
-}
-.event-time {
-  color: #666;
-  font-size: clamp(12px, 1vw, 14px);
-  margin: clamp(5px, 0.5vw, 8px) 0;
-}
-
-/* 每月热门图书榜 - 父容器（相对定位，留在文档流） */
-/*
-@media (max-width: 952px) {
-  .home-monthly-hot {
-    left: 79vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-@media (max-width: 922px) {
-  .home-monthly-hot {
-    left: 78.5vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-@media (max-width: 822px) {
-  .home-monthly-hot {
-    left: 78vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-
-@media (max-width: 622px) {
-  .home-monthly-hot {
-    left: 80vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-
-@media (max-width: 612px) {
-  .home-monthly-hot {
-    left: 81vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-@media (max-width: 592px) {
-  .home-monthly-hot {
-    left: 82vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-@media (max-width: 570px) {
-  .home-monthly-hot {
-    left: 60vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-@media (max-width: 502px) {
-  .home-monthly-hot {
-    left: 60vw !important;
-    transition: left transform 0.3s ease;
-  }
-}
-*/
 @media (max-width: 1452px) {
   .home-monthly-hot1 {
     left: 68vw !important;
@@ -1744,6 +1244,7 @@ button {
   .home-monthly-hot1 {
     left: 66.7vw !important;
     transition: left transform 0.3s ease;
+    transform: scale(0.9);
   }
 }
 @media (max-width: 1332px) {
@@ -1756,17 +1257,18 @@ button {
   .home-monthly-hot1 {
     left: 67.7vw !important;
     transition: left transform 0.3s ease;
+    transform: scale(0.85);
   }
 }
 @media (max-width: 1212px) {
   .home-monthly-hot1 {
-    left: 69vw !important;
+    left: 67vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 1192px) {
   .home-monthly-hot1 {
-    left: 71vw !important;
+    left: 66vw !important;
     transition: left transform 0.3s ease;
   }
 }
@@ -1778,19 +1280,19 @@ button {
 }
 @media (max-width: 1112px) {
   .home-monthly-hot1 {
-    left: 75vw !important;
+    left: 70vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 1052px) {
   .home-monthly-hot1 {
-    left: 72vw !important;
+    left: 70vw !important;
     transition: left transform 0.3s ease;
   }
 }
 @media (max-width: 952px) {
   .home-monthly-hot1 {
-    left: 72vw !important;
+    left: 70vw !important;
     transition: left transform 0.3s ease;
   }
 }
@@ -1802,7 +1304,7 @@ button {
 }
 @media (max-width: 882px) {
   .home-monthly-hot1 {
-    left: 75vw !important;
+    left: 72vw !important;
     transition: left transform 0.3s ease;
   }
 }
@@ -1824,13 +1326,28 @@ button {
     transition: left transform 0.3s ease;
   }
 }
+@media (max-width: 690px) {
+  .home-monthly-hot1 {
+    top: -976px !important;
+    transform: scale(0.8);
+  }
+}
 @media (max-width: 672px) {
   .home-monthly-hot1 {
     left: 84vw !important;
     transition: left transform 0.3s ease;
   }
 }
-
+@media (max-width: 650px) {
+  .home-monthly-hot1 {
+    top: -1100px !important;
+  }
+}
+@media (max-width: 630px) {
+  .home-monthly-hot1 {
+    top: -820px !important;
+  }
+}
 @media (max-width: 622px) {
   .home-monthly-hot1 {
     left: 82vw !important;
@@ -1841,6 +1358,7 @@ button {
 @media (max-width: 600px) {
   .home-monthly-hot1 {
     left: 79.7vw !important;
+     top: -700px !important;
     transition: left transform 0.3s ease;
   }
 }
@@ -1848,6 +1366,7 @@ button {
 @media (max-width: 570px) {
   .home-monthly-hot1 {
     left: 80.5vw !important;
+    
     transition: all transform 0.3s ease;
   }
 }
@@ -1863,101 +1382,10 @@ button {
     transition: all transform 0.3s ease;
   }
 }
-
-/* 图书资讯 */
-.news-list {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(15px, 1.8vw, 20px);
-  max-width: 800px;
-  margin: 0 auto;
-}
-.news-time {
-  color: #666;
-  font-size: clamp(12px, 1vw, 14px);
-  display: block;
-  margin-top: clamp(10px, 1.2vw, 15px);
-}
-
-/* 科幻图书250 */
-.sci-fi-250-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, clamp(200px, 20vw, 240px));
-  gap: clamp(15px, 1.8vw, 20px);
-  justify-content: center;
-}
-.sci-fi-250-cover {
-  width: clamp(100px, 10vw, 120px);
-  height: clamp(150px, 15vw, 180px);
-  object-fit: cover;
-  margin-bottom: clamp(10px, 1.2vw, 15px);
-  border-radius: clamp(3px, 0.3vw, 4px);
-}
-.sci-fi-250-price {
-  color: #e6a23c;
-  font-weight: bold;
-  margin-top: clamp(8px, 1vw, 10px);
-}
-
-/* 空数据提示 */
-.empty-tip {
-  text-align: center;
-  padding: clamp(40px, 5vw, 60px) 0;
-}
-.acwy {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; /* 所有子按钮强制100%等宽，完全统一 */
-  /* 核心居中：和父按钮严格水平居中，零偏移 */
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  margin-top: 2px; /* 和父按钮轻微间距，不遮挡 */
-}
-
-/* 所有按钮统一基础样式：宽度、内边距、盒模型完全统一，全部对齐 */
-.ac1,
-.ac2 {
-  /* 统一固定宽度，所有按钮完全等宽 */
-  width: clamp(101px, 10vw, 117.7px) !important;
-  padding: 7px 20px !important;
-  height: auto !important;
-  text-align: center;
-  box-sizing: border-box;
-  margin: 0 !important; /* 清除所有自带外边距 */
-  border: 1px soild black !important;
-}
-
-/* 奇数按钮：仅顶部圆角，底部直角无缝衔接下一个按钮 */
-.ac1 {
-  border-radius: 4px 4px 0 0 !important;
-  /* 完全删除旧代码所有硬编码 left 偏移！！！ */
-  left: unset !important;
-}
-
-/* 偶数按钮：仅底部圆角，顶部直角无缝衔接上一个按钮 */
-.ac2 {
-  border-radius: 0 0 4px 4px !important;
-  margin-top: -1px; /* 消除按钮之间的1px白边缝隙，上下完美拼接 */
-  /* 完全删除旧代码所有硬编码 left 偏移！！！ */
-  left: unset !important;
-}
 </style>
 
 <style scoped>
-/* 整合导入组件CSS：按钮交互效果 + 大厂风格视觉优化 */
-/* 增强的按钮交互效果 */
-.syws {
-  transition: all 0.2s ease-out;
-}
-
-.syws:hover {
-  transform: translateY(-1px);
-}
-
-/* 增强的豆包按钮效果 */
+/* 豆包按钮效果 */
 .doubao-btn {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -1990,23 +1418,38 @@ button {
   background: #ffffff;
   position: relative;
   top: 120px;
+  height: 1100px;
   border-radius: 12px;
   margin: clamp(15px, 2vw, 20px) 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-
+@media (max-width: 690px) {
+  .home-banner {
+    height: 1000px;
+  }
+}
+@media (max-width: 630px) {
+  .home-banner {
+    height: 730px;
+  }
+}
+@media (max-width: 580px) {
+  .home-banner {
+    height: 630px;
+  }
+}
 /* 热门图书区域 */
 .home-hot-book {
   /* 布局 */
   position: relative;
   transform-origin: top center;
 
-  top: 0;
+  top: 200px;
   padding: clamp(15px, 2vw, 9px);
   margin-left: clamp(-83px, -4.8vw, -86.3px);
   transform: scale(0.8);
   left: -9px;
-
+  height: 1000px;
   /* 视觉效果 */
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.521);
@@ -2017,10 +1460,10 @@ button {
 /* 图书卡片：合并所有效果 */
 .hot-book-card {
   /* 基础布局 */
-  width: clamp(200px, 15vw, 460px);
+  width: clamp(180px, 18vw, 216px);
   cursor: pointer;
   text-align: center;
-
+  height: auto;
   overflow: visible !important;
   display: flex;
   flex-direction: column;
@@ -2119,90 +1562,7 @@ button {
   font-size: clamp(14px, 1.2vw, 16px);
 }
 
-/* 读书活动区域 */
-.home-reading-events {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: clamp(20px, 2.5vw, 30px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
-
-/* 活动卡片 */
-.event-card {
-  /* 布局 */
-  padding: clamp(15px, 2vw, 20px);
-
-  /* 视觉效果 */
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.event-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-/* 图书资讯区域 */
-.home-book-news {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: clamp(20px, 2.5vw, 30px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
-
-/* 资讯卡片 */
-.news-item {
-  /* 布局 */
-  padding: clamp(15px, 2vw, 20px);
-
-  /* 视觉效果 */
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.news-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-/* 科幻250区域 */
-.home-sci-fi-250 {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: clamp(20px, 2.5vw, 30px);
-  margin: clamp(30px, 3.5vw, 40px) 0;
-}
-
-/* 科幻250卡片 */
-.sci-fi-250-card {
-  /* 布局 */
-  cursor: pointer;
-  text-align: center;
-  padding: clamp(10px, 1.2vw, 15px);
-
-  /* 视觉效果 */
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.sci-fi-250-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-/* 标题：合并所有效果 */
+/* 标题合并所有效果 */
 .sci-fi-title {
   /* 基础样式 */
   text-align: center;

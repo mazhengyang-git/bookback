@@ -1,15 +1,14 @@
 <template>
-  <Transition name="fade">
-    <div v-show="!allImagesLoaded" class="black-mask"></div>
-  </Transition>
   <div class="cart-container">
     <el-button link class="syses11" @click="$router.push('/home')">返回首页</el-button>
 
     <h2 class="cart-title">我的购物车</h2>
 
+    <!-- 加载中（和商城一致，初始不闪） -->
+    <div v-if="loading" class="loading-tip"></div>
+
     <!-- 购物车列表 -->
-    <div class="cart-list" v-if="cartStore.currentCart.length > 0">
-      <!-- 全选栏 -->
+    <div class="cart-list" v-else-if="cartStore.currentCart.length > 0">
       <div class="check-all-bar">
         <el-checkbox style="font-weight: 700" v-model="isAllChecked" @change="handleCheckAll">
           全选
@@ -18,27 +17,26 @@
       </div>
 
       <div class="cart-item" v-for="item in cartStore.currentCart" :key="item.cartId">
-        <!-- 勾选框 -->
         <el-checkbox
           class="item-check"
           :model-value="checkedIds.includes(item.cartId)"
           @change="(val: any) => handleItemCheck(item.cartId, val)"
         />
 
-        <!-- 封面：跳转链接带source参数，确保新书也能正确打开 -->
         <img
           :src="item.cover || '/default-book.png'"
           alt="图书封面"
           class="item-cover"
-          @click="$router.push(`/book/${item.id}?source=${item.source || 'normal'}`)"
+          @click="handleBookClick(item)"
           @error="(e) => (e.target.src = '/default-book.png')"
         />
         <div class="item-info">
           <h3 class="item-name">{{ item.name || '未知图书' }}</h3>
-          <p class="item-price">¥{{ Number(item.price || 0).toFixed(2) }}</p>
+          <p class="item-price">
+            ¥{{ (Number(item.price || 0) * Number(item.count || 1)).toFixed(2) }}
+          </p>
         </div>
 
-        <!-- 橙色按钮控制+可输入 -->
         <div class="item-count">
           <button class="count-btn" @click="handleReduce(item.cartId)">-</button>
           <el-input-number
@@ -56,7 +54,6 @@
         <button class="del-btn" @click="handleDelete(item.cartId)">删除</button>
       </div>
 
-      <!-- 底部按钮 -->
       <div class="cart-footer">
         <button class="clear-btn1" @click="handlePay">去支付</button>
         <button class="clear-btn" @click="handleClear">清空购物车</button>
@@ -80,28 +77,25 @@ import { useCartStore } from '@/store/cart'
 import { useUserStore } from '@/store/user'
 import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/cart'
 import { getBookDetailApi } from '@/api/front/book'
-
-// 🔥 导入新书Store，用于获取新书真实数据
 import { useBookStore1 } from '@/store/newbook'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const router = useRouter()
-const allImagesLoaded = ref(false)
-const bookStore1 = useBookStore1() // 初始化新书Store
+const bookStore1 = useBookStore1()
 
-//勾选相关
+//用和商城一致的 loading
+const loading = ref(true)
+
 const checkedIds = ref<number[]>([])
 const isAllChecked = ref(false)
 
-//计算：选中商品总价
 const selectedTotal = computed(() => {
   return cartStore.currentCart
     .filter((item) => checkedIds.value.includes(item.cartId))
     .reduce((sum, item) => sum + item.price * item.count, 0)
 })
 
-// 输入框更新数量 + 库存校验
 const handleUpdateCount = async (cartId: number, count: number) => {
   try {
     const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
@@ -125,7 +119,6 @@ const handleUpdateCount = async (cartId: number, count: number) => {
   }
 }
 
-//单个勾选
 const handleItemCheck = (cartId: number, checked: boolean) => {
   if (checked) {
     checkedIds.value.push(cartId)
@@ -135,7 +128,6 @@ const handleItemCheck = (cartId: number, checked: boolean) => {
   isAllChecked.value = checkedIds.value.length === cartStore.currentCart.length
 }
 
-//全选 / 取消全选
 const handleCheckAll = (checked: boolean) => {
   if (checked) {
     checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
@@ -144,44 +136,41 @@ const handleCheckAll = (checked: boolean) => {
   }
 }
 
-onMounted(async () => {
-  await loadCartData()
-  setTimeout(() => {
-    allImagesLoaded.value = true
-  }, 0.11)
-})
+const handleBookClick = (item: any) => {
+  const path = `/book/${item.id}?source=${item.source || 'normal'}`
+  if (router.currentRoute.value.path.startsWith('/book/')) {
+    window.location.href = path
+  } else {
+    router.push(path)
+  }
+}
 
-// 并行识别新书/普通书，分别加载真实数据
+// 并行加载 + 最后关 loading
 const loadCartData = async () => {
   if (!userStore.token) {
     ElMessage.warning('请先登录')
     router.push('/login')
+    loading.value = false
     return
   }
 
-  // 提前加载新书数据，避免查询时为空
-  await bookStore1.fetchBookList()
-
   try {
-    const res = await getCartList()
-    if (res.code === 200 && res.data) {
+    const [_bookReady, cartRes] = await Promise.all([bookStore1.fetchBookList(), getCartList()])
+
+    if (cartRes.code === 200 && cartRes.data) {
       cartStore.clearCart()
 
-      // 遍历购物车每一项，根据source区分处理
-      for (const item of res.data) {
-        const source = item.source || 'normal' // 从后端/本地读取source标识
+      for (const item of cartRes.data) {
+        const source = item.source || 'normal'
         let realBookData = null
 
         if (source === 'new') {
-          // 从newbook Store获取真实数据
           realBookData = bookStore1.bookList1.find((b) => b.id === item.goodsId)
         } else {
-          // 普通书：走原接口
-          const bookRes = await getBookDetailApi(item.goodsId)
-          realBookData = bookRes.data
+          const res = await getBookDetailApi(item.goodsId)
+          realBookData = res.data
         }
 
-        // 加入购物车，携带真实数据
         cartStore.addToCart({
           cartId: item.id,
           id: item.goodsId,
@@ -190,8 +179,8 @@ const loadCartData = async () => {
           count: item.quantity || item.count,
           cover: realBookData?.cover || item.bookCover || '/default-book.png',
           spec: item.spec || '平装版',
-          stock: realBookData?.stock || 999, // 真实库存
-          source: source, // 保留source标识，用于跳转和后续操作
+          stock: realBookData?.stock || 999,
+          source: source,
         })
       }
 
@@ -199,12 +188,18 @@ const loadCartData = async () => {
       checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
       isAllChecked.value = true
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('加载购物车失败', error)
+  } finally {
+    // 数据就绪关 loading → 不闪
+    loading.value = false
   }
 }
 
-// 减少数量
+onMounted(() => {
+  loadCartData()
+})
+
 const handleReduce = async (cartId: number) => {
   const targetItem = cartStore.currentCart.find((item) => item.cartId === cartId)
   if (!targetItem) return
@@ -231,7 +226,6 @@ const handleReduce = async (cartId: number) => {
   }
 }
 
-// 增加数量（限制真实库存）
 const handleAdd = async (item: any) => {
   if (item.count + 1 > item.stock) {
     ElMessage.warning(`库存不足，最多可购买 ${item.stock} 本`)
@@ -247,7 +241,6 @@ const handleAdd = async (item: any) => {
   }
 }
 
-// 删除商品
 const handleDelete = async (cartId: number) => {
   try {
     await deleteCartItem(cartId)
@@ -260,7 +253,6 @@ const handleDelete = async (cartId: number) => {
   }
 }
 
-// 清空购物车
 const handleClear = async () => {
   try {
     await clearCart()
@@ -272,7 +264,6 @@ const handleClear = async () => {
   }
 }
 
-// 支付
 const handlePay = () => {
   const selectedItems = cartStore.currentCart.filter((item) =>
     checkedIds.value.includes(item.cartId),
@@ -281,15 +272,19 @@ const handlePay = () => {
     ElMessage.warning('请先勾选要结算的商品')
     return
   }
-  const xuanzhongid = checkedIds.value.join(',')
-  router.push({
-    path: '/pay',
-    query: {
-      cartIds: xuanzhongid,
-    },
-  })
+  router.push({ path: '/pay', query: { cartIds: checkedIds.value.join(',') } })
 }
 </script>
+
+<style>
+.loading-tip {
+  padding: 60px 0;
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+}
+</style>
+
 <style scoped>
 * {
   margin: 0;
@@ -323,6 +318,7 @@ button {
 
 /* ========== 核心响应式容器 ========== */
 .syses11 {
+  position: absolute;
   color: #000000;
   font-size: clamp(16px, 3vw, 18px);
   margin-bottom: 10px;
@@ -340,7 +336,8 @@ button {
   align-items: center;
   justify-content: center;
   width: fit-content;
-  margin: 0 auto 22px;
+
+  margin: 0 auto 8px;
   text-align: center;
   color: #ff9100;
   font-size: clamp(24px, 5vw, 32px);
@@ -537,6 +534,8 @@ button {
   height: clamp(38px, 6vw, 44px);
   border-radius: 10px;
   cursor: pointer;
+  margin-top: -10px;
+  margin-bottom: -15px;
   font-size: clamp(14px, 2vw, 16px);
   white-space: nowrap;
   box-shadow: 0 12px 26px rgba(255, 169, 50, 0.18);

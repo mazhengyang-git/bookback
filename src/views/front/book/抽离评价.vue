@@ -1,9 +1,8 @@
 <template>
   <div class="book-comment-container">
-    <!-- 图书整体评分头部 -->
     <div class="comment-header">
-      <div class="score-summary">
-        <!-- 五星评分展示 -->
+      <!-- 关键：整个区域用 v-if 包住，数据没好完全不渲染 -->
+      <div v-if="bookAvgScore !== null" class="score-summary">
         <el-rate
           v-model="bookAvgScore"
           disabled
@@ -15,22 +14,21 @@
         <span class="avg-score-text">{{ bookAvgScore.toFixed(1) }} 分</span>
         <span class="count-text">共 {{ commentTotalCount }} 人评价</span>
       </div>
+      <!-- 数据没加载时：用空占位，保持布局位置不变 -->
+      <div v-else class="score-summary placeholder"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-
 import { getBookAvgScore, getCommentList, getRandomComments } from '@/api/front/bookComment'
-// 导入TS类型
 import type { CommentItem } from '@/types/index'
 
-// 接收父组件图书ID
 const props = defineProps<{ bookId: number }>()
 
-// 响应式数据
-const bookAvgScore = ref<number>(0.0)
+// 初始 null：不渲染、不占位、不闪烁
+const bookAvgScore = ref<number | null>(null)
 const commentTotalCount = ref<number>(0)
 const commentList = ref<CommentItem[]>([])
 
@@ -39,15 +37,13 @@ const fetchRandomComments = async () => {
   try {
     const res = await getRandomComments(props.bookId)
     if (res.code === 200) {
-      // 假设后端返回 { code:200, data: [comment1, comment2, comment3] }
-      getRandomComments.value = res.data || []
+      commentList.value = res.data || []
     }
   } catch (err) {
     console.error('获取随机评论失败', err)
   }
 }
 
-// 获取图书评分
 const fetchBookScore = async () => {
   try {
     const res = await getBookAvgScore(props.bookId)
@@ -60,7 +56,6 @@ const fetchBookScore = async () => {
   }
 }
 
-// 获取评价列表
 const fetchCommentList = async () => {
   try {
     const res = await getCommentList(props.bookId)
@@ -72,13 +67,6 @@ const fetchCommentList = async () => {
   }
 }
 
-// 时间格式化
-const formatTime = (time: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
-}
-
-// 初始化加载
 onMounted(async () => {
   if (props.bookId) {
     await Promise.all([fetchBookScore(), fetchCommentList()])
@@ -86,17 +74,25 @@ onMounted(async () => {
   }
 })
 
-// 监听图书ID切换
 watch(
   () => props.bookId,
   async (newId) => {
     if (newId) {
+      bookAvgScore.value = null // 切换时重置，防止旧数据闪烁
       await Promise.all([fetchBookScore(), fetchCommentList()])
     }
   },
   { immediate: true },
 )
 </script>
+
+<style scoped>
+/* 占位容器：尺寸和真实容器完全一致，防止跳动 */
+.score-summary.placeholder {
+  height: 32px; /* 和真实 score-summary 高度一致 */
+  width: 100%;
+}
+</style>
 <style scoped>
 .book-comment-container {
   width: 40%;

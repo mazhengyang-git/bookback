@@ -13,6 +13,13 @@
       <el-card class="user-info-card" shadow="hover" :unstable-disable-deprecated-warning="true">
         <template #header>
           <span class="card-title">用户信息</span>
+          <el-button
+            style="padding-left: 10px; padding-right: 10px; margin-left: 220px"
+            type="danger"
+            @click="handleLogout"
+            :unstable-disable-deprecated-warning="true"
+            >退出登录</el-button
+          >
         </template>
         <div class="user-info-content">
           <!-- 手机号区域 -->
@@ -75,26 +82,44 @@
           >
             修改绑定手机号
           </el-button>
-          <el-button
-            style="padding-left: 10px; padding-right: 10px"
-            type="danger"
-            @click="handleLogout"
-            :unstable-disable-deprecated-warning="true"
-            >退出登录</el-button
-          >
+
           <div style="margin-top: 30px; font-weight: 600">
-            <span> 个人签名:{{ jieshouput }}</span
-            ><el-button
-              @click="updetaqm"
-              style="margin-left: 172px; margin-bottom: 10px"
-              type="primary"
-              >保存签名</el-button
-            ><br /><el-input
-              v-model="inputtext"
-              type="textarea"
-              :rows="8"
-              style="width: 300px; text-align: left"
-            />
+            <span>
+              <strong>个人签名</strong><br />
+              <hr style="margin-top: 25px" />
+              <br /><span class="qmhh" style="font-size: 13px">{{
+                userStore.user?.sign || '暂无签名'
+              }}</span>
+            </span>
+
+            <div style="margin-top: 20px; margin-bottom: 20px; margin-left: -9px">
+              <el-button type="primary" @click="updetaqm" style="margin-left: 9px">{{
+                km ? '保存签名' : '设置签名'
+              }}</el-button>
+              <el-button
+                v-show="km === true"
+                type="primary"
+                @click="quxiqm"
+                style="margin-left: 43px; white-space: nowrap"
+              >
+                取消修改 </el-button
+              ><br />
+              <el-input
+                v-show="km === true"
+                v-model="inputtext"
+                type="textarea"
+                :rows="8"
+                class="sign-input"
+                style="
+                  width: 330px;
+                  text-align: left;
+                  margin-top: 15px;
+                  border: 1px solid #000000;
+                  border-radius: 15px;
+                "
+                placeholder="请输入个人签名"
+              />
+            </div>
           </div>
         </template>
       </el-card>
@@ -304,8 +329,10 @@ import { deleteOrder, getUserOrderList } from '@/api/front/order'
 import {
   bindPhone,
   sendSmsCode,
-  verifyPaySmsCode, // 你后端专属：短信验证码真实性核验接口
+  verifyPaySmsCode,
   updateUserInfoApi,
+  getSign,
+  updasign,
 } from '@/api/front/user'
 import dayjs from 'dayjs'
 
@@ -328,7 +355,8 @@ const chars = '0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ'
 const captchaCode = ref('')
 const showCaptcha = ref(false)
 const inputtext = ref(``)
-const jieshouput = ref(``)
+const bcqm = ref(``)
+const km = ref(false)
 const generateCaptcha = () => {
   let code = ''
   for (let i = 0; i < 4; i++) {
@@ -337,9 +365,52 @@ const generateCaptcha = () => {
   captchaCode.value = code
 }
 const refreshCaptcha = () => generateCaptcha()
-function updetaqm() {
-  jieshouput.value = inputtext.value
-  inputtext.value = ''
+// 获取用户签名
+const fetchUserSign = async () => {
+  try {
+    const res = await getSign()
+    //@ts-ignore
+    if (res.code === 200 && res.data) {
+      //@ts-ignore
+      if (userStore.user) {
+        //@ts-ignore
+        userStore.user.sign = res.data.sign || ''
+      }
+    }
+  } catch (error) {
+    console.error('获取签名失败', error)
+  }
+}
+const updetaqm = async () => {
+  // 如果 km 是 false，说明是点击"设置签名"，只显示输入框并填充当前签名
+  if (!km.value) {
+    km.value = true
+    inputtext.value = userStore.user?.sign || ''
+    return
+  }
+
+  // 如果 km 是 true，说明是点击"保存签名"，真正保存签名
+  try {
+    // 调用更新个人签名接口
+    const res = await updasign(inputtext.value)
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('🎉 个人签名保存成功！')
+      // 重新获取签名确保数据同步
+      await fetchUserSign()
+      inputtext.value = ''
+      km.value = false
+    } else {
+      //@ts-ignore
+      ElMessage.error(res.msg || '个人签名保存失败')
+    }
+  } catch (error) {
+    ElMessage.error('网络异常，保存失败，请稍后重试')
+  }
+}
+const quxiqm = () => {
+  km.value = false
+  return km.value
 }
 // 表单数据
 const editPhoneForm = ref({
@@ -742,12 +813,34 @@ const handleDeleteOrder = async (no: string) => {
 }
 
 onUnmounted(() => clearInterval(smsTimer))
-onActivated(() => userStore.isLogin && getOrderList())
-onMounted(() => getOrderList())
+onActivated(() => {
+  if (userStore.isLogin) {
+    getOrderList()
+    fetchUserSign()
+  }
+})
+onMounted(() => {
+  if (userStore.isLogin) {
+    getOrderList()
+    fetchUserSign()
+  }
+})
 </script>
 
 <style scoped>
-/* 全部原有样式+登录页同款验证码样式完整保留 */
+/* 全部原有样式+登录页同款验证码样式*/
+.qmhh {
+  display: inline-block;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.8;
+  width: 450px;
+}
+
+.sign-input :deep(.el-textarea__inner) {
+  background-color: rgba(220, 220, 220, 0.312) !important;
+  color: #000;
+}
 .code-box {
   display: flex;
   gap: 10px;

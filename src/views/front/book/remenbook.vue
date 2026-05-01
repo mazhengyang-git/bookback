@@ -19,7 +19,7 @@
         v-for="(book, index) in finalBooks"
         :key="book.id"
         class="book-item"
-        @click="handleItemClick(book)"
+        @click="go(`/book/${book.id}`)"
       >
         <!-- 排名序号 -->
         <span class="rank" :class="{ 'top-three': index < 3 }">{{ book.rank }}</span>
@@ -45,56 +45,52 @@
 </template>
 
 <script setup lang="ts">
-// 【关键修复】补充 ref 导入
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElEmpty, ElSkeleton } from 'element-plus'
 import { useBookStore } from '@/store/book'
 import type { Book } from '@/types/index'
-import router from '@/router'
+import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { getSystemConfig } from '@/api/back/config'
+
+const router = useRouter()
+const route = useRoute()
 const bookStore = useBookStore()
 
-// ====================== 【核心配置】置顶图书ID（默认1,3,5,7,8为前五） ======================
-// 【修改】从后端获取置顶ID，不再硬编码
+// ====================== 置顶图书ID ======================
 const topBookIds = ref<(number | string)[]>([])
 const configLoading = ref(true)
-// ===============================================================================================
+
 const loadTopBookIds = async () => {
   try {
     const res = await getSystemConfig('home_top_book_ids')
     //@ts-ignore
     if (res.code === 200 && res.data) {
       //@ts-ignore
-      topBookIds.value = res.data.config_value || [1, 3, 5, 7, 8] // 兜底默认值
+      topBookIds.value = res.data.config_value || [1, 3, 5, 7, 8]
     }
   } catch (error) {
     console.error('加载排行榜配置失败，使用默认值')
-    topBookIds.value = [1, 3, 5, 7, 8] // 加载失败时的兜底
+    topBookIds.value = [1, 3, 5, 7, 8]
   } finally {
     configLoading.value = false
   }
 }
-/** 图书榜单项类型定义（继承项目 Book 类型） */
+
 export interface MonthlyHotBookItem extends Book {
   rank: number
   [key: string]: any
 }
 
-/** 组件入参 */
 const props = defineProps<{
-  /** 自定义榜单数据（优先级最高） */
   books?: MonthlyHotBookItem[]
-  /** 自定义置顶ID（优先级高于内部默认） */
   topIds?: (number | string)[]
 }>()
 
-/** 组件抛出事件 */
 const emit = defineEmits<{
-  /** 点击图书项事件 */
   click: [book: MonthlyHotBookItem]
 }>()
 
-/** 内置默认数据（兜底用） */
 const defaultBooks: MonthlyHotBookItem[] = [
   {
     id: 21,
@@ -163,14 +159,11 @@ const defaultBooks: MonthlyHotBookItem[] = [
   },
 ]
 
-/** 最终使用的置顶ID */
 const finalTopIds = computed(() => (props.topIds?.length ? props.topIds : topBookIds.value))
 
-/** 从 store 处理后的榜单数据 */
 const storeBooks = computed<MonthlyHotBookItem[]>(() => {
   if (!bookStore?.bookList?.length) return []
 
-  // 1. 提取置顶图书并按配置顺序排列
   const allBooks = JSON.parse(JSON.stringify(bookStore.bookList)) as Book[]
   const topBooks: MonthlyHotBookItem[] = []
   const topIdSet = new Set(finalTopIds.value.map((id) => String(id)))
@@ -183,10 +176,8 @@ const storeBooks = computed<MonthlyHotBookItem[]>(() => {
     }
   })
 
-  // 2. 剩余图书随机抽取补充（最多补5个）
   const remainingBooks = allBooks.filter((b) => !topIdSet.has(String(b.id)))
   const randomBooks: MonthlyHotBookItem[] = []
-  // 数组长度为0时跳过打乱，避免报错
   if (remainingBooks.length > 0) {
     for (let i = remainingBooks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -197,50 +188,59 @@ const storeBooks = computed<MonthlyHotBookItem[]>(() => {
     randomBooks.push({ ...book, rank: topBooks.length + index + 1 })
   })
 
-  // 3. 合并返回
   return [...topBooks, ...randomBooks]
 })
 
-/** 最终渲染的图书数据（优先级：props.books > store处理后 > 默认数据） */
 const finalBooks = computed(() => {
   if (props.books?.length) return props.books
   if (storeBooks.value.length) return storeBooks.value
   return defaultBooks
 })
 
-/** 价格格式化 */
 const formatPrice = (price: unknown): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
 
-/** 图书项点击处理 */
-const handleItemClick = (book: MonthlyHotBookItem) => {
-  router.push(`/book/${book.id}`)
+// ==============================================
+// 新书速递 的跳转逻辑
+// ==============================================
+const go = (path: string) => {
+  if (router.currentRoute.value.path.startsWith('/book/')) {
+    router.replace(path)
+    location.reload()
+  } else {
+    router.push(path)
+  }
 }
+
 const chuyu = ref(false)
-// 初始化时加载 store 数据
+
+const loadData = async () => {
+  await loadTopBookIds()
+  if (!bookStore?.bookList?.length) {
+    bookStore?.fetchBookList?.().catch(() => {})
+  }
+}
+
 onMounted(() => {
   if (!chuyu.value) {
     requestIdleCallback(() => {
-      //预加载页面
       import('@/views/front/book/detail.vue')
-
       console.log('排行榜预加载成功')
     })
     chuyu.value = true
   }
-  const bookjiazai = async () => {
-    await loadTopBookIds()
-  }
-  bookjiazai()
-  // 再加载图书数据
-  if (!bookStore?.bookList?.length) {
-    bookStore?.fetchBookList?.().catch(() => {})
-  }
+  loadData()
 })
-</script>
 
+watch(
+  () => route.path,
+  () => {
+    loadData()
+  },
+)
+</script>
 <style scoped>
 .monthly-hot-books {
   width: 115%;

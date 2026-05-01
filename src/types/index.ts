@@ -34,6 +34,7 @@ export interface User {
   create_time?: string
   update_time?: string
   phone: string
+  sign: string
 }
 
 // 购物车项
@@ -73,6 +74,7 @@ export interface userment {
   update_time: string
   role: 'admin' | 'buyer' | 'seller'
   phone: string
+  sign: string
 }
 /**
  * 评价权限校验返回类型

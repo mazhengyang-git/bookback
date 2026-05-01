@@ -1,11 +1,13 @@
 <template>
+  <Transition name="fade">
+    <div v-show="!allImagesLoaded" class="black-mask"></div>
+  </Transition>
   <div class="book-comment-container">
-    <!-- 图书整体评分头部 -->
     <div class="comment-header">
       <h3 class="comment-title">图书综合评价</h3>
       <div class="score-summary">
-        <!-- 五星评分展示 -->
         <el-rate
+          v-if="bookAvgScore !== null"
           v-model="bookAvgScore"
           disabled
           :max="5"
@@ -13,16 +15,14 @@
           text-color="#ff7d00"
           score-format="(value) => value.toFixed(1)"
         />
-        <span class="avg-score-text">{{ bookAvgScore.toFixed(1) }} 分</span>
+        <span class="avg-score-text">{{ bookAvgScore?.toFixed(1) }} 分</span>
         <span class="count-text">共 {{ commentTotalCount }} 人评价</span>
       </div>
     </div>
 
-    <!-- 【评价提交区域】权限控制：仅有权限用户展示 -->
     <div v-if="userAuthInfo.hasAuth && !userAuthInfo.hasCommented" class="comment-submit-box">
       <h4 class="submit-title">发表你的评价</h4>
       <el-form ref="submitFormRef" :model="commentForm" label-width="80px">
-        <!-- 五星评分 + 数字双向同步 -->
         <el-form-item label="综合评分">
           <div class="score-input-box">
             <el-rate
@@ -47,7 +47,6 @@
           </div>
         </el-form-item>
 
-        <!-- 评价文字内容输入 -->
         <el-form-item label="评价内容">
           <el-input
             v-model="commentForm.content"
@@ -67,31 +66,23 @@
       </el-form>
     </div>
 
-    <!-- 无评价权限提示 -->
     <div v-else-if="!userAuthInfo.hasAuth" class="no-auth-tip">
       <el-icon><InfoFilled /></el-icon>
       <span>您未购买该图书，暂无评价权限</span>
     </div>
 
-    <!-- 已评价完成提示 -->
     <div v-else-if="userAuthInfo.hasCommented" class="has-comment-tip">
       <el-icon><SuccessFilled /></el-icon>
       <span>您已完成该图书的评价，感谢您的反馈</span>
     </div>
 
-    <!-- 历史全部评价列表 -->
     <div class="comment-list-box">
       <h4 class="list-title">全部用户评价 ({{ commentTotalCount }})</h4>
-
-      <!-- 暂无评价空状态 -->
       <el-empty v-if="commentList.length === 0" description="暂无用户评价，快来第一个评价吧" />
-
-      <!-- 评价列表 -->
       <div v-else class="comment-item-wrap">
         <div v-for="item in commentList" :key="item.id" class="comment-item">
           <div class="comment-item-top">
             <span class="username">{{ item.nickname }}</span>
-            <!-- 单条评价星星+数字展示 -->
             <div class="item-score">
               <el-rate
                 v-model="item.score"
@@ -112,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage, FormInstance } from 'element-plus'
 import { InfoFilled, SuccessFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
@@ -124,7 +115,6 @@ import {
   addComment,
   getRandomComments,
 } from '@/api/front/bookComment'
-// 导入TS类型
 import type { CommentAuth, BookScore, CommentItem } from '@/types/index'
 
 interface CommentForm {
@@ -132,20 +122,19 @@ interface CommentForm {
   content: string
 }
 
-// 接收父组件图书ID
 const props = defineProps<{ bookId: number }>()
 const userStore = useUserStore()
 
-// 响应式数据
+const allImagesLoaded = ref(false)
 const submitFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
-const bookAvgScore = ref<number>(0.0)
+const bookAvgScore = ref<number | null>(null)
 const commentTotalCount = ref<number>(0)
 const userAuthInfo = ref<CommentAuth>({ hasAuth: false, hasCommented: false })
 const commentForm = ref<CommentForm>({ score: 5.0, content: '' })
 const commentList = ref<CommentItem[]>([])
+const randomComments = ref<CommentItem[]>([])
 
-// 评分双向绑定
 const handleScoreChange = (val: number) => {
   commentForm.value.score = parseFloat(val.toFixed(1))
 }
@@ -155,22 +144,20 @@ const handleInputScoreChange = () => {
   if (val > 5) val = 5.0
   commentForm.value.score = parseFloat(val.toFixed(1))
 }
+
 const fetchRandomComments = async () => {
   if (!props.bookId) return
   try {
     const res = await getRandomComments(props.bookId)
     if (res.code === 200) {
-      // 假设后端返回 { code:200, data: [comment1, comment2, comment3] }
       randomComments.value = res.data || []
     }
   } catch (err) {
     console.error('获取随机评论失败', err)
   }
 }
-// ========== 【字段名 userInfo → user 与详情页统一】 ==========
-// 校验评价权限
+
 const fetchCommentAuth = async () => {
-  // 现在 userStore.user 能正常拿到登录用户，和详情页完全一致
   if (!userStore.user?.id) {
     userAuthInfo.value = { hasAuth: false, hasCommented: false }
     return
@@ -185,7 +172,6 @@ const fetchCommentAuth = async () => {
   }
 }
 
-// 获取图书评分
 const fetchBookScore = async () => {
   try {
     const res = await getBookAvgScore(props.bookId)
@@ -198,7 +184,6 @@ const fetchBookScore = async () => {
   }
 }
 
-// 获取评价列表
 const fetchCommentList = async () => {
   try {
     const res = await getCommentList(props.bookId)
@@ -210,7 +195,6 @@ const fetchCommentList = async () => {
   }
 }
 
-// 提交评价
 const submitComment = async () => {
   if (!submitFormRef.value) return
   if (commentForm.value.score <= 0) {
@@ -244,25 +228,33 @@ const submitComment = async () => {
   }
 }
 
-// 时间格式化
 const formatTime = (time: string) => {
   if (!time) return ''
   return new Date(time).toLocaleString()
 }
 
-// 初始化加载
 onMounted(async () => {
   if (props.bookId) {
-    await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
-    await fetchRandomComments()
+    await Promise.all([
+      fetchCommentAuth(),
+      fetchBookScore(),
+      fetchCommentList(),
+      fetchRandomComments(),
+    ])
   }
+
+  nextTick(() => {
+    setTimeout(() => {
+      allImagesLoaded.value = true
+    }, 50)
+  })
 })
 
-// 监听图书ID切换
 watch(
   () => props.bookId,
   async (newId) => {
     if (newId) {
+      bookAvgScore.value = null
       await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
     }
   },
@@ -387,5 +379,21 @@ watch(
   color: #444;
   line-height: 1.6;
   word-break: break-all;
+}
+</style>
+
+<style>
+/* 遮罩样式 */
+.black-mask {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 19999;
+}
+.fade-leave-active {
+  opacity: 1;
+}
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

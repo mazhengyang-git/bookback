@@ -1,10 +1,4 @@
 <template>
-  <Transition name="fade">
-    <div v-show="!allImagesLoaded" class="black-mask"></div>
-  </Transition>
-
-  <div class="wave-bg"></div>
-
   <div class="home-top-nav">
     <div class="nav-left">
       <h2 class="logo1 sci-fi-title1">星途科幻图书</h2>
@@ -66,26 +60,56 @@
       </div>
     </div>
     <div class="nav-right1">
-      <div v-if="!userStore.isLogin">
-        <el-button type="primary" link @click="$router.push('/login')">登录</el-button>
-        <el-button type="primary" link @click="$router.push('/register')">注册</el-button>
+      <div style="position: relative; left: -89px; margin-top: 10px" v-if="!userStore.isLogin">
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/login')"
+          >登录</el-button
+        >
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/register')"
+          >注册</el-button
+        >
       </div>
       <div v-else class="login-bar">
-        <span class="welcome-text">欢迎：{{ userStore.user?.username }}</span>
-        <el-button link @click="$router.push('/user')">
+        <span
+          style="
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            color: green;
+            font-size: 22px;
+          "
+          class="welcome-text"
+          >欢迎：{{ userStore.user?.username }}</span
+        >
+        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')">
           <img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心
         </el-button>
-        <el-button link @click="$router.push('/cart')">
-          <img style="width: 24px; height: auto" src="/img/购物车.png" />购物车
+        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')">
+          <img
+            class="gwdh"
+            style="width: 24px; height: auto; margin-right: 3px"
+            src="/img/购物车.png"
+          />购物车
         </el-button>
-        <el-button type="danger" link @click="handleLogout">退出</el-button>
+        <el-button
+          style="color: white; background-color: red; position: relative"
+          type="danger"
+          link
+          @click="handleLogout"
+          >退出</el-button
+        >
       </div>
     </div>
   </div>
 
   <div v-if="book" class="book-detail-container">
     <div class="book-detail-content">
-      <!-- 图书封面 -->
       <div class="book-detail-cover" ref="coverRef">
         <el-image
           :src="book.cover || '/img/default-book.jpg'"
@@ -98,7 +122,6 @@
         />
       </div>
 
-      <!-- 图书基础信息区域 -->
       <div class="book-detail-info">
         <h1 class="book-detail-name">{{ book.name || '未知图书' }}</h1>
         <p class="book-detail-author">作者：{{ book.author || '未知作者' }}</p>
@@ -130,12 +153,11 @@
           去支付
         </el-button>
 
-        <!-- ================== 【修复完成】右侧评分+随机评论展示区域 ================== -->
         <div class="comment-preview-box">
           <h4>图书综合评分</h4>
-          <!-- 综合星级评分 -->
           <div class="score-display">
             <el-rate
+              v-if="localAvgScore !== null"
               v-model="localAvgScore"
               disabled
               :max="5"
@@ -143,11 +165,10 @@
               text-color="#ff7d00"
               :score-format="(value) => value.toFixed(1)"
             />
-            <span class="score-text">{{ localAvgScore.toFixed(1) }}</span>
+            <span class="score-text">{{ localAvgScore?.toFixed(1) }}</span>
             <span class="comment-count">共 {{ commentTotalCount }} 人评价</span>
           </div>
 
-          <!-- 前端随机展示3条评论 -->
           <div class="random-comments">
             <div
               class="comment-item"
@@ -155,6 +176,7 @@
               :key="comment.id ?? index"
             >
               <el-rate
+                v-if="comment.score != null"
                 v-model="comment.score"
                 disabled
                 :max="5"
@@ -163,11 +185,9 @@
               />
               <p class="comment-content">{{ comment.content || '用户无文字评价' }}</p>
             </div>
-            <!-- 无评论空状态 -->
             <div v-if="randomComments.length === 0" class="empty-tip">暂无用户评价</div>
           </div>
 
-          <!-- 查看全部评价按钮 -->
           <el-button
             type="success"
             class="add-cart-btn1"
@@ -178,11 +198,9 @@
             查看图书评价
           </el-button>
         </div>
-        <!-- ================== 新增区域结束 ================== -->
       </div>
     </div>
 
-    <!-- 图书简介 -->
     <div class="book-detail-desc">
       <h3>图书简介</h3>
       <p
@@ -203,7 +221,6 @@
       </el-button>
     </div>
 
-    <!-- 图书目录 -->
     <div class="book-detail-desc1">
       <h3>目录展示</h3>
       <p
@@ -224,7 +241,6 @@
       </el-button>
     </div>
 
-    <!-- 作者简介 -->
     <div class="book-detail-desc2">
       <h3>作者简介</h3>
       <p
@@ -245,7 +261,6 @@
       </el-button>
     </div>
 
-    <!-- 评价全部弹窗 -->
     <el-dialog
       v-model="commentVisible"
       title="图书评价中心"
@@ -259,10 +274,7 @@
     </el-dialog>
   </div>
 
-  <!-- 未加载/无数据兜底 -->
-  <div v-else class="loading-tip">
-    {{ loading ? '加载中...' : '未找到该图书' }}
-  </div>
+  <div v-else class="loading-tip">加载中...</div>
 </template>
 
 <script setup lang="ts">
@@ -277,12 +289,10 @@ import request from '@/utils/request'
 import { getDirectPayGoodsInfo } from '@/api/front/pay'
 import BookComment from '@/views/front/book/bookcomment.vue'
 import { useBookStore1 } from '@/store/newbook'
-
 import { getBookAvgScore, getCommentList } from '@/api/front/bookComment'
 
 const router = useRouter()
-const allImagesLoaded = ref(false)
-const commentVisible = ref(false)
+const route = useRoute()
 
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
@@ -296,19 +306,18 @@ function mouseleve() {
     if (showhover.value === true) {
       showhover.value = false
     }
-  }, 750)
+  }, 450)
 }
 function mouseshow() {
   if (timeleave) clearTimeout(timeleave)
   showhover.value = true
 }
+
 function go(path: string) {
-  setTimeout(() => {
-    router.push(path)
-  }, 1)
+  router.push(path)
 }
 
-const localAvgScore = ref<number>(0.0)
+const localAvgScore = ref<number | null>(null)
 const commentTotalCount = ref<number>(0)
 const randomComments = ref<any[]>([])
 
@@ -433,39 +442,39 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-const route = useRoute()
 const bookId = computed(() => Number(route.params.id))
 const source = computed(() => String(route.query.source || 'normal'))
+
 const cartStore = useCartStore()
 const userStore = useUserStore()
-const bookStore1 = useBookStore1() // 引入新书Store
+const bookStore1 = useBookStore1()
 
 const loading = ref(true)
 const book = ref<Book | null>(null)
 const buyCount = ref(1)
 
-const isMuluExpanded1 = ref(false)
-const showMuluExpand1 = ref(false)
 const isDescExpanded = ref(false)
 const isMuluExpanded = ref(false)
+const isMuluExpanded1 = ref(false)
 const showDescExpand = ref(false)
 const showMuluExpand = ref(false)
+const showMuluExpand1 = ref(false)
+
 const descRef = ref<HTMLElement | null>(null)
 const muluRef = ref<HTMLElement | null>(null)
 const muluRef1 = ref<HTMLElement | null>(null)
 
-// 核心：根据source加载图书数据（普通书/新书）
+const commentVisible = ref(false)
+
 const loadBookDetail = async () => {
-  allImagesLoaded.value = false
   const currentBookId = bookId.value
   const currentSource = source.value
+
   try {
     if (currentSource === 'new') {
-      // 从新书表newbook加载数据
       await bookStore1.fetchBookList()
       book.value = bookStore1.bookList1.find((item) => item.id === currentBookId)
     } else {
-      // 从普通图书接口加载数据
       const res = await getBookDetailApi(currentBookId)
       if (res.code === 200 && res.data) {
         book.value = res.data
@@ -480,9 +489,6 @@ const loadBookDetail = async () => {
     console.error(error)
   } finally {
     loading.value = false
-    nextTick(() => {
-      allImagesLoaded.value = true
-    })
   }
 }
 
@@ -508,7 +514,7 @@ const addToCart = async () => {
       goodsId: book.value.id,
       num: buyCount.value,
       spec: '平装版',
-      source: source, // 加上这一行
+      source: source.value,
     })
     cartStore.addToCart({
       id: book.value.id,
@@ -518,7 +524,7 @@ const addToCart = async () => {
       cover: book.value.cover || '/img/default-book.jpg',
       cartId: 0,
       spec: '',
-      source: source, //前端购物车项里存source
+      source: source.value,
     })
     ElMessage.success({ message: '加入购物车成功', offset: 80 })
   } catch (err) {
@@ -527,7 +533,6 @@ const addToCart = async () => {
   }
 }
 
-// 修复后的立即支付方法
 const handlePay = async () => {
   if (!userStore.token) {
     ElMessage.warning('请先登录后再支付')
@@ -538,8 +543,7 @@ const handlePay = async () => {
     ElMessage.warning('图书信息加载失败，无法支付')
     return
   }
-  // 新书不校验库存
-  if (source !== 'new') {
+  if (source.value !== 'new') {
     const stock = Number(book.value.stock) || 0
     if (buyCount.value > stock) {
       ElMessage.error(`库存不足！该图书仅剩${stock}本`)
@@ -547,63 +551,45 @@ const handlePay = async () => {
     }
   }
 
-  // 直接跳转，不需要提前调用接口
   router.push({
     path: '/pay/direct',
     query: {
       bookId: book.value.id.toString(),
       buyCount: buyCount.value.toString(),
-      source: source,
+      source: source.value,
     },
   })
 }
+
 onMounted(async () => {
   window.scrollTo(0, 0)
-  if (bookId.value) {
-    await loadBookDetail()
-    nextTick(() => {
-      if (descRef.value) {
-        showDescExpand.value = descRef.value.scrollHeight > descRef.value.clientHeight
-      }
-      if (muluRef.value) {
-        showMuluExpand.value = muluRef.value.scrollHeight > muluRef.value.clientHeight
-      }
-      if (muluRef1.value) {
-        showMuluExpand1.value = muluRef1.value.scrollHeight > muluRef1.value.clientHeight
-      }
-      fetchScoreAndRandomComments(bookId.value)
-    })
-  }
 })
+
+watch(
+  [bookId, source],
+  async ([newBookId, newSource]) => {
+    if (!newBookId) return
+    loading.value = true
+    book.value = null
+    localAvgScore.value = null
+    randomComments.value = []
+
+    await loadBookDetail()
+
+    nextTick(() => {
+      showDescExpand.value = descRef.value?.scrollHeight > descRef.value?.clientHeight
+      showMuluExpand.value = muluRef.value?.scrollHeight > muluRef.value?.clientHeight
+      showMuluExpand1.value = muluRef1.value?.scrollHeight > muluRef1.value?.clientHeight
+      fetchScoreAndRandomComments(newBookId)
+    })
+  },
+  { immediate: true },
+)
 
 const chuyu = ref(false)
-
-watch([bookId, source], async ([newBookId, newSource], [oldBookId, oldSource]) => {
-  if (!newBookId || (newBookId === oldBookId && newSource === oldSource)) return
-  loading.value = true
-  book.value = null
-  allImagesLoaded.value = false
-  await loadBookDetail()
-  nextTick(() => {
-    if (descRef.value) {
-      showDescExpand.value = descRef.value.scrollHeight > descRef.value.clientHeight
-    }
-    if (muluRef.value) {
-      showMuluExpand.value = muluRef.value.scrollHeight > muluRef.value.clientHeight
-    }
-    if (muluRef1.value) {
-      showMuluExpand1.value = muluRef1.value.scrollHeight > muluRef1.value.clientHeight
-    }
-    fetchScoreAndRandomComments(newBookId)
-  })
-  window.scrollTo(0, 0)
-})
-
 onMounted(() => {
   if (!chuyu.value) {
     requestIdleCallback(() => {
-      //预加载页面
-
       import('@/views/front/book/list.vue')
       import('@/views/front/user/index.vue')
       import('@/views/front/cart/index.vue')
@@ -614,6 +600,26 @@ onMounted(() => {
 })
 </script>
 <style scoped>
+.gwdh {
+  animation: gwdh 2s infinite;
+}
+@keyframes gwdh {
+  0%,
+  100% {
+    transform: scale(1) rotate3d(0, 0, 0, 0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate3d(0, 1, 1, 12deg);
+  }
+  75% {
+    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
+  }
+}
+</style>
+<style scoped>
 /* 基础响应式配置 */
 :root {
   font-size: 16px;
@@ -622,7 +628,7 @@ onMounted(() => {
 /* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.1s ease;
 }
 .fade-leave-to {
   opacity: 0;
@@ -921,6 +927,7 @@ onMounted(() => {
 @media (max-width: 880px) {
   .comment-preview-box {
     right: -380px;
+    display: none;
   }
 }
 @media (max-width: 850px) {
@@ -1138,7 +1145,7 @@ onMounted(() => {
 
 .syws {
   display: flex;
-  background: linear-gradient(0deg, #ffffff 0%, #022d8a 100%);
+  background: #ffffff;
   border: 1px solid rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
   border-radius: 0.375rem;
@@ -1147,7 +1154,7 @@ onMounted(() => {
   justify-content: center;
 }
 .syses {
-  color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
   font-size: clamp(1rem, 2vw, 1.125rem);
   text-decoration: none;
 }

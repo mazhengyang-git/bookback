@@ -1,15 +1,15 @@
 <template>
   <div class="se">
-    <!-- 轮播容器（带scale(0.6)缩放） -->
+    <!-- 轮播容器 -->
     <div class="asss carousel-container">
       <!-- 所有图片同时渲染，通过class控制状态 -->
-      <router-link
+      <div
         v-for="(item, index) in slides"
         :key="index"
-        :to="item.path"
         :class="getItemStatus(index + 1)"
         class="carousel-item"
         v-if="slides.length > 0"
+        @click="handleSlideClick(item.path)"
       >
         <span class="lunbotuzi">{{ item.title }}</span>
         <!--@vue-ignore-->
@@ -19,7 +19,7 @@
           referrerpolicy="no-referrer"
           @error="(e) => (e.target.src = '/img/default-book.jpg')"
         />
-      </router-link>
+      </div>
 
       <!-- 左右切换按钮 -->
       <button @click="next" class="pw prev" v-if="slides.length > 0">></button>
@@ -44,10 +44,20 @@
 <script lang="ts" setup>
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { useBookStore } from '@/store/book'
+import { useRouter } from 'vue-router'
 import type { Book } from '@/types/index'
 
 const bookStore = useBookStore()
-
+const router = useRouter()
+//轮播图点击处理
+const handleSlideClick = (path: string) => {
+  if (router.currentRoute.value.path.startsWith('/book/')) {
+    router.replace(path)
+    location.reload()
+  } else {
+    router.push(path)
+  }
+}
 // 随机抽取图书
 function getRandomBooks(list: Book[], count: number = 4) {
   if (!list || list.length === 0) return []
@@ -128,7 +138,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
   height: 526px;
   width: 100%;
   max-width: 1200px;
-
+  z-index: 666 !important;
   margin: 0 auto;
   position: relative;
   user-select: none;
@@ -211,6 +221,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
   text-shadow:
     0 0 5px #edeef0,
     0 0 5px rgba(85, 52, 10, 0.6);
+  cursor: pointer;
 }
 .lunbotuzi:hover {
   color: rgb(198, 111, 43);
@@ -218,6 +229,7 @@ onUnmounted(() => zilun && clearInterval(zilun))
 
 /* 图书封面样式 */
 .tu {
+  cursor: pointer;
   width: 320px;
   height: auto;
   aspect-ratio: 2 / 3;
@@ -333,16 +345,5 @@ onUnmounted(() => zilun && clearInterval(zilun))
 
   position: absolute;
   left: 100px;
-}
-.xiatiao2 {
-  height: 2px;
-  background: #eee;
-
-  top: 100.2px;
-  width: 669px;
-  z-index: 888;
-  transform: rotate(90deg);
-  position: absolute;
-  left: 534.5px;
 }
 </style>
