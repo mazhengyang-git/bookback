@@ -6,15 +6,15 @@
     <!-- 统计面板 -->
     <div class="stats-box" style="-webkit-user-select: none">
       <div class="stats-item">
-        <span>总用户数</span>
+        <span style="color: #000;font-weight: 600;">总用户数</span>
         <strong>{{ stats.totalUserCount }}</strong>
       </div>
       <div class="stats-item">
-        <span>买家数量</span>
+        <span style="color: #000;font-weight: 600;">买家数量</span>
         <strong>{{ stats.buyerCount }}</strong>
       </div>
       <div class="stats-item">
-        <span>卖家数量</span>
+        <span style="color: #000;font-weight: 600;">卖家数量</span>
         <strong>{{ stats.sellerCount }}</strong>
       </div>
     </div>

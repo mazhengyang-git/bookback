@@ -1,6 +1,7 @@
 <template>
   <div class="admin-container">
     <!-- 装饰 -->
+     <div>
     <div class="decor decor-line-1"></div>
     <div class="decor decor-line-2"></div>
     <div class="decor decor-line-3"></div>
@@ -8,10 +9,8 @@
     <div class="decor decor-card-1"></div>
     <div class="decor decor-card-2"></div>
     <div class="decor decor-icon-1">📚</div>
-    <div class="decor decor-icon-2">💻</div>
-    <div class="decor decor-icon-3">📊</div>
-    <div class="decor decor-icon-4">🔍</div>
-    <div class="decor decor-icon-5">📝</div>
+  
+   
     <div class="decor decor-icon-6">🔐</div>
     <div class="decor decor-corner-1"></div>
     <div class="decor decor-corner-2"></div>
@@ -31,7 +30,7 @@
     <!-- 流动渐变条 -->
     <div class="decor decor-shine-border"></div>
     <!-- 边框扫光 -->
-
+</div>
     <!-- 顶部导航栏 -->
     <div class="admin-header">
       <span
@@ -56,33 +55,39 @@
 
     <!-- 管理按钮 -->
     <div class="guanli按钮">
-      <button style="-webkit-user-select: none" @click="switchTab('notice')">公告管理</button>
-      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('user')">
+      <button :class="{active: activeTab === 'notice'}" class="an1" style="-webkit-user-select: none" @click="switchTab('notice')">公告管理</button>
+      <button :class="{active: activeTab === 'user'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('user')">
         用户信息
       </button>
-      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookguan')">
+      <button :class="{active: activeTab === 'bookguan'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookguan')">
         商品管理
       </button>
-      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('orderguan')">
+      <button :class="{active: activeTab === 'orderguan'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('orderguan')">
         订单管理
       </button>
-      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookpaihang')">
+      <button :class="{active: activeTab === 'bookpaihang'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookpaihang')">
         图书排行
       </button>
-      <button style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('newbook')">
+      <button :class="{active: activeTab === 'newbook'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('newbook')">
         新书速递
+      </button>
+      <button :class="{active: activeTab === 'huodongzixun'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('huodongzixun')">
+        活动资讯
       </button>
       <button
         link
         @click="switchTab('useradmin')"
         style="
-          color: black;
+        
           -webkit-user-select: none;
           margin-top: 20px;
           padding: 9px;
-          width: 84px;
-          margin-left: -3px;
-        "
+          width: 86px;
+          margin-left: -3.6px;
+          padding-right:3px;
+          "
+          class="an1"
+        :class="{active: activeTab === 'useradmin'}"
       >
         <img
           style="width: 18px; height: auto; position: relative; top: 5px"
@@ -93,26 +98,29 @@
 
     <!-- 管理显示区域 -->
     <div class="guanli显示区域">
-      <div class="sub-page-container notice-container" v-if="activeTab === 'notice'">
+      <div class="sub-page-container notice-container" v-show="activeTab === 'notice'">
         <notice />
       </div>
-      <div class="sub-page-container user-container" v-if="activeTab === 'user'">
+      <div class="sub-page-container user-container" v-show="activeTab === 'user'">
         <userment />
       </div>
-      <div class="sub-page-container bookguan" v-if="activeTab === 'bookguan'">
+      <div class="sub-page-container bookguan" v-show="activeTab === 'bookguan'">
         <bookdetail />
       </div>
-      <div class="sub-page-container bookguan" v-if="activeTab === 'useradmin'">
+      <div class="sub-page-container bookguan" v-show="activeTab === 'useradmin'">
         <useradmin />
       </div>
-      <div class="sub-page-container bookguan" v-if="activeTab === 'orderguan'">
+      <div class="sub-page-container bookguan" v-show="activeTab === 'orderguan'">
         <orderadmin />
       </div>
-      <div class="sub-page-container bookguan" v-if="activeTab === 'bookpaihang'">
+      <div class="sub-page-container bookguan" v-show="activeTab === 'bookpaihang'">
         <bookpai />
       </div>
-      <div class="sub-page-container bookguan" v-if="activeTab === 'newbook'">
+      <div class="sub-page-container bookguan" v-show="activeTab === 'newbook'">
         <newbook />
+      </div>
+       <div class="sub-page-container bookguan" v-show="activeTab === 'huodongzixun'">
+        <huodongzx />
       </div>
     </div>
 
@@ -134,6 +142,7 @@ import newbook from '@/views/back/book/newbook.vue'
 import orderadmin from '@/views/back/order/index.vue'
 import useradmin from '@/views/back/user/index.vue'
 import bookpai from '@/views/back/book/bookpaihang.vue'
+import huodongzx from '@/views/back/huodongzx/huodongzx.vue'
 const title = '后台首页'
 const userStore = useUserStore()
 const router = useRouter()
@@ -141,7 +150,7 @@ const router = useRouter()
 const activeTab = ref('notice')
 
 const switchTab = (
-  tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan' | 'bookpaihang' | 'newbook',
+  tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan' | 'bookpaihang' | 'newbook' |'huodong',
 ) => {
   activeTab.value = activeTab.value === tab ? '' : tab
 }
@@ -160,6 +169,22 @@ const goToFront = () => {
 </script>
 
 <style scoped>
+.an1{
+  font-weight: 700;
+}
+.an1.active{
+ background-color: #325ee1;
+  color: #fff !important;
+ 
+box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+}
+.an1:hover {
+  
+  color: rgba(174, 94, 7, 0.812);
+ 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  
+}
 .admin-container {
   width: 100%;
   max-width: 1200px;
@@ -171,20 +196,17 @@ const goToFront = () => {
   min-height: 100vh;
   height: 1400px;
 }
-
-/*
-顶部导航栏
-*/
+/*顶部导航栏*/
 .admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px 16px 120px;
   margin-bottom: 20px;
-  width: 100%;
+  width: 110%;
   /* 高级蓝紫渐变背景 */
   background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
-  border-radius: 12px;
+ margin-left: -5%;
   box-shadow: 0 4px 15px rgba(78, 115, 223, 0.2);
   position: relative;
   overflow: hidden;
@@ -199,13 +221,14 @@ const goToFront = () => {
   position: relative;
   z-index: 2;
 }
+
 /* 导航栏柔光装饰 */
 .admin-header::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
-  width: 100%;
+  width: 110%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   animation: headerShine 6s infinite linear;
@@ -219,7 +242,6 @@ const goToFront = () => {
     left: 100%;
   }
 }
-
 .guanli按钮 {
   position: absolute;
   left: 20px;
@@ -228,14 +250,14 @@ const goToFront = () => {
   flex: none;
   display: grid;
   background: linear-gradient(180deg, #e8e9ed 0%, #ffffff 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.333);
   z-index: 10;
   height: auto;
   padding: 12px 6px;
   border-radius: 8px;
+  
   transition: all 0.3s ease;
 }
-
 .guanli按钮 button {
   width: 80px;
   padding: 10px 6px;
@@ -249,12 +271,6 @@ const goToFront = () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.25s ease;
 }
-.guanli按钮 button:hover {
-  background-color: #4e73df;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
-}
 
 .el-button {
   box-shadow: 0 2px 6px rgba(78, 115, 223, 0.15) !important;
@@ -266,7 +282,6 @@ const goToFront = () => {
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 12px rgba(78, 115, 223, 0.25) !important;
 }
-
 .guanli显示区域 {
   background: linear-gradient(-135deg, #dfdede 25%, #e9ecef 50%, #f3f3f3 25%);
   border-radius: 12px;
@@ -278,7 +293,6 @@ const goToFront = () => {
   height: 1300px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
-
 .sub-page-container {
   width: 1000px;
   height: 100%;
@@ -289,9 +303,8 @@ const goToFront = () => {
   border-radius: 8px;
   align-items: flex-start;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s ease;
+ 
 }
-
 .sub-page-container::-webkit-scrollbar {
   width: 8px;
 }
@@ -306,7 +319,6 @@ const goToFront = () => {
 .sub-page-container::-webkit-scrollbar-track {
   background: #f5f7fa;
 }
-
 .router-view-container {
   margin-top: 620px;
   margin-left: 120px;
@@ -314,10 +326,8 @@ const goToFront = () => {
   min-height: 200px;
   z-index: 1;
 }
-
 .bookguan {
 }
-
 /* 基础装饰 */
 .admin-container::before {
   content: '';
@@ -341,7 +351,6 @@ const goToFront = () => {
   z-index: 1;
   pointer-events: none;
 }
-
 .guanli按钮::before {
   content: '';
   width: 60%;
@@ -351,7 +360,6 @@ const goToFront = () => {
   margin: 0 auto 8px;
   opacity: 0.8;
 }
-
 .guanli显示区域::before {
   content: '';
   position: absolute;
@@ -364,16 +372,12 @@ const goToFront = () => {
   z-index: 6;
   pointer-events: none;
 }
-
-/* 
-原有装饰样式
-*/
+/* 装饰样式*/
 .decor {
   position: absolute;
   pointer-events: none;
   z-index: 40;
 }
-
 .decor-line-1 {
   top: 95px;
   left: 120px;
@@ -406,7 +410,6 @@ const goToFront = () => {
   background: linear-gradient(-90deg, rgba(69, 165, 255, 0.3), transparent);
   border-radius: 2px;
 }
-
 .decor-card-1 {
   left: 130px;
   top: 150px;
@@ -425,7 +428,6 @@ const goToFront = () => {
   border-radius: 10px;
   transform: rotate(10deg);
 }
-
 .decor-icon-1 {
   top: 105px;
   left: 130px;
@@ -468,7 +470,6 @@ const goToFront = () => {
   color: rgba(69, 165, 255, 0.4);
   animation: floatIcon 4.2s ease-in-out infinite reverse;
 }
-
 .decor-corner-1 {
   top: 0;
   left: 120px;
@@ -565,9 +566,7 @@ const goToFront = () => {
   z-index: 40;
 }
 
-/*
-高级CSS动态装饰
-*/
+/*高级CSS动态装饰*/
 /* 1. 旋转流光环 */
 .decor-rotate-light {
   top: 105px;
@@ -634,7 +633,6 @@ const goToFront = () => {
   border-radius: 8px;
   animation: shine 3s linear infinite;
 }
-
 /* 新增动画 */
 @keyframes rotate {
   0% {
@@ -707,7 +705,7 @@ const goToFront = () => {
   }
 }
 
-/* 媒体查询（原有不变） */
+/* 媒体查询 */
 @media (max-width: 1200px) {
   .guanli显示区域 {
     justify-content: flex-start;

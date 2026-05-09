@@ -1,5 +1,5 @@
 <template>
-  <div class="cart-container">
+  <div class="cart-container"    v-cloak>
     <el-button link class="syses11" @click="$router.push('/home')">返回首页</el-button>
 
     <h2 class="cart-title">我的购物车</h2>

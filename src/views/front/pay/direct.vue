@@ -1,5 +1,5 @@
 <template>
-  <div class="pay-page">
+  <div class="pay-page"    v-cloak>
     <div class="pay-header">
       <h2 style="color: darkorange">确认支付</h2>
       <el-button
@@ -13,7 +13,7 @@
     </div>
 
     <!-- 加载中 -->
-    <div v-if="loading" class="loading-tip">加载支付信息中...</div>
+    <div v-if="loading" class="loading-tip"><!--加载支付信息中...--></div>
 
     <!-- 直付商品信息 -->
     <div v-else-if="payGoods" class="pay-goods-card">

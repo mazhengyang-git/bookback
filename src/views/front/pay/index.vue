@@ -1,5 +1,5 @@
 <template>
-  <div class="pay-container">
+  <div class="pay-container"    v-cloak>
     <div class="pay-header">
       <h2 style="color: black">确认订单</h2>
       <el-button
@@ -13,7 +13,7 @@
     </div>
 
     <!-- 加载/空状态 -->
-    <div v-if="loading" class="loading-tip">加载中...</div>
+    <div v-if="loading" class="loading-tip"><!--加载中...--></div>
     <div v-else-if="!payList.length" class="empty">
       <p style="color: black">暂无待支付商品</p>
       <el-button @click="router.push('/cart')">返回购物车</el-button>

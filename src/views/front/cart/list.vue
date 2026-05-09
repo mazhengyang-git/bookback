@@ -1,5 +1,5 @@
 <template>
-  <div class="cart-container">
+  <div class="cart-container"    v-cloak>
     <h2 class="title">我的购物车</h2>
 
     <div v-if="cartStore.cartList.length === 0" class="empty">购物车是空的，快去选购图书吧~</div>

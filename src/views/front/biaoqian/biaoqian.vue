@@ -124,11 +124,12 @@ onMounted(async () => {
 
 <style scoped>
 .home-hot-tags {
-  width: 450px;
+  width: 499px;
   padding: clamp(15px, 2vw, 20px);
   margin: clamp(30px, 3.5vw, 40px) 0;
   box-sizing: border-box;
   height: auto;
+
   border-radius: 20%;
 }
 
@@ -193,6 +194,7 @@ onMounted(async () => {
   border: none;
   border-radius: clamp(10px, 2vw, 15px);
   transition: all 0.3s ease;
+  
   opacity: 0.66;
 }
 
@@ -243,14 +245,8 @@ onMounted(async () => {
 
 .home-hot-tags {
   border-radius: 12px;
-  box-shadow:
-    0 2.8px 2.2px rgba(0, 0, 0, 0.02),
-    0 6.7px 5.3px rgba(0, 0, 0, 0.028),
-    0 2.5px 5px rgba(0, 0, 0, 0.035),
-    0 2.3px 7.9px rgba(0, 0, 0, 0.042),
-    0 1.8px 3.4px rgba(0, 0, 0, 0.05),
-    0 1px 30px rgba(0, 0, 0, 0.07);
-
+ box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.1);
   /* 调高透明度，更容易看出毛玻璃 */
   background: rgba(255, 255, 255, 0.35);
   /* 适度模糊，不要太大太糊 */

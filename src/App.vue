@@ -17,9 +17,9 @@
   background-color: white !important;
 }
 
-/* 这里**绝对不能加 scoped**！不加才是全局生效，覆盖全项目所有样式 */
-/* ========== 根治右侧粉色竖边 全局终极样式 ========== */
-/* 覆盖浏览器所有滚动条，消除粉色背景 */
+/* 覆盖全项目所有样式 */
+/* ========== 全局样式 ========== */
+/* 覆盖浏览器滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   background-color: #ffffff !important;

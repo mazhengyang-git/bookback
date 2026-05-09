@@ -1,18 +1,18 @@
 <template>
   <div class="notice-manage">
     <h2 class="page-title">公告管理</h2>
-    <button class="add-btn" @click="toAdd">发布新公告</button>
+    <button style="font-weight: 600;" class="add-btn" @click="toAdd">发布新公告</button>
 
     <div class="list">
       <div v-for="item in noticeList" :key="item.id" class="item">
         <div class="info">
-          <h4>{{ item.title }}</h4>
-          <p>{{ item.content }}</p>
-          <span>{{ item.create_time }}</span>
+          <h4 style="color: #000;font-weight: 600;">{{ item.title }}</h4>
+          <p style="color: #000fff;font-weight: 600;">{{ item.content }}</p>
+          <span style="color: #000;font-weight: 600;">{{ item.create_time }}</span>
         </div>
         <div class="btns">
-          <button class="edit-btn" @click="toEdit(item)">修改</button>
-          <button class="del-btn" @click="delNotice(item.id)">删除</button>
+          <button style="font-weight: 600;" class="edit-btn" @click="toEdit(item)">修改</button>
+          <button style="font-weight: 600;" class="del-btn" @click="delNotice(item.id)">删除</button>
         </div>
       </div>
     </div>
@@ -20,15 +20,16 @@
     <div v-if="formVisible" class="modal-overlay" @click.self="formVisible = false">
       <div class="form-modal">
         <h3 class="modal-title">{{ form.id ? '编辑公告' : '新增公告' }}</h3>
-        <input class="form-input" v-model="form.title" placeholder="请输入公告标题" />
+        <input style="color: #000;font-weight: 600;" class="form-input" v-model="form.title" placeholder="请输入公告标题" />
         <textarea
           class="form-textarea"
+          style="color: #000;font-weight: 600;"
           v-model="form.content"
           placeholder="请输入公告内容"
         ></textarea>
         <div class="modal-btns">
-          <button class="save-btn" @click="saveNotice">保存</button>
-          <button class="cancel-btn" @click="formVisible = false">取消</button>
+          <button style="font-weight: 600;" class="save-btn" @click="saveNotice">保存</button>
+          <button style="font-weight: 600;" class="cancel-btn" @click="formVisible = false">取消</button>
         </div>
       </div>
     </div>

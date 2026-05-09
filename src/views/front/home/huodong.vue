@@ -1,5 +1,5 @@
 <template>
-  <div class="wave">
+  <div class="wave"    v-cloak>
     <!-- 活动内容 -->
 
     <div class="buttrq">
@@ -91,18 +91,25 @@
     <div class="huodong-container">
       <div v-show="xianshi === false" class="home-reading-events section-glow">
         <h2 class="sci-fi-title">读书活动</h2>
-        <div v-if="readingEvents.length === 0" class="empty-tip">
-          <el-empty description="暂无读书活动" />
+        <div v-if="huodongList.length === 0" class="empty-tip">
+          <!-- <el-empty description="暂无读书活动" /> -->
         </div>
         <div v-else class="events-list">
-          <el-card v-for="event in readingEvents" :key="event.id" class="event-card">
-            <h3>{{ event.title }}</h3>
-            <p class="event-time">时间：{{ event.time }}</p>
-            <p>{{ event.content }}</p>
-          </el-card>
+        
 
           <el-card v-for="e in huodongList" :key="e.id" class="event-card">
-            <h3>{{ e.title }}</h3>
+         <div class="hddbj">
+          <h3>
+            <span style="cursor: pointer;">
+              {{ e.title }}
+             </span>
+
+               <span class="notice-tag" style="user-select: none;">
+                {{ getStatusText(e.status) }}
+              </span>
+
+            </h3> 
+          </div>
             <p class="event-time">时间：{{ e.time }}</p>
             <p>{{ e.content }}</p>
           </el-card>
@@ -134,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, Ref, ref } from 'vue'
 import { ElEmpty, ElMessage } from 'element-plus'
 // import { useUserStore } from '@/store/modules/user'
 import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
@@ -149,33 +156,7 @@ const userStore = useUserStore()
 const router = useRouter()
 // const userStore = useUserStore()
 const xianshi = ref(false)
-// 读书活动
-const readingEvents = ref([
-  {
-    id: 1,
-    title: '《三体》线上共读会',
-    time: '2026-04-25 19:00',
-    content: '方寸书页,尽览宇宙浩瀚,让我们一起探讨三体宇宙的奥秘',
-  },
-  {
-    id: 2,
-    title: '科幻作家沙龙：未来世界的构建',
-    time: '2026-05-01 14:00',
-    content: '邀请知名科幻作家分享创作经验',
-  },
-  {
-    id: 3,
-    title: '科幻作家沙龙：未来世界的构建',
-    time: '2026-05-01 14:00',
-    content: '邀请知名科幻作家分享创作经验',
-  },
-  {
-    id: 4,
-    title: '科幻作家沙龙：未来世界的构建',
-    time: '2026-05-01 14:00',
-    content: '邀请知名科幻作家分享创作经验',
-  },
-])
+
 const huodongList = ref<Huodong[]>([])
 const zixunList = ref<Zixun[]>([])
 // 获取活动列表
@@ -217,14 +198,40 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   router.push('/login')
 }
+
+const random=ref<Huodong[]>([])
+function getRandomList(list: any[],count=4){
+  if(!list||list.length===0)return[]
+const hdcopy=[...list]
+for(let i=hdcopy.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1))
+  ;[hdcopy[i],hdcopy[j]]=[hdcopy[j],hdcopy[i]]
+
+}
+  return hdcopy.slice(0,count)
+}
+// 数字状态 → 文字
+const getStatusText = (status: number) => {
+  switch (status) {
+    case 0: return '未开始'
+    case 1: return '进行中'
+    case 2: return '快结束'
+    case 3: return '已结束'
+      case 4: return '已取消'
+    default: return '未知'
+  }
+}
+
 onMounted(() => {
   getHuodongList(huodongList)
   getZixunList()
+  random.value=getRandomList(huodongList.value,4)
 })
 </script>
 <style scoped>
 .gwdh {
   animation: gwdh 2s infinite;
+  
 }
 @keyframes gwdh {
   0%,
@@ -331,6 +338,16 @@ onMounted(() => {
 }
 </style>
 <style scoped>
+
+
+.notice-tag {
+  padding: 2px 6px;
+  background: #e6a23c;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
 .wave {
   position: relative;
   min-height: 100vh;
@@ -374,6 +391,7 @@ onMounted(() => {
 .huodong-container {
   min-height: 100vh;
   width: 80vw;
+  
   margin-left: 9.36vw;
   z-index: 1000;
   margin-top: 4px;
@@ -382,6 +400,7 @@ onMounted(() => {
 /* 读书活动 */
 .home-reading-events {
   width: 100%;
+  min-height: 600px;
   position: relative;
   background: #ffffff;
   padding: clamp(15px, 2vw, 20px);
@@ -404,7 +423,7 @@ onMounted(() => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border-radius: clamp(8px, 1vw, 12px);
   margin-top: 5px;
-  cursor: pointer;
+ 
 }
 
 .event-time {
@@ -550,5 +569,15 @@ onMounted(() => {
   margin-top: 5px;
   color: #666;
   user-select: none;
+}
+</style>
+<style>
+.hddbj{
+ background-color: #e7e7e760 !important;
+}
+:deep(.hddbj) {
+  background-color: #e7e7e760 !important;
+  display: block;
+  width: 100%;
 }
 </style>

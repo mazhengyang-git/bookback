@@ -11,3 +11,17 @@ interface ApiResponse<T> {
 export const getHuodongListApi = () => {
   return request.get<ApiResponse<Huodong[]>>('/api/huodong')
 }
+
+export const addHuodongApi = () => {
+  return request.post<ApiResponse<Huodong[]>>('/api/addhuodong')
+}
+export const updateHuodongApi = (id: number, status: number) => {
+  return request.put<ApiResponse<Huodong[]>>('/api/updatehuodong')
+}
+export const updateHuodongStatusApi = (data: { id: number; status: string }) => {
+  return request.put<ApiResponse<Huodong[]>>('/api/updatehdstatus', data)
+}
+export const deleteHuodongApi = () => {
+  return request.delete<ApiResponse<Huodong[]>>('/api/deletehuodong/:id')
+}
+

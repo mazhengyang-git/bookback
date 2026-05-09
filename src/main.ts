@@ -11,12 +11,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 const app = createApp(App)
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
-app.directive('cloak', {
-  mounted(el) {
-    // TODO: 实现loading指令
-    el.style.display = 'block'
-  },
-})
+
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)

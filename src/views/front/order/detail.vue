@@ -1,5 +1,5 @@
 <template>
-  <div class="order-container">
+  <div class="order-container"    v-cloak>
     <div class="action-row">
       <h2 class="page-title">我的订单</h2>
       <div class="button-group">
@@ -32,7 +32,7 @@
         <div class="divider"></div>
       </div>
     </div>
-    <div v-if="!orderList.length" class="empty">暂无订单</div>
+    <div v-if="!orderList.length" class="empty"><!--暂无订单--></div>
   </div>
 </template>
 

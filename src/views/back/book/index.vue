@@ -2,12 +2,12 @@
   <div class="admin-book-container" style="user-select: none; -webkit-user-select: none">
     <div class="admin-header">
       <h2 style="color: black">图书管理</h2>
-      <el-button type="primary" @click="handleAdd">新增图书</el-button>
+      <el-button style="font-weight:550" type="primary" @click="handleAdd">新增图书</el-button>
     </div>
 
     <!-- 表格容器 -->
     <div class="table-scroll-wrapper">
-      <el-table v-loading="loading" :data="bookList" border stripe>
+      <el-table style="color:black;-webkit-text-stroke:0.07px #333" v-loading="loading" :data="bookList" border stripe :header-cell-style="{ color: '#333', fontSize: '15px', fontWeight: 900 }">
         <el-table-column type="index" label="序号" width="80" />
         <el-table-column prop="book_name" label="图书名称" min-width="200" />
         <el-table-column prop="author" label="作者" width="120" />
@@ -27,8 +27,8 @@
 
         <el-table-column label="操作" width="180">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row.id)"
+            <el-button style="font-weight:550" type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button style="font-weight:550" type="danger" size="small" @click="handleDelete(scope.row.id)"
               >删除</el-button
             >
           </template>
@@ -41,9 +41,9 @@
       v-model="dialogVisible"
       width="600px"
     >
-      <template #title>{{ isEdit ? '编辑图书' : '新增图书' }}</template>
-      <el-form ref="bookFormRef" :model="bookForm" :rules="bookRules" label-width="80px">
-        <el-form-item label="图书名称" prop="book_name">
+      <template style="color: black;font-weight:550" #title>{{ isEdit ? '编辑图书' : '新增图书' }}</template>
+      <el-form style="color: black;font-weight:550" ref="bookFormRef" :model="bookForm" :rules="bookRules" label-width="80px" >
+        <el-form-item label="书名" prop="book_name">
           <!--@vue-ignore-->
           <el-input v-model="bookForm.book_name" placeholder="请输入图书名称" />
         </el-form-item>
@@ -87,16 +87,16 @@
             placeholder="请输入图书简介"
           />
         </el-form-item>
-        <el-form-item label="图书目录" prop="mulu">
+        <el-form-item label="目录" prop="mulu">
           <el-input v-model="bookForm.mulu" type="textarea" placeholder="请输入图书目录" />
         </el-form-item>
-        <el-form-item label="作者简介" prop="author_into">
+        <el-form-item label="作者" prop="author_into">
           <el-input v-model="bookForm.author_into" type="textarea" placeholder="请输入作者简介" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave">确定</el-button>
+        <el-button style="font-weight:550" @click="dialogVisible = false">取消</el-button>
+        <el-button style="font-weight:550" type="primary" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
   </div>

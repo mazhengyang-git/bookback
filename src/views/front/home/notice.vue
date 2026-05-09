@@ -3,7 +3,6 @@
   <div class="notice-drawer" :class="modelValue ? 'open' : 'close'">
     <div class="drawer-header">
       <h3 class="gg">官方公告</h3>
-
       <span class="close" @click="handleClose">×</span>
     </div>
     <hr style="color: #000; height: 1.5px; width: 100%" />
@@ -18,7 +17,7 @@
   </div>
 
   <!-- 遮罩层 -->
-  <div class="mask" v-if="modelValue" @click="handleClose"></div>
+  <div class="mask" v-show="modelValue" @click="handleClose"></div>
 </template>
 
 <script setup lang="ts">
@@ -27,31 +26,27 @@ import { getAnnouncementList } from '@/api/front/announcement'
 import type { Announcement } from '@/types/index'
 import dayjs from 'dayjs'
 
-// 接收 v-model 传入的显示状态
 const props = defineProps<{
   modelValue: boolean
 }>()
 
 const formatTime = (t: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : '暂无')
-// 抛出事件，实现双向绑定
+
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-// 公告列表
 const noticeList = ref<Announcement[]>([])
 
-// 获取公告
 const getNotice = async () => {
-  const res = await getAnnouncementList()
-  // @ts-ignore
-  if (res.code === 200) {
-    // @ts-ignore
-    noticeList.value = res.data
-  }
+  try {
+    const res = await getAnnouncementList()
+    if (res?.code === 200) {
+      noticeList.value = res.data
+    }
+  } catch (e) {}
 }
 
-// 关闭方法 → 通知首页
 const handleClose = () => {
   emit('update:modelValue', false)
 }
@@ -63,41 +58,37 @@ onMounted(() => {
 
 <style scoped>
 .gg {
-  transform: all 1.9s ease;
   animation: icon 1s ease infinite;
 }
 @keyframes icon {
-  0%,
-  100% {
-    transform: rotate3d(0, 0, 1, 0deg) translate3d(0, 0, 0);
-  }
-  25% {
-    transform: rotate3d(0, 0, 1, 5deg) translate3d(-3px, 0, 0);
-  }
-  50% {
-    transform: translate3d(3px, 0, 0) rotate3d(0, 0, 1, -5deg);
-  }
+  0%,100% { transform: rotate3d(0, 0, 1, 0deg) translate3d(0, 0, 0); }
+  25% { transform: rotate3d(0, 0, 1, 5deg) translate3d(-3px, 0, 0); }
+  50% { transform: translate3d(3px, 0, 0) rotate3d(0, 0, 1, -5deg); }
 }
-/* 公告抽屉 */
+
+/* transform 动画 */
 .notice-drawer {
   position: fixed;
   top: 0;
-  right: -400px;
+  right: 0;
+  transform: translateX(100%);
   width: clamp(300px, 35vw, 400px);
   height: 100%;
   background: linear-gradient(135deg, #ffffff 0%, #d5d5d6 100%);
   box-shadow: 4px 0 4px rgba(241, 4, 4, 0.17);
-  transition: right 0.4s ease;
-  z-index: 199999;
+  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 88999; /* 重绘 */
   display: flex;
   flex-direction: column;
+  will-change: transform; /* 浏览器预加速 */
 }
 .notice-drawer.close {
-  right: -400px;
+  transform: translateX(100%);
 }
 .notice-drawer.open {
-  right: 0;
+  transform: translateX(0);
 }
+
 .drawer-header {
   padding: clamp(20px, 2.5vw, 30px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -157,7 +148,13 @@ onMounted(() => {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
-  backdrop-filter: blur(1px);
+  z-index: 1998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+.mask.active {
+  opacity: 1;
+  visibility: visible;
 }
 </style>

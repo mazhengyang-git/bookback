@@ -99,7 +99,7 @@ watch(
   margin-top: 10px;
   height: 100px;
   padding: 12px;
-
+user-select: none;
   border-radius: 8px;
   border: 1px solid #eee;
 }

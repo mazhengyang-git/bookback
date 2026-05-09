@@ -1,282 +1,3 @@
-<template>
-  <div class="home-top-nav">
-    <div class="nav-left">
-      <h2 class="logo1 sci-fi-title1">星途科幻图书</h2>
-    </div>
-    <div class="nav-center1">
-      <div class="sejb">
-        <div class="syws">
-          <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
-        </div>
-      </div>
-      <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
-        <div class="syws">
-          <el-button link class="syses" @click="go('/books')">图书商城</el-button>
-          <span class="acwy">
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=太空歌剧')"
-              >太空歌剧</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=赛博朋克')"
-              >赛博朋克</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=时间旅行')"
-              >时间旅行</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=智能纪元')"
-              >智能纪元</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=外星文明')"
-              >外星文明</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=末世废土')"
-              >末世废土</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=星际灾厄')"
-              >星际灾厄</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=虚幻惊悚')"
-              >虚幻惊悚</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=星系攻略')"
-              >星系攻略</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=次元交互')"
-              >次元交互</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=梦灵空间')"
-              >梦灵空间</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=自然谜团')"
-              >自然谜团</el-button
-            >
-            <el-button v-if="showhover" class="ac1" @click="go('/books?category=平行宇宙')"
-              >平行宇宙</el-button
-            >
-            <el-button v-if="showhover" class="ac2" @click="go('/books?category=意识陷落')"
-              >意识陷落</el-button
-            >
-          </span>
-        </div>
-      </div>
-    </div>
-    <div class="nav-right1">
-      <div style="position: relative; left: -89px; margin-top: 10px" v-if="!userStore.isLogin">
-        <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
-          type="primary"
-          link
-          @click="$router.push('/login')"
-          >登录</el-button
-        >
-        <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
-          type="primary"
-          link
-          @click="$router.push('/register')"
-          >注册</el-button
-        >
-      </div>
-      <div v-else class="login-bar">
-        <span
-          style="
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            color: green;
-            font-size: 22px;
-          "
-          class="welcome-text"
-          >欢迎：{{ userStore.user?.username }}</span
-        >
-        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')">
-          <img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心
-        </el-button>
-        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')">
-          <img
-            class="gwdh"
-            style="width: 24px; height: auto; margin-right: 3px"
-            src="/img/购物车.png"
-          />购物车
-        </el-button>
-        <el-button
-          style="color: white; background-color: red; position: relative"
-          type="danger"
-          link
-          @click="handleLogout"
-          >退出</el-button
-        >
-      </div>
-    </div>
-  </div>
-
-  <div v-if="book" class="book-detail-container">
-    <div class="book-detail-content">
-      <div class="book-detail-cover" ref="coverRef">
-        <el-image
-          :src="book.cover || '/img/default-book.jpg'"
-          referrerpolicy="no-referrer"
-          alt="图书封面"
-          :preview-src-list="[book.cover || '/img/default-book.jpg']"
-          fit="cover"
-          @show="handlePreviewShow"
-          @error="(e) => (e.target.src = '/img/default-book.jpg')"
-        />
-      </div>
-
-      <div class="book-detail-info">
-        <h1 class="book-detail-name">{{ book.name || '未知图书' }}</h1>
-        <p class="book-detail-author">作者：{{ book.author || '未知作者' }}</p>
-        <p class="book-detail-category">分类：{{ book.category || '未知分类' }}</p>
-        <p class="book-detail-price">¥{{ formatPrice(book.price) }}</p>
-        <p class="book-detail-stock">库存：{{ book.stock || 0 }}本</p>
-
-        <div class="book-detail-count">
-          <el-input-number v-model="buyCount" :min="1" :max="book.stock || 1" label="购买数量" />
-        </div>
-
-        <el-button
-          type="primary"
-          size="large"
-          class="add-cart-btn"
-          @click="addToCart"
-          :disabled="!userStore.token"
-        >
-          {{ userStore.token ? '加入购物车' : '加入购物车? 请先登录' }}
-        </el-button>
-
-        <el-button
-          type="primary"
-          style="margin-top: 13px"
-          class="add-cart-btn1"
-          size="large"
-          @click="handlePay"
-        >
-          去支付
-        </el-button>
-
-        <div class="comment-preview-box">
-          <h4>图书综合评分</h4>
-          <div class="score-display">
-            <el-rate
-              v-if="localAvgScore !== null"
-              v-model="localAvgScore"
-              disabled
-              :max="5"
-              show-score
-              text-color="#ff7d00"
-              :score-format="(value) => value.toFixed(1)"
-            />
-            <span class="score-text">{{ localAvgScore?.toFixed(1) }}</span>
-            <span class="comment-count">共 {{ commentTotalCount }} 人评价</span>
-          </div>
-
-          <div class="random-comments">
-            <div
-              class="comment-item"
-              v-for="(comment, index) in randomComments"
-              :key="comment.id ?? index"
-            >
-              <el-rate
-                v-if="comment.score != null"
-                v-model="comment.score"
-                disabled
-                :max="5"
-                size="small"
-                :score-format="(val) => val.toFixed(1)"
-              />
-              <p class="comment-content">{{ comment.content || '用户无文字评价' }}</p>
-            </div>
-            <div v-if="randomComments.length === 0" class="empty-tip">暂无用户评价</div>
-          </div>
-
-          <el-button
-            type="success"
-            class="add-cart-btn1"
-            style="margin-top: 15px; width: 100%"
-            size="large"
-            @click="commentVisible = true"
-          >
-            查看图书评价
-          </el-button>
-        </div>
-      </div>
-    </div>
-
-    <div class="book-detail-desc">
-      <h3>图书简介</h3>
-      <p
-        ref="descRef"
-        class="desc-content"
-        :class="{ expanded: isDescExpanded }"
-        style="text-indent: 2em; white-space: pre-wrap"
-      >
-        {{ book.desc || '暂无简介' }}
-      </p>
-      <el-button
-        v-if="showDescExpand"
-        link
-        class="expand-btn"
-        @click="isDescExpanded = !isDescExpanded"
-      >
-        {{ isDescExpanded ? '收起' : '展开全部' }}
-      </el-button>
-    </div>
-
-    <div class="book-detail-desc1">
-      <h3>目录展示</h3>
-      <p
-        ref="muluRef"
-        class="mulu-content"
-        :class="{ expanded: isMuluExpanded }"
-        style="text-indent: 2em; white-space: pre-wrap"
-      >
-        {{ book.mulu || '暂无目录' }}
-      </p>
-      <el-button
-        v-if="showMuluExpand"
-        link
-        class="expand-btn"
-        @click="isMuluExpanded = !isMuluExpanded"
-      >
-        {{ isMuluExpanded ? '收起' : '展开全部' }}
-      </el-button>
-    </div>
-
-    <div class="book-detail-desc2">
-      <h3>作者简介</h3>
-      <p
-        ref="muluRef1"
-        class="mulu-content1"
-        :class="{ expanded: isMuluExpanded1 }"
-        style="text-indent: 2em; white-space: pre-wrap"
-      >
-        {{ book.author_into || '暂无简介' }}
-      </p>
-      <el-button
-        v-if="showMuluExpand1"
-        link
-        class="expand-btn1"
-        @click="isMuluExpanded1 = !isMuluExpanded1"
-      >
-        {{ isMuluExpanded1 ? '收起' : '展开全部' }}
-      </el-button>
-    </div>
-
-    <el-dialog
-      v-model="commentVisible"
-      title="图书评价中心"
-      width="750px"
-      append-to-body
-      close-on-click-modal
-      close-on-press-escape
-      destroy-on-close
-    >
-      <BookComment :book-id="bookId" />
-    </el-dialog>
-  </div>
-
-  <div v-else class="loading-tip">加载中...</div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -290,7 +11,7 @@ import { getDirectPayGoodsInfo } from '@/api/front/pay'
 import BookComment from '@/views/front/book/bookcomment.vue'
 import { useBookStore1 } from '@/store/newbook'
 import { getBookAvgScore, getCommentList } from '@/api/front/bookComment'
-
+import footere from '@/views/front/biaoqian/footer.vue'
 const router = useRouter()
 const route = useRoute()
 
@@ -599,7 +320,290 @@ onMounted(() => {
   }
 })
 </script>
+<template>
+  <div class="home-top-nav">
+    <div class="nav-left">
+      <h2 class="logo1 sci-fi-title1">星途科幻图书</h2>
+    </div>
+    <div class="nav-center1">
+      <div class="sejb">
+        <div class="syws">
+          <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
+        </div>
+      </div>
+      <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
+        <div class="syws">
+          <el-button link class="syses" @click="go('/books')">图书商城</el-button>
+          <span class="acwy">
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=太空歌剧')"
+              >太空歌剧</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;"     v-if="showhover" class="ac2" @click="go('/books?category=赛博朋克')"
+              >赛博朋克</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=时间旅行')"
+              >时间旅行</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=智能纪元')"
+              >智能纪元</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=外星文明')"
+              >外星文明</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=末世废土')"
+              >末世废土</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=星际灾厄')"
+              >星际灾厄</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=虚幻惊悚')"
+              >虚幻惊悚</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=星系攻略')"
+              >星系攻略</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=次元交互')"
+              >次元交互</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=梦灵空间')"
+              >梦灵空间</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=自然谜团')"
+              >自然谜团</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac1" @click="go('/books?category=平行宇宙')"
+              >平行宇宙</el-button
+            >
+            <el-button style="color: #000;font-weight: 550;" v-if="showhover" class="ac2" @click="go('/books?category=意识陷落')"
+              >意识陷落</el-button
+            >
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-right1">
+      <div style="position: relative; left: -89px; margin-top: 10px" v-if="!userStore.isLogin">
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/login')"
+          >登录</el-button
+        >
+        <el-button
+          style="color: black; font-weight: 600; font-size: 20px"
+          type="primary"
+          link
+          @click="$router.push('/register')"
+          >注册</el-button
+        >
+      </div>
+      <div v-else class="login-bar">
+        <span
+          style="
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            color: green;
+            font-size: 22px;
+          "
+          class="welcome-text"
+          >欢迎：{{ userStore.user?.username }}</span
+        >
+        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')">
+          <img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心
+        </el-button>
+        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')">
+          <img
+            class="gwdh"
+            style="width: 24px; height: auto; margin-right: 3px"
+            src="/img/购物车.png"
+          />购物车
+        </el-button>
+        <el-button
+          style="color: white; background-color: red; position: relative"
+          type="danger"
+          link
+          @click="handleLogout"
+          >退出</el-button
+        >
+      </div>
+    </div>
+  </div>
+
+  <div v-if="book" class="book-detail-container"    v-cloak>
+    <div class="book-detail-content">
+      <div class="book-detail-cover" ref="coverRef">
+        <el-image
+          :src="book.cover || '/img/default-book.jpg'"
+          referrerpolicy="no-referrer"
+          alt="图书封面"
+          :preview-src-list="[book.cover || '/img/default-book.jpg']"
+          fit="cover"
+          @show="handlePreviewShow"
+          @error="(e) => (e.target.src = '/img/default-book.jpg')"
+        />
+      </div>
+
+      <div class="book-detail-info">
+        <h1 class="book-detail-name">{{ book.name || '未知图书' }}</h1>
+        <p class="book-detail-author">作者：{{ book.author || '未知作者' }}</p>
+        <p class="book-detail-category">分类：{{ book.category || '未知分类' }}</p>
+        <p class="book-detail-price">¥{{ formatPrice(book.price) }}</p>
+        <p class="book-detail-stock">库存：{{ book.stock || 0 }}本</p>
+
+        <div class="book-detail-count">
+          <el-input-number v-model="buyCount" :min="1" :max="book.stock || 1" label="购买数量" />
+        </div>
+
+        <el-button
+          type="primary"
+          size="large"
+          class="add-cart-btn"
+          @click="addToCart"
+          :disabled="!userStore.token"
+        >
+          {{ userStore.token ? '加入购物车' : '加入购物车? 请先登录' }}
+        </el-button>
+
+        <el-button
+          type="primary"
+          style="margin-top: 13px"
+          class="add-cart-btn1"
+          size="large"
+          @click="handlePay"
+        >
+          去支付
+        </el-button>
+
+        <div class="comment-preview-box">
+          <h4>图书综合评分</h4>
+          <div class="score-display">
+            <el-rate
+              v-if="localAvgScore !== null"
+              v-model="localAvgScore"
+              disabled
+              :max="5"
+              show-score
+              text-color="#ff7d00"
+              :score-format="(value) => value.toFixed(1)"
+            />
+            <span class="score-text">{{ localAvgScore?.toFixed(1) }}</span>
+            <span class="comment-count">共 {{ commentTotalCount }} 人评价</span>
+          </div>
+
+          <div class="random-comments">
+            <div
+              class="comment-item"
+              v-for="(comment, index) in randomComments"
+              :key="comment.id ?? index"
+            >
+              <el-rate
+                v-if="comment.score != null"
+                v-model="comment.score"
+                disabled
+                :max="5"
+                size="small"
+                :score-format="(val) => val.toFixed(1)"
+              />
+              <p class="comment-content">{{ comment.content || '用户无文字评价' }}</p>
+            </div>
+            <div v-if="randomComments.length === 0" class="empty-tip">暂无用户评价</div>
+          </div>
+
+          <el-button
+            type="success"
+            class="add-cart-btn1"
+            style="margin-top: 15px; width: 100%"
+            size="large"
+            @click="commentVisible = true"
+          >
+            查看图书评价
+          </el-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="book-detail-desc">
+      <h3>图书简介</h3>
+      <p
+        ref="descRef"
+        class="desc-content"
+        :class="{ expanded: isDescExpanded }"
+        style="text-indent: 2em; white-space: pre-wrap"
+      >
+        {{ book.desc || '暂无简介' }}
+      </p>
+      <el-button
+        v-if="showDescExpand"
+        link
+        class="expand-btn"
+        @click="isDescExpanded = !isDescExpanded"
+      >
+        {{ isDescExpanded ? '收起' : '展开全部' }}
+      </el-button>
+    </div>
+
+    <div class="book-detail-desc1">
+      <h3>目录展示</h3>
+      <p
+        ref="muluRef"
+        class="mulu-content"
+        :class="{ expanded: isMuluExpanded }"
+        style="text-indent: 2em; white-space: pre-wrap"
+      >
+        {{ book.mulu || '暂无目录' }}
+      </p>
+      <el-button
+        v-if="showMuluExpand"
+        link
+        class="expand-btn"
+        @click="isMuluExpanded = !isMuluExpanded"
+      >
+        {{ isMuluExpanded ? '收起' : '展开全部' }}
+      </el-button>
+    </div>
+
+    <div class="book-detail-desc2">
+      <h3>作者简介</h3>
+      <p
+        ref="muluRef1"
+        class="mulu-content1"
+        :class="{ expanded: isMuluExpanded1 }"
+        style="text-indent: 2em; white-space: pre-wrap"
+      >
+        {{ book.author_into || '暂无简介' }}
+      </p>
+      <el-button
+        v-if="showMuluExpand1"
+        link
+        class="expand-btn1"
+        @click="isMuluExpanded1 = !isMuluExpanded1"
+      >
+        {{ isMuluExpanded1 ? '收起' : '展开全部' }}
+      </el-button>
+    </div>
+
+    <el-dialog
+      v-model="commentVisible"
+      title="图书评价中心"
+      width="750px"
+      append-to-body
+      close-on-click-modal
+      close-on-press-escape
+      destroy-on-close
+    >
+      <BookComment :book-id="bookId" />
+    </el-dialog>
+  </div>
+
+  <div v-else class="loading-tip">加载中...</div>
+ <div v-if="book"   v-cloak><div class="twy"><footere/></div></div></template>
+
+
 <style scoped>
+.twy{
+  bottom: 0;
+}
 .gwdh {
   animation: gwdh 2s infinite;
 }
@@ -647,9 +651,7 @@ onMounted(() => {
   opacity: 0.9;
   background: linear-gradient(
     180deg,
-    rgba(215, 213, 213, 0.98) 0%,
-    rgba(160, 158, 158, 0.612) 50%,
-    rgba(215, 213, 213, 0.98) 100%
+    
   );
   border-bottom: 1px solid rgba(5, 44, 84, 0.3);
   box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
@@ -723,7 +725,7 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.25rem;
-  background-color: #eeecec;
+  background-color: #f3f2f2;
   color: #fff;
   min-height: 101vh;
   position: relative;
@@ -740,7 +742,7 @@ onMounted(() => {
   gap: 1.875rem;
   margin-bottom: 2.5rem;
   padding: 1.25rem;
-  background: linear-gradient(90deg, #f0f2f5 25%, #d8d6d520 58%, #f0f2f5 25%);
+  background: linear-gradient(90deg, #ffffff 25%, #fcfff44d 58%, #ffffff 25%);
   background-attachment: fixed;
   background-size: cover;
   border-radius: 0.5rem;
@@ -1021,7 +1023,7 @@ onMounted(() => {
     -90deg,
     #b6b5b3 0%,
     #f0f2f5 25%,
-    #aaa8a6 50%,
+    #d4d1ce 50%,
     #f0f2f5 75%,
     #b6b5b3 100%
   );
@@ -1043,7 +1045,7 @@ onMounted(() => {
     -90deg,
     #b6b5b3 0%,
     #f0f2f5 25%,
-    #aaa8a6 50%,
+    #d4d1ce 50%,
     #f0f2f5 75%,
     #b6b5b3 100%
   );
@@ -1059,7 +1061,7 @@ onMounted(() => {
     -90deg,
     #b6b5b3 0%,
     #f0f2f5 25%,
-    #aaa8a6 50%,
+    #d4d1ce 50%,
     #f0f2f5 75%,
     #b6b5b3 100%
   );
@@ -1145,7 +1147,7 @@ onMounted(() => {
 
 .syws {
   display: flex;
-  background: #ffffff;
+  background: #e5e3e1;
   border: 1px solid rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
   border-radius: 0.375rem;
@@ -1157,6 +1159,7 @@ onMounted(() => {
   color: rgb(0, 0, 0);
   font-size: clamp(1rem, 2vw, 1.125rem);
   text-decoration: none;
+  
 }
 .syses:hover {
   color: #ec8f33;

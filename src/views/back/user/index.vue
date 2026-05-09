@@ -15,7 +15,7 @@
           <span class="card-title">用户信息</span>
         </template>
         <div class="user-info-content">
-          <!-- 手机号区域（修复版：处理空字符串 + 绑定后隐藏） -->
+          <!-- 手机号区域（处理空字符串 + 绑定隐藏） -->
           <div v-if="!userStore.user?.phone || userStore.user?.phone.trim() === ''">
             <h3>绑定手机号</h3>
             <el-input

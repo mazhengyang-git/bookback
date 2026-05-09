@@ -62,7 +62,8 @@
 
     <!-- 表格容器+粘性横向滚动条 -->
     <div class="table-sticky-wrapper">
-      <el-table v-loading="loading" :data="orderList" border stripe fit>
+      <el-table style="color: #000;"  v-loading="loading" :data="orderList" border  :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
+> stripe fit>
         <el-table-column prop="orderNo" label="订单编号" min-width="136" />
         <el-table-column prop="username" label="下单用户" min-width="90" />
         <el-table-column prop="bookName" label="图书名称" min-width="140" show-overflow-tooltip />

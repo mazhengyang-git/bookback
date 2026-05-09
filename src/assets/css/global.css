@@ -4,7 +4,9 @@
   padding: 0;
   box-sizing: border-box;
 }
-
+[v-cloak] {
+  display: none !important;
+}
 /* 全局背景：深色科技风 */
 body {
   color: #e0e6ff;

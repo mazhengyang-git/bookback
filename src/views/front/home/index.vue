@@ -1,7 +1,6 @@
 <template>
-  <Transition name="fade">
-    <div v-show="!allImagesLoaded" class="black-mask"></div>
-  </Transition>
+  <!-- 遮罩 -->
+  <div v-if="!slidesLoaded" class="simple-mask"></div>
 
   <div
     v-cloak
@@ -21,23 +20,27 @@
       <img class="doubao" src="/img/doubao.png" alt="豆包" draggable="false" />
     </a>
   </div>
+
   <HomeTopNav @refresh="shoubookshuaxin" />
+ 
   <div class="home-container">
-    <!-- 轮播 （增加v-if避免空数据渲染） -->
     <div class="home-banner" v-if="slidesLoaded">
-      <div class="banner-content">
+      <div class="banner-content" style="position: relative; z-index: 100">
         <lunbotu :key="refshua" />
       </div>
     </div>
+
     <div class="home-monthly-hot2">
-      <!-- 热门标签内部容器 -->
       <div class="monthly-inner2">
         <newbook :key="refreshKey1" />
       </div>
+      <div class="editor-recommend-container">
+        <editorrecommend  :key="refreshKey"/>
+      </div>
     </div>
+
     <div class="hwy">
       <div class="home-monthly-hot1">
-        <!-- 热门标签内部容器 -->
         <div class="monthly-inner1">
           <remenbiaoqian
             :key="refreshKey"
@@ -48,32 +51,22 @@
       </div>
 
       <div class="home-monthly-hot">
-        <!-- 热门图书排行内部容器 -->
         <div class="monthly-inner">
           <remenbook />
         </div>
       </div>
     </div>
-    <!-- 热门图书 -->
+
     <div class="home-hot-book">
       <div class="hot-book-back">
         <h2
           class="sci-fi-title-custom"
-          style="
-            text-align: left;
-            width: 100%;
-            margin: 20px 0;
-            position: static;
-            left: auto;
-            right: auto;
-            padding-left: 50px;
-          "
+          style="text-align: left; width: 100%; margin: 20px 0; padding-left: 50px"
         >
           热门科幻图书
         </h2>
-        <hr style="margin-bottom: 20px; width: 1115.9px; position: relative; left: 46px" />
+        <hr style="margin-bottom: 20px; width: 1115.9px; left: 46px" />
 
-        <!-- 空数据提示 -->
         <div v-if="hotBooks.length === 0" class="empty-tip">
           <el-empty description="暂无热门图书数据" />
         </div>
@@ -84,9 +77,7 @@
             style="margin-left: 40px !important"
             class="hot-book-card"
             @click="go(`/book/${book.id}`)"
-            v-loading="!book.id"
           >
-            <!--@vue-ignore-->
             <img
               :src="book.cover || '/img/default-book.jpg'"
               alt="图书封面"
@@ -115,20 +106,19 @@
         draggable="false"
       >
         🔔 系统公告
-      </button></span
-    >
+      </button>
+    </span>
 
     <notice v-model="showNotice" />
   </div>
-  <div></div>
+ <span style=""><footere /></span>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElEmpty } from 'element-plus'
 import type { Book } from '@/types/index'
-import { useUserStore } from '@/store/modules/user'
-import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useBookStore } from '@/store/book'
 import lunbotu from '@/views/front/home/lunbotu.vue'
 import { getAnnouncementList } from '@/api/front/announcement'
@@ -136,22 +126,15 @@ import type { Announcement } from '@/types/index'
 import remenbook from '@/views/front/book/remenbook.vue'
 import remenbiaoqian from '@/views/front/biaoqian/biaoqian.vue'
 import newbook from '@/views/front/home/xinbook.vue'
+import editorrecommend from '@/views/front/home/editorrecommend.vue'
 import HomeTopNav from '@/views/front/home/hometopnav.vue'
 import notice from '@/views/front/home/notice.vue'
-
-const userStore = useUserStore()
+import footere from '@/views/front/biaoqian/footer.vue'
 const router = useRouter()
 const bookStore = useBookStore()
 
 // 跳转
-function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
-  const pathStr = path as string
-  if (router.currentRoute.value.path.startsWith('/book/')) {
-    window.location.href = pathStr
-  } else {
-    router.push(path)
-  }
-}
+const go = (path: string) => router.push(path)
 
 const hotBooks = ref<Book[]>([])
 const refshua = ref(0)
@@ -159,7 +142,7 @@ const slidesLoaded = ref(false)
 const showNotice = ref(false)
 const noticeList = ref<Announcement[]>([])
 
-// 拖拽相关
+// 拖拽
 const doubaoBtn = ref(null)
 const doubaoBtn1 = ref(null)
 const isDragging = ref(false)
@@ -173,76 +156,15 @@ const hasDragged1 = ref(false)
 const currentPos1 = ref({ x: 6, y: 380 })
 const DRAG_THRESHOLD1 = 5
 
-// 子组件刷新
 const refreshKey = ref(0)
 const refreshKey1 = ref(0)
 const categoryTags = ref<any[]>([])
 const authorTags = ref<any[]>([])
 
-// 遮罩层
-const allImagesLoaded = ref(false)
+// 价格格式化
+const formatPrice = (price: any): string => (Number(price) || 0).toFixed(2)
 
-// 离开页面回到顶部
-import { onBeforeRouteLeave } from 'vue-router'
-onBeforeRouteLeave(() => {
-  window.scrollTo(0, 0)
-})
-
-// ==================== 预加载 ====================
-const preloaded = ref(false)
-const preloadPages = async () => {
-  if (preloaded.value) return
-  try {
-    // 提前加载高频页面
-    await Promise.all([
-      import('@/views/front/book/detail.vue'),
-      import('@/views/front/book/list.vue'),
-      import('@/views/front/user/index.vue'),
-      import('@/views/front/cart/index.vue'),
-    ])
-    console.log('✅ 页面预加载完成')
-  } catch (e) {}
-  preloaded.value = true
-}
-
-// 浏览器空闲时立刻预加载
-if ('requestIdleCallback' in window) {
-  requestIdleCallback(preloadPages, { timeout: 2000 })
-} else {
-  setTimeout(preloadPages, 1000)
-}
-
-// ==================== 图片预加载 ====================
-const preloadImages = () => {
-  const imgList = ['/img/doubao.png', '/img/default-book.jpg']
-  const tasks = imgList.map((src) => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.src = src
-      img.onload = resolve
-      img.onerror = resolve
-    })
-  })
-  Promise.all(tasks).finally(() => {
-    allImagesLoaded.value = true
-  })
-}
-
-// ==================== 公告 ====================
-const getNotice = async () => {
-  try {
-    const res = await getAnnouncementList()
-    // @ts-ignore
-    if (res?.code === 200) noticeList.value = res.data
-  } catch (e) {}
-}
-
-// ==================== 热门图书 ====================
-const formatPrice = (price: any): string => {
-  const num = Number(price) || 0
-  return num.toFixed(2)
-}
-
+// 随机图书
 const getRandomBooks = (list: Book[], count = 10): Book[] => {
   if (!list?.length) return []
   const arr = [...list]
@@ -253,90 +175,46 @@ const getRandomBooks = (list: Book[], count = 10): Book[] => {
   return arr.slice(0, count)
 }
 
-const getHotBooks = async () => {
+// ==============================================
+// 双线路加载：本地静态优先 + 后端兜底
+// ==============================================
+const loadHomeData = async () => {
   try {
-    await bookStore.fetchBookList()
-    hotBooks.value = getRandomBooks(bookStore.bookList || [], 10)
-  } catch (e) {
-    hotBooks.value = []
-  } finally {
-    slidesLoaded.value = true
-  }
+    // 1. 优先加载本地静态JSON（极速）
+    const res = await fetch('/home-static.json')
+    const data = await res.json()
+
+    // 2. 如果本地有数据 → 直接用
+    if (data?.bookList?.length) {
+      bookStore.setBookList(data.bookList)
+      hotBooks.value = getRandomBooks(data.bookList, 10)
+      console.log('✅ 首页使用本地加速数据')
+      return
+    }
+  } catch (e) {}
+
+  // 3. 本地无数据 → 自动走后端（兜底）
+  console.log('⚠️ 本地数据为空，使用后端接口')
+  await bookStore.fetchBookList()
+  hotBooks.value = getRandomBooks(bookStore.bookList || [], 10)
 }
 
-// // 科幻图书
-// const sciFi250 = ref<Book[]>([
-//   {
-//     id: 31,
-//     name: '银河帝国全集',
-//     author: '艾萨克·阿西莫夫',
-//     price: 299.0,
-//     cover: '/img/default-book.jpg',
-//     category: '',
-//     desc: '',
-//     stock: 0,
-//     mulu: '',
-//     author_into: '',
-//   },
-//   {
-//     id: 32,
-//     name: '基地三部曲',
-//     author: '艾萨克·阿西莫夫',
-//     price: 128.0,
-//     cover: '/img/default-book.jpg',
-//     category: '',
-//     desc: '',
-//     stock: 0,
-//     mulu: '',
-//     author_into: '',
-//   },
-//   {
-//     id: 33,
-//     name: '机器人短篇全集',
-//     author: '艾萨克·阿西莫夫',
-//     price: 89.0,
-//     cover: '/img/default-book.jpg',
-//     category: '',
-//     desc: '',
-//     stock: 0,
-//     mulu: '',
-//     author_into: '',
-//   },
-//   {
-//     id: 34,
-//     name: '2001太空漫游',
-//     author: '阿瑟·C·克拉克',
-//     price: 55.0,
-//     cover: '/img/default-book.jpg',
-//     category: '',
-//     desc: '',
-//     stock: 0,
-//     mulu: '',
-//     author_into: '',
-//   },
-//   {
-//     id: 35,
-//     name: '与拉玛相会',
-//     author: '阿瑟·C·克拉克',
-//     price: 48.0,
-//     cover: '/img/default-book.jpg',
-//     category: '',
-//     desc: '',
-//     stock: 0,
-//     mulu: '',
-//     author_into: '',
-//   },
-// ])
+const getNotice = async () => {
+  try {
+    const res = await getAnnouncementList()
+    if (res?.code === 200) noticeList.value = res.data
+  } catch (e) {}
+}
 
 // 刷新
-const shoubookshuaxin = () => {
-  getHotBooks()
+const shoubookshuaxin = async () => {
+  await loadHomeData()
   refshua.value++
   refreshKey.value++
   refreshKey1.value++
 }
 
-// ==================== 拖拽逻辑 ====================
+// 拖拽逻辑
 const handleMouseDown = (e: MouseEvent) => {
   isDragging.value = true
   hasDragged.value = false
@@ -354,9 +232,7 @@ const handleMouseDown = (e: MouseEvent) => {
     currentPos.value.x = left + dx
     currentPos.value.y = top + dy
     if (doubaoBtn.value) {
-      // @ts-ignore
       doubaoBtn.value.style.left = currentPos.value.x + 'px'
-      // @ts-ignore
       doubaoBtn.value.style.top = currentPos.value.y + 'px'
     }
   }
@@ -388,13 +264,9 @@ const handleMouseDown1 = (e: MouseEvent) => {
     currentPos1.value.x = left + dx
     currentPos1.value.y = top + dy
     if (doubaoBtn1.value) {
-      // @ts-ignore
       doubaoBtn1.value.style.left = currentPos1.value.x + 'px'
-      // @ts-ignore
       doubaoBtn1.value.style.top = currentPos1.value.y + 'px'
-      // @ts-ignore
       doubaoBtn1.value.style.right = 'unset'
-      // @ts-ignore
       doubaoBtn1.value.style.transform = 'unset'
     }
   }
@@ -410,43 +282,31 @@ const handleMouseDown1 = (e: MouseEvent) => {
 }
 
 const handleLinkClick = (e: Event) => {
-  if (hasDragged.value) {
-    e.preventDefault()
-    return false
-  }
+  if (hasDragged.value) e.preventDefault()
 }
 const handleLinkClick1 = (e: Event) => {
-  if (hasDragged1.value) {
-    e.preventDefault()
-    return false
-  }
+  if (hasDragged1.value) e.preventDefault()
 }
 
-// 公告开关
 const notandmouse = () => {
-  if (hasDragged1.value) return
-  showNotice.value = !showNotice.value
+  if (!hasDragged1.value) showNotice.value = !showNotice.value
 }
-const openNotice = () => (showNotice.value = true)
-const closeNotice = () => (showNotice.value = false)
 
-// ==================== 初始化 ====================
+// 初始化
 onMounted(async () => {
-  // 图片预加载（极快）
-  preloadImages()
-
-  // 加载公告
   getNotice()
-
-  // 加载图书
-  await getHotBooks()
-
-  // 兜底：防止遮罩卡死
-  setTimeout(() => {
-    allImagesLoaded.value = true
-  }, 0.1)
+  await loadHomeData() // 使用双线路加载
+  slidesLoaded.value = true
 })
 </script>
+<style scoped>
+.simple-mask {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 9999;
+}
+</style>
 <style scoped>
 [v-cloak] {
   display: none !important;
@@ -556,13 +416,13 @@ onMounted(async () => {
   }
 }
 .home-monthly-hot {
-  position: relative;
+  position: absolute;
   width: clamp(390px, 30vw, 540px);
   height: auto;
   padding: 0;
   margin: 0;
   top: 100px;
-  z-index: 188;
+  z-index: 218;
   margin-left: 130px;
   left: clamp(845px, 67.5vw, 880px);
   /* 子组件缩放*/
@@ -574,9 +434,9 @@ onMounted(async () => {
   height: auto;
   padding: 0;
   margin: 0;
-  top: -1086px !important;
-  z-index: 188;
-  left: clamp(1050px, 66vw, 1030px);
+  top: -1176px !important;
+  z-index: 18888;
+  left: clamp(1033px, 66vw, 1020px);
   transform: none;
 }
 .home-monthly-hot2 {
@@ -584,12 +444,37 @@ onMounted(async () => {
   width: 100%;
   height: auto;
   top: -10px;
-  z-index: 188;
 
   transform: none;
   margin-left: 80px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
+/* 页面容器 */
+.home-banner {
+  /* 轮播高度响应式 */
+  height: clamp(700px, 45vw, 813px);
+  background: white;
+  position: relative;
+  top: 120px;
 
+  border-radius: clamp(8px, 1vw, 12px);
+  margin: clamp(15px, 2vw, 20px) 0;
+}
+/* 轮播区域：*/
+.home-banner {
+  /* 轮播高度响应式 */
+  height: clamp(700px, 45vw, 813px);
+  background: #ffffff;
+  position: relative;
+  top: 120px;
+  height: 1160px;
+
+  border-radius: 12px;
+  margin: clamp(15px, 2vw, 20px) 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
 /* 子容器：用margin占位 */
 .monthly-inner {
   position: static;
@@ -616,67 +501,223 @@ onMounted(async () => {
   height: 100%;
   margin-left: 20px;
   transform-origin: top left;
+  flex: 1;
+  min-width: 0;
 }
 
-/* 热门图书 */
-@media (max-width: 1000px) {
-  .home-monthly-hot2 {
+.editor-recommend-container {
+  position: absolute;
+  transform: scale(0.83);
+  width: 499px;
+  height: 100%;
+ right: 57px;
+  margin-top: 699px;
+  transform-origin: top left;
+  flex-shrink: 0;
+  margin-right: 20px;
+}
+@media (max-width: 1520px) {
+  .editor-recommend-container {
+    right: 40px;
+   
   }
+
+}
+@media (max-width: 1490px) {
+  .editor-recommend-container {
+    right: 10px;
+   
+  }
+
+}
+@media (max-width: 1460px) {
+  .editor-recommend-container {
+    right: 12px;
+   
+  }
+
+}
+@media (max-width: 1430px) {
+  .editor-recommend-container {
+    right: 3px;
+   
+  }
+
+}
+@media (max-width: 1350px) {
+  .editor-recommend-container {
+    right: -53px;
+   
+  }
+
+}
+@media (max-width: 1280px) {
+  .editor-recommend-container {
+    right: -148px;
+   top: 20px;
+    transform: scale(0.75);
+  }
+
+}
+@media (max-width: 1240px) {
+  .editor-recommend-container {
+    right: -140px;
+  
+  }
+
+}
+@media (max-width: 1200px) {
+  .editor-recommend-container {
+    right: -170px;
+   
+  }
+
+}
+@media (max-width: 1160px) {
+  .editor-recommend-container {
+    right: -266px;
+   transition: right 0.3s ease;
+  }
+
+}
+@media (max-width: 1100px) {
+  .editor-recommend-container {
+    right: -300px;
+   
+  }
+
+}
+
+@media (max-width: 1080px) {
+  .editor-recommend-container {
+    right: -329px;
+   
+  }
+
+}
+@media (max-width: 1050px) {
+  .editor-recommend-container {
+    right: -346px;
+   
+  }
+
+}
+@media (max-width: 1010px) {
+  .editor-recommend-container {
+    right: -370px;
+   
+  }
+
+}
+@media (max-width: 970px) {
+  .editor-recommend-container {
+    right: -420px;
+   
+  }
+
+}
+@media (max-width: 930px) {
+  .editor-recommend-container {
+    right: -1280px;
+   
+  }
+
+}
+@media (max-width: 1350px) {
+  .home-monthly-hot2 {
+    margin-left: 80px;
+   right: 7px;
+    top: -53px;
+  }
+
+}
+@media (max-width: 1300px) {
+  .home-monthly-hot2 {
+    margin-left: 80px;
+   right: 10px;
+    top: -53px;
+  }
+
 }
 @media (max-width: 900px) {
   .home-monthly-hot2 {
-    margin-left: -10px;
+    margin-left: 40px;
     top: -53px;
+     right: 16px;
   }
+
 }
 @media (max-width: 850px) {
   .home-monthly-hot2 {
-    margin-left: -20px;
+    margin-left: -45px;
     top: -113px;
+    right: 57px;
     transform: scale(0.93);
   }
+
+}
+@media (max-width: 780px) {
+  .home-monthly-hot2 {
+    margin-left: -55px;
+    transform: scale(0.9);
+     right: 66px;
+    top: -130px;
+  }
+
 }
 @media (max-width: 730px) {
   .home-monthly-hot2 {
-    margin-left: -50px;
+    margin-left: -55px;
     transform: scale(0.9);
+     right: 86px;
     top: -130px;
   }
+
 }
 @media (max-width: 690px) {
   .home-monthly-hot2 {
-    margin-left: -50px;
+    margin-left: -70px;
     transform: scale(0.85);
+    right: 102px;
     top: -160px;
   }
+
 }
 @media (max-width: 650px) {
   .home-monthly-hot2 {
-    margin-left: -70px;
+    margin-left: -80px;
     transform: scale(0.8);
     top: -310px;
+     right: 106px;
   }
+
 }
 @media (max-width: 630px) {
   .home-monthly-hot2 {
     margin-left: -80px;
     transform: scale(0.7);
     top: -330px;
+     right: 120px;
   }
+
 }
 @media (max-width: 600px) {
   .home-monthly-hot2 {
-    margin-left: -90px;
+    margin-left: -80px;
     transform: scale(0.7);
     top: -350px;
+    
   }
+
 }
 @media (max-width: 580px) {
   .home-monthly-hot2 {
     margin-left: -80px;
     transform: scale(0.6);
     top: -450px;
+     right: 126px;
   }
+
 }
 * {
   user-select: none !important;
@@ -688,6 +729,7 @@ onMounted(async () => {
   /* 基础字号响应式 */
   font-size: clamp(14px, 1vw, 16px);
 }
+
 .banner-content {
   position: relative;
   right: 96px;
@@ -699,7 +741,7 @@ onMounted(async () => {
     transform: scale(1);
     right: 111px;
     top: -11vh;
-    /* 每个媒体查询都必须写！ */
+    
     transition:
       top,
       right,
@@ -835,16 +877,6 @@ button {
 }
 
 /*页面整体：固定最大宽度，所有非图书区域永久固定不滚动*/
-/* 页面容器 */
-.home-banner {
-  /* 轮播高度响应式 */
-  height: clamp(700px, 45vw, 813px);
-  background: white;
-  position: relative;
-  top: 120px;
-  border-radius: clamp(8px, 1vw, 12px);
-  margin: clamp(15px, 2vw, 20px) 0;
-}
 
 @keyframes zzi {
   0% {
@@ -1080,6 +1112,7 @@ button {
   inset: 0;
   background: #ffffff;
   z-index: 19999;
+  pointer-events: none;
 }
 
 /* 遮罩淡出动画 */
@@ -1185,7 +1218,7 @@ button {
 }
 .hot-book-list {
   flex-wrap: wrap;
-
+  z-index: 300;
   gap: clamp(15px, 1.8vw, 20px);
 }
 .hot-book-cover {
@@ -1220,12 +1253,12 @@ button {
   color: #fff;
   font-size: clamp(14px, 1.2vw, 16px);
   cursor: pointer;
-
-  transition: all 0.3s ease;
 }
 .notice-btn:hover {
   transform: translateY(-50%) scale(1.05);
   box-shadow: 0 6px 20px rgba(94, 94, 94, 0.5);
+
+  transition: all 0.3s ease;
 }
 
 @media (max-width: 1452px) {
@@ -1330,11 +1363,13 @@ button {
   .home-monthly-hot1 {
     top: -976px !important;
     transform: scale(0.8);
+      top: -1060px !important;
   }
 }
 @media (max-width: 672px) {
   .home-monthly-hot1 {
     left: 84vw !important;
+   
     transition: left transform 0.3s ease;
   }
 }
@@ -1358,15 +1393,25 @@ button {
 @media (max-width: 600px) {
   .home-monthly-hot1 {
     left: 79.7vw !important;
-     top: -700px !important;
+    transform: scale(0.74);
+    top: -820px !important;
+    transition: left transform 0.3s ease;
+  }
+}
+@media (max-width: 580px) {
+  .home-monthly-hot1 {
+    left: 79.7vw !important;
+    transform: scale(0.7);
+    top: -760px !important;
     transition: left transform 0.3s ease;
   }
 }
 
-@media (max-width: 570px) {
+@media (max-width: 560px) {
   .home-monthly-hot1 {
     left: 80.5vw !important;
-    
+ top: -750px !important;
+ transform: scale(0.7);
     transition: all transform 0.3s ease;
   }
 }
@@ -1385,6 +1430,8 @@ button {
 </style>
 
 <style scoped>
+* {
+}
 /* 豆包按钮效果 */
 .doubao-btn {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -1401,28 +1448,17 @@ button {
 .home-container {
   /* 布局 */
   width: 100%;
-  max-width: 1500px;
+  max-width: 1505.9px;
   margin: 0 auto;
   padding: 0 clamp(10px, 2vw, 20px);
   overflow: visible;
   overflow-x: hidden;
   box-sizing: border-box;
   background-color: #dededf6c;
+ 
   /* 视觉效果 */
 }
 
-/* 轮播区域：合并所有效果 */
-.home-banner {
-  /* 轮播高度响应式 */
-  height: clamp(700px, 45vw, 813px);
-  background: #ffffff;
-  position: relative;
-  top: 120px;
-  height: 1100px;
-  border-radius: 12px;
-  margin: clamp(15px, 2vw, 20px) 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
 @media (max-width: 690px) {
   .home-banner {
     height: 1000px;
@@ -1443,7 +1479,7 @@ button {
   /* 布局 */
   position: relative;
   transform-origin: top center;
-
+  z-index: 200;
   top: 200px;
   padding: clamp(15px, 2vw, 9px);
   margin-left: clamp(-83px, -4.8vw, -86.3px);
@@ -1489,7 +1525,7 @@ button {
     #f2eeee,
     #575656,
     #f2eeee,
-    #ff7f00,
+    #ff80005a,
     #f2eeee,
     #575656,
     #f2eeee

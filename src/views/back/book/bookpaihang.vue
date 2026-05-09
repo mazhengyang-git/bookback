@@ -7,9 +7,9 @@
 
     <!-- 配置说明 -->
     <el-alert title="配置说明" type="info" :closable="false" style="margin-bottom: 20px">
-      <p style="color: gray">1. 下方列表为首页置顶图书，点击「删除」可移除</p>
-      <p style="color: gray">2. 点击「从图书列表选择」可添加现有图书</p>
-      <p style="color: gray">3. 保存后实时生效，刷新首页即可看到效果</p>
+      <p style="color: gray;font-weight: 550;">1. 下方列表为首页置顶图书，点击「删除」可移除</p>
+      <p style="color: gray;font-weight:550">2. 点击「从图书列表选择」可添加现有图书</p>
+      <p style="color: gray;font-weight:550">3. 保存后实时生效，刷新首页即可看到效果</p>
     </el-alert>
 
     <!-- 已选图书列表 -->
@@ -23,7 +23,7 @@
         row-key="id"
         border
         stripe
-        style="width: 100%; margin-bottom: 20px"
+        style="width: 100%; margin-bottom: 20px;color: #000;font-weight: 600;"   :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
       >
         <el-table-column type="index" label="排序" width="80" />
         <el-table-column prop="book_name" label="图书名称" min-width="200" />
@@ -66,7 +66,7 @@
       destroy-on-close
     >
       <template #header>
-        <span>选择要置顶的图书</span>
+        <span style="color:#333;font-weight:550">选择要置顶的图书</span>
       </template>
 
       <el-table
@@ -75,7 +75,9 @@
         @selection-change="handleSelectionChange"
         row-key="id"
         border
-        style="width: 100%"
+        style="width: 100%;color:#333;-webkit-text-stroke:0.07px #333"
+ :header-cell-style="{ color: '#333', fontSize: '15px', fontWeight: 900 }">
+
       >
         <el-table-column type="selection" width="55" :selectable="checkSelectable" />
         <el-table-column type="index" label="序号" width="80" />

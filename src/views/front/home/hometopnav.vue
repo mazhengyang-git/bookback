@@ -7,14 +7,14 @@
       <el-button class="sx" type="primary" @click="shoubookshuaxin">刷新页面</el-button>
       <div class="sejb">
         <div class="syws">
-          <el-button link class="syse" @click="go('/huodong')">活动咨询</el-button>
+          <el-button link class="syse" @click="go('/huodong')">活动资讯</el-button>
         </div>
       </div>
       <div class="sejb" @mouseenter="mouseshow" @mouseleave="mouseleve">
         <div class="syws">
           <el-button link class="syse1" @click="go('/books')">图书商城</el-button>
           <span class="acwy">
-            <!-- 严格按照截图从上到下顺序，14个分类完整无重复、路由100%对应 -->
+            <!-- 14个分类路由 -->
             <el-button v-if="showhover" class="ac1" @click="go('/books?category=太空歌剧')"
               >太空歌剧</el-button
             >
@@ -161,7 +161,7 @@ const emit = defineEmits(['refresh'])
 function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
   setTimeout(() => {
     router.push(path)
-  }, 10) // 只延迟10毫秒，人感觉不到，但浏览器能缓过来
+  }, 10) // 只延迟10毫秒，浏览器能缓过来
 }
 
 function mouseshow() {
@@ -205,7 +205,7 @@ const handleLogout = () => {
   width: clamp(700px, 70vw, 850px);
   /* 高度响应式：最小50px，最大60px */
   height: clamp(50px, 5vw, 60px);
-  background: rgba(212, 211, 211, 0.95);
+ background-color: #ffffff;
   border-bottom: 1px solid rgba(254, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -312,7 +312,7 @@ const handleLogout = () => {
   color: #000000 !important;
 }
 
-/* 导航栏：在后面合并 */
+/* 导航栏 */
 .home-top-nav {
   display: flex;
 
@@ -325,9 +325,7 @@ const handleLogout = () => {
   opacity: 0.9;
   background: linear-gradient(
     180deg,
-    rgba(215, 213, 213, 0.98) 0%,
-    rgba(160, 158, 158, 0.612) 50%,
-    rgba(215, 213, 213, 0.98) 100%
+   
   );
   border-bottom: 1px solid rgba(5, 44, 84, 0.3);
   box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
@@ -380,7 +378,7 @@ const handleLogout = () => {
 
 /* ========== 导航按钮视觉 ========== */
 .syws {
-  background: #ffffff;
+  background: #e5e3e1;
   border: 1px solid rgba(64, 158, 255, 0.3);
   display: flex;
 
@@ -393,20 +391,7 @@ const handleLogout = () => {
 .syws:hover {
   box-shadow: 0 0 10px rgba(64, 158, 255, 0.3);
 }
-/*导航按钮样式*/
-.syse,
-.syse1 {
-  color: #000000;
-  font-size: clamp(14px, 1.2vw, 16px);
-  text-decoration: none;
-  line-height: 1.2;
-  transition: all 0.3s ease;
-}
-.syse:hover,
-.syse1:hover {
-  color: #ec8f33;
-  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
-}
+
 .sx {
   position: relative;
   margin-left: 6px;
@@ -429,49 +414,50 @@ const handleLogout = () => {
 .acwy {
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* 所有子按钮强制100%等宽，完全统一 */
-  /* 核心居中：和父按钮严格水平居中，零偏移 */
+  align-items: stretch; /* 子按钮强制100%等宽，完全统一 */
+  /* 核心居中 父按钮严格水平居中 */
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
-  margin-top: 2px; /* 和父按钮轻微间距，不遮挡 */
+  margin-top: 2px; 
 }
 
-/* 所有按钮统一基础样式：宽度、内边距、盒模型完全统一，全部对齐 */
+/* 盒模型完全统一 */
 .ac1,
 .ac2 {
-  /* 统一固定宽度，所有按钮完全等宽 */
+  /* 统一固定宽度，按钮完全等宽 */
   width: clamp(101px, 10vw, 117.7px) !important;
   padding: 7px 20px !important;
   height: auto !important;
   text-align: center;
-  font-weight: 600;
+  font-weight: 500;
+ color: #000;
   box-sizing: border-box;
   margin: 0 !important; /* 清除所有自带外边距 */
   border: 1px soild black !important;
 }
 
-/* 奇数按钮：仅顶部圆角，底部直角无缝衔接下一个按钮 */
+/* 奇数按钮 */
 .ac1 {
   border-radius: 4px 4px 0 0 !important;
-  /* 完全删除旧代码所有硬编码 left 偏移！！！ */
+  
   left: unset !important;
 }
 
-/* 偶数按钮：仅底部圆角，顶部直角无缝衔接上一个按钮 */
+/* 偶数按钮 */
 .ac2 {
   border-radius: 0 0 4px 4px !important;
-  margin-top: -1px; /* 消除按钮之间的1px白边缝隙，上下完美拼接 */
-  /* 完全删除旧代码所有硬编码 left 偏移！！！ */
+  margin-top: -1px; /* 上下拼接 */
+
   left: unset !important;
 }
 </style>
 
 <style scoped>
-/* 整合导入组件CSS：按钮交互效果 + 大厂风格视觉优化 */
-/* 增强的按钮交互效果 */
+/* 按钮交互风格视觉*/
+/* 按钮交互效果 */
 .syws {
   transition: all 0.2s ease-out;
 }
@@ -496,5 +482,20 @@ const handleLogout = () => {
   75% {
     transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
   }
+}
+
+/*导航按钮样式*/
+.syse,
+.syse1 {
+  color: #000000 !important;
+  font-size: clamp(14px, 1.2vw, 16px);
+  text-decoration: none !important;
+  line-height: 1.2;
+  transition: all 0.3s ease;
+}
+.syse:hover,
+.syse1:hover {
+  color: #ec8f33 !important;
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5) !important;
 }
 </style>

@@ -148,6 +148,7 @@ onMounted(() => {
   padding-bottom: 800px;
   position: relative;
   margin: 30px 0;
+  margin-left: 80px;
 }
 
 .skeleton-placeholder {
@@ -160,6 +161,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   width: 1000px;
+ 
   transform: scale(0.8);
   transform-origin: top left;
 }
@@ -274,7 +276,7 @@ onMounted(() => {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: -45px;
+ top:750px;
   display: flex;
   align-items: center;
   gap: 8px;
