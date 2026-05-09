@@ -1,12 +1,11 @@
 const pool = require('../config/db');
 
-// 1. 校验用户评价权限【100%贴合库表 + 全步骤详细日志打印】
+// 1. 校验用户评价权限
 const checkCommentAuth = async (req, res) => {
   try {
     const userId = req.user.id;
     const { bookId } = req.query;
 
-    // ========== 【日志1：打印前端传过来的所有入参】 ==========
     console.log('\n==========【评价权限接口】开始 ==========');
     console.log('当前登录用户ID(req.user.id)：', userId);
     console.log('当前页面图书ID(bookId)：', bookId);
@@ -16,25 +15,21 @@ const checkCommentAuth = async (req, res) => {
       return res.json({ code: 400, msg: '图书ID不能为空', data: { hasAuth: false, hasCommented: false } });
     }
 
-    // ========== 【权限SQL：完美匹配你的订单 + 兼容全部有效购买状态】 ==========
-    // 已付款、已发货 都开放评价权限；待发货无权限
     const [buyResult] = await pool.execute(
       `SELECT id FROM \`order\` WHERE user_id = ? AND book_id = ? AND status IN ('已付款', '已发货','待发货')`,
       [userId, bookId]
     );
 
-    // ========== 【日志2：打印订单查询结果】 ==========
     console.log('订单查询结果数组长度：', buyResult.length);
-    console.log('匹配到的订单完整数据：', buyResult);
     const hasAuth = buyResult.length > 0;
-    console.log('是否拥有购买权限(hasAuth)：', hasAuth);
 
-    // 校验：是否已经评价过（一人一书限评1次）
     const [commentResult] = await pool.execute(
       `SELECT id FROM book_comment WHERE user_id = ? AND book_id = ?`,
       [userId, bookId]
     );
     const hasCommented = commentResult.length > 0;
+
+    console.log('是否拥有购买权限(hasAuth)：', hasAuth);
     console.log('是否已经评价过(hasCommented)：', hasCommented);
     console.log('==========【评价权限接口】结束 ==========\n');
 
@@ -49,7 +44,7 @@ const checkCommentAuth = async (req, res) => {
   }
 };
 
-// 2. 获取图书平均分（之前全部完美，完整保留 + 日志）
+// 2. 获取图书平均分（独立接口，用于详情页动态刷新）
 const getBookAvgScore = async (req, res) => {
   try {
     const { bookId } = req.query;
@@ -72,7 +67,7 @@ const getBookAvgScore = async (req, res) => {
   }
 };
 
-// 3. 获取评价列表（之前全部完美修复：联表username、空值兼容，完整保留+日志）
+// 3. 获取评价列表
 const getCommentList = async (req, res) => {
   try {
     const { bookId } = req.query;
@@ -105,7 +100,7 @@ const getCommentList = async (req, res) => {
   }
 };
 
-// 4. 提交图书评价（完整业务逻辑+权限校验+全日志）
+// 4. 提交图书评价（自动更新 book 和 newbook 表的 avg_score, comment_count）
 const addComment = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -113,40 +108,33 @@ const addComment = async (req, res) => {
 
     console.log('\n==========【提交评价接口】开始 ==========');
     console.log('当前用户ID：', userId);
-    console.log('提交参数：图书ID',bookId,'评分',score,'内容',content);
+    console.log('提交参数：图书ID', bookId, '评分', score, '内容', content);
 
     if (!bookId || !score) return res.json({ code: 400, msg: '图书ID和评分不能为空', data: null });
     if (score < 0 || score > 5) return res.json({ code: 400, msg: '评分必须0~5分', data: null });
 
-    // 购买权限校验，和权限接口完全统一
     const [buyCheck] = await pool.execute(
       `SELECT id FROM \`order\` WHERE user_id = ? AND book_id = ? AND status IN ('已付款', '已发货','待发货')`,
       [userId, bookId]
     );
-    console.log('提交接口订单查询结果长度：', buyCheck.length);
     if (buyCheck.length === 0) {
-      console.log('无购买权限，拒绝提交');
       return res.json({ code: 403, msg: '未购买该图书，无法评价', data: null });
     }
 
-    // 一人一书唯一限评校验
     const [commentCheck] = await pool.execute(
       `SELECT id FROM book_comment WHERE user_id = ? AND book_id = ?`,
       [userId, bookId]
     );
     if (commentCheck.length > 0) {
-      console.log('用户已评价过本书，拒绝提交');
       return res.json({ code: 403, msg: '您已评价过该图书', data: null });
     }
 
-    // 插入评价数据
     await pool.execute(
       `INSERT INTO book_comment (book_id, user_id, score, content) VALUES (?, ?, ?, ?)`,
       [bookId, userId, score, content || '']
     );
-    console.log('评价数据插入数据库成功');
 
-    // 自动更新图书表平均分、评价总数
+    // 重新计算平均分和评价总数
     const [avgData] = await pool.execute(
       `SELECT IFNULL(AVG(score),0.0) AS avg, COUNT(id) AS count FROM book_comment WHERE book_id = ?`,
       [bookId]
@@ -154,17 +142,17 @@ const addComment = async (req, res) => {
     const avgScore = Number(avgData[0].avg) || 0;
     const commentCount = Number(avgData[0].count) || 0;
 
-    // 更新【普通图书表】
+    // 更新普通图书表
     await pool.execute(
       `UPDATE book SET avg_score = ?, comment_count = ? WHERE id = ?`,
       [avgScore, commentCount, bookId]
     );
-    // 同步更新【新书表】（评分实时生效）
+    // 同步更新新书表
     await pool.execute(
       `UPDATE newbook SET avg_score = ?, comment_count = ? WHERE id = ?`,
       [avgScore, commentCount, bookId]
     );
-    
+
     console.log('普通图书+新书表 评分数据同步更新成功');
     console.log('==========【提交评价接口】结束 ==========\n');
 
@@ -174,4 +162,10 @@ const addComment = async (req, res) => {
     res.status(500).json({ code: 500, msg: '评价提交失败', data: null });
   }
 };
-module.exports = { checkCommentAuth, getBookAvgScore, getCommentList, addComment };
+
+module.exports = {
+  checkCommentAuth,
+  getBookAvgScore,
+  getCommentList,
+  addComment
+};

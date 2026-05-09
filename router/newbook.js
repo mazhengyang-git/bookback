@@ -7,9 +7,9 @@ const pool = require('../config/db');
 router.get('/front/newbook/list', async (req, res) => {
   try {
     const { category } = req.query;
-    let sql = 'SELECT id, book_name AS name, author,author_into, category, price, cover, `desc`, mulu, stock, status FROM newbook WHERE status = 1';
+    let sql = 'SELECT id, book_name AS name, author,author_into, category, price, cover, `desc`, mulu, stock, status, avg_score, comment_count  FROM newbook WHERE status = 1';
     const sqlParams = [];
-    
+
     if (category && category !== '全部') {
       sql += ' AND category = ?';
       sqlParams.push(category);
@@ -30,9 +30,9 @@ router.get('/front/newbook/detail', async (req, res) => {
     if (!id || isNaN(Number(id))) {
       return res.send({ code: 400, msg: '图书ID不能为空，且必须是数字' });
     }
-    const sql = 'SELECT id, book_name AS name, author,author_into, category, price, cover, `desc`, mulu, stock, status FROM newbook WHERE id = ?';
+    const sql = 'SELECT id, book_name AS name, author,author_into, category, price, cover, `desc`, mulu, stock, status, avg_score, comment_count  FROM newbook WHERE id = ?';
     const [results] = await pool.execute(sql, [Number(id)]);
-    
+
     if (results.length === 0) {
       return res.send({ code: 500, msg: '图书不存在' });
     }

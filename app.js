@@ -10,13 +10,22 @@ const bookRouter = require('./router/book');
 const newbookRouter = require('./router/newbook');
 const umentRouter = require('./router/userment');
 const payRouter = require('./router/payRouter');
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:4173']
 //中间件
 //解决跨域
 app.use(express.json()); //解析JSON请求体
 app.use(express.urlencoded({ extended: true })); //解析表单请求体
 app.use(cors({
-  origin:'http://localhost:3000',
-  credentials:true
+  origin: function (origin, callback) {
+    // 允许没有 origin 的请求（如 Postman）
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('CORS not allowed'))
+    }
+  },
+  credentials: true // 如果需要携带 cookie
 }))
 //路由挂载
 
@@ -24,7 +33,7 @@ app.use(cors({
 const orderRouter = require('./router/orderRouter')
 const userdate = require('./router/userupdate')
 const orderadmin = require('./router/orderment')
-const hdzx=require('./router/活动资讯/hdzx')
+const hdzx = require('./router/活动资讯/hdzx')
 const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
 const newbookguan = require('./router/newbookguanli');
