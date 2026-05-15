@@ -1,331 +1,385 @@
 <template>
   <div class="page-container">
-    <el-button
-      class="gwy"
-      type="primary"
-      @click="$router.push('/home')"
-      :unstable-disable-deprecated-warning="true"
-      >返回首页</el-button
-    >
-    <h2 class="sci-fi-title">个人中心</h2>
+    <div class="topse">
+      <el-button
+        class="gwy"
+        type="primary"
+        @click="$router.push('/home')"
+        :unstable-disable-deprecated-warning="true"
+        >返回首页</el-button
+      >
+      <el-button
+        class="zise"
+        style="position: absolute; font-size: 17px; margin-left: 120px; top: 5px;z-index:10 "
+        link
+        @click="go('/cart')"
+        ><img
+          class="gwdh"
+          style="width: 24px; height: auto; margin-right: 3px"
+          src="/img/购物车.png"
+        />购物车</el-button
+      >
+      <el-button
+        class="zise1"
+        style="position: absolute; font-size: 17px; margin-left: 250px; top: 5px;z-index:10 "
+        link
+        @click="go('/shoucang')"
+        ><img
+          class="gwdh1"
+          style="width: 24px; height: auto; margin-right: 3px"
+          src="/public/img/收藏夹.png"
+        />收藏夹</el-button
+      >
+    </div>
 
-    <div v-if="userStore.isLogin">
-      <el-card class="user-info-card" shadow="hover" :unstable-disable-deprecated-warning="true">
-        <template #header>
-          <span class="card-title">用户信息</span>
-          <el-button
-            style="padding-left: 10px; padding-right: 10px; margin-left: 220px"
-            type="danger"
-            @click="handleLogout"
-            :unstable-disable-deprecated-warning="true"
-            >退出登录</el-button
-          >
-        </template>
-        <div class="user-info-content">
-          <!-- 手机号区域 -->
-          <div v-if="!userStore.user?.phone || userStore.user?.phone.trim() === ''">
-            <h3>绑定手机号</h3>
-            <el-input
-              v-model="phone"
-              placeholder="请输入手机号"
-              style="width: 300px"
-              maxlength="11"
-            />
-            <el-button type="primary" @click="handleBind" style="margin-left: 10px">
-              确认绑定
-            </el-button>
+    <div style="margin-top: 80px">
+      <h2 class="sci-fi-title">个人中心</h2>
+
+      <div v-if="userStore.isLogin">
+        <el-card class="user-info-card" shadow="hover" :unstable-disable-deprecated-warning="true">
+          <template #header>
+            <span class="card-title">用户信息</span>
+            <el-button
+              style="padding-left: 10px; padding-right: 10px; margin-left: 50px"
+              type="danger"
+              @click="handleLogout"
+              :unstable-disable-deprecated-warning="true"
+              >退出登录</el-button
+            >
+          </template>
+
+          <!--  头像区域 -->
+          <div style="display: flex; align-items: center; margin-bottom: 20px;">
+            <div class="avatar-wrapper" style="position: relative; margin-right: 20px;">
+              <el-avatar :src="currentAvatar" size="80" />
+              <div class="avatar-upload-btn" @click="openAvatarDialog">
+                <el-icon><Plus /></el-icon>
+              </div>
+            </div>
+            <div>
+              <h2 style="margin:0">{{ userStore.user?.username || '未知用户' }}</h2>
+            </div>
           </div>
-          <div v-else class="phone-binded">
-            <h3>绑定手机号</h3>
-            <p style="font-size: 16px; margin: 10px 0">
-              已绑定：<strong style="color: #409eff">{{ userStore.user.phone }}</strong>
+
+          <div class="user-info-content">
+            <div v-if="!userStore.user?.phone || userStore.user?.phone.trim() === ''">
+              <h3>绑定手机号</h3>
+              <el-input
+                v-model="phone"
+                placeholder="请输入手机号"
+                style="width: 300px"
+                maxlength="11"
+              />
+              <el-button type="primary" @click="handleBind" style="margin-left: 10px">
+                确认绑定
+              </el-button>
+            </div>
+            <div v-else class="phone-binded">
+              <h3>绑定手机号</h3>
+              <p style="font-size: 16px; margin: 10px 0">
+                已绑定：<strong style="color: #409eff">{{ userStore.user.phone }}</strong>
+              </p>
+            </div>
+
+            <p><strong>用户名：</strong>{{ userStore.user?.username || '未知用户' }}</p>
+            <p>
+              <strong>用户角色：</strong>
+              <el-tag :type="userStore.userRole === 'admin' ? 'danger' : 'primary'">
+                {{
+                  userStore.userRole === 'admin'
+                    ? '管理员'
+                    : userStore.userRole === 'seller'
+                      ? '卖家'
+                      : '买家'
+                }}
+              </el-tag>
+            </p>
+            <p>
+              <strong>注册时间：</strong>
+              {{ formatTime(userStore.user?.create_time) || '暂无记录' }}
             </p>
           </div>
 
-          <p><strong>用户名：</strong>{{ userStore.user?.username || '未知用户' }}</p>
-          <p>
-            <strong>用户角色：</strong>
-            <el-tag :type="userStore.userRole === 'admin' ? 'danger' : 'primary'">
-              {{
-                userStore.userRole === 'admin'
-                  ? '管理员'
-                  : userStore.userRole === 'seller'
-                    ? '卖家'
-                    : '买家'
-              }}
-            </el-tag>
-          </p>
-          <p>
-            <strong>注册时间：</strong>
-            <!--@vue-ignore-->
-            {{ formatTime(userStore.user?.create_time) || '暂无记录' }}
-          </p>
-        </div>
-        <template #footer>
-          <el-button
-            style="margin-right: 30px; padding-left: 10px; padding-right: 10px"
-            type="primary"
-            @click="openEditDialog"
-            >修改账密</el-button
-          >
-          <el-button
-            style="
-              position: relative;
-              padding-top: 10px;
-              padding-bottom: 10px;
-              height: 30px;
-              margin-right: 34px;
-            "
-            type="primary"
-            size="small"
-            @click="handleEditPhone"
-          >
-            修改绑定手机号
-          </el-button>
+          <template #footer>
+            <el-button
+              style="margin-right: 30px; padding-left: 10px; padding-right: 10px"
+              type="primary"
+              @click="openEditDialog"
+              >修改账密</el-button
+            >
+            <el-button
+              style="
+                position: relative;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                height: 30px;
+                margin-right: 34px;
+              "
+              type="primary"
+              size="small"
+              @click="handleEditPhone"
+            >
+              修改绑定手机号
+            </el-button>
 
-          <div style="margin-top: 30px; font-weight: 600">
-            <span>
-              <strong>个人签名</strong><br />
-              <hr style="margin-top: 25px" />
-              <br /><span class="qmhh" style="font-size: 13px">{{
-                userStore.user?.sign || '暂无签名'
-              }}</span>
-            </span>
-
-            <div style="margin-top: 20px; margin-bottom: 20px; margin-left: -9px">
-              <el-button type="primary" @click="updetaqm" style="margin-left: 9px">{{
-                km ? '保存签名' : '设置签名'
-              }}</el-button>
-              <el-button
-                v-show="km === true"
-                type="primary"
-                @click="quxiqm"
-                style="margin-left: 43px; white-space: nowrap"
-              >
-                取消修改 </el-button
-              ><br />
-              <el-input
-                v-show="km === true"
-                v-model="inputtext"
-                type="textarea"
-                :rows="8"
-                class="sign-input"
-                style="
-                  width: 330px;
-                  text-align: left;
-                  margin-top: 15px;
-                  border: 1px solid #000000;
-                  border-radius: 15px;
-                "
-                placeholder="请输入个人签名"
-              />
-            </div>
-          </div>
-        </template>
-      </el-card>
-
-      <!-- 修改账密弹窗（原有全部代码完全不动） -->
-      <el-dialog
-        v-model="showEditDialog"
-        title="修改用户名/密码"
-        width="500px"
-        style="padding: 20px !important"
-        :close-on-click-modal="false"
-      >
-        <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
-          <el-form-item style="margin-bottom: 20px" label="用户名/账号" prop="username">
-            <el-input
-              v-model="editForm.username"
-              maxlength="13"
-              placeholder="不修改请保持原样"
-              clearable
-            />
-          </el-form-item>
-          <el-form-item style="margin-bottom: 20px" label="新密码" prop="password">
-            <el-input
-              v-model="editForm.password"
-              type="password"
-              placeholder="不修改请留空"
-              show-password
-              maxlength="13"
-            />
-          </el-form-item>
-          <el-form-item label="确认密码" prop="confirmPwd">
-            <el-input
-              v-model="editForm.confirmPwd"
-              type="password"
-              placeholder="再次输入新密码"
-              show-password
-              maxlength="13"
-            />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button
-            style="margin-right: 10px; padding-left: 10px; padding-right: 10px"
-            @click="showEditDialog = false"
-            >取消</el-button
-          >
-          <el-button type="primary" @click="submitEdit">确认修改</el-button>
-        </template>
-      </el-dialog>
-
-      <!-- ================== 修改手机号弹窗【完整修复版 1:1复刻登录页+后端全校验】 ================== -->
-      <el-dialog
-        v-model="showEditPhoneDialog"
-        title="修改绑定手机号"
-        width="550px"
-        :close-on-click-modal="false"
-        @close="resetPhoneDialog"
-      >
-        <el-form
-          ref="editPhoneFormRef"
-          :model="editPhoneForm"
-          label-width="110px"
-          :rules="editPhoneRules"
-        >
-          <!-- 验证方式选择 -->
-          <el-form-item label="身份验证方式">
-            <el-radio-group v-model="verifyType">
-              <el-radio label="原绑定手机号验证" value="phone" />
-              <el-radio label="当前账号密码验证" value="password" />
-            </el-radio-group>
-          </el-form-item>
-
-          <!-- ========== 方式1：原手机短信验证【全部修复】 ========== -->
-          <template v-if="verifyType === 'phone'">
-            <!-- 【修复1】原绑定手机号：**只读禁用！完全不可手动编辑** 自动读取用户绑定数据，去掉所有必填*号 -->
-            <el-form-item label="原绑定手机号">
-              <el-input v-model="originalPhone" disabled placeholder="当前账号已绑定手机号" />
-            </el-form-item>
-
-            <!-- 原手机短信验证码输入+发送按钮 -->
-            <el-form-item label="原手机验证码" prop="oldSmsCode">
-              <div class="code-box">
-                <el-input
-                  v-model="editPhoneForm.oldSmsCode"
-                  placeholder="请输入原手机收到的6位短信验证码"
-                  maxlength="6"
-                />
-                <el-button type="primary" @click="sendOldPhoneSms" :disabled="smsCountdown > 0">
-                  {{ smsCountdown > 0 ? `${smsCountdown}秒后重发` : '发送验证码' }}
+            <div style="margin-top: 30px; font-weight: 600">
+              <span>
+                <strong>个人签名</strong><br />
+                <hr style="margin-top: 25px" />
+                <br /><span class="qmhh" style="font-size: 13px">{{
+                  userStore.user?.sign || '暂无签名'
+                }}</span>
+              </span>
+              <div style="margin-top: 20px; margin-bottom: 20px; margin-left: -9px">
+                <el-button type="primary" @click="updetaqm" style="margin-left: 9px">{{
+                  km ? '保存签名' : '设置签名'
+                }}</el-button>
+                <el-button
+                  v-show="km === true"
+                  type="primary"
+                  @click="quxiqm"
+                  style="margin-left: 43px; white-space: nowrap"
+                >
+                  取消修改
                 </el-button>
-              </div>
-            </el-form-item>
-
-            <!-- 图片验证码区域（和登录页完全一致：发送验证码前置校验） -->
-            <el-form-item v-if="showCaptcha" label="安全核验" prop="captcha">
-              <div class="captcha-row">
+                <br />
                 <el-input
-                  v-model="editPhoneForm.captcha"
-                  placeholder="请输入图片验证码"
-                  maxlength="4"
-                  style="flex: 1"
+                  v-show="km === true"
+                  v-model="inputtext"
+                  type="textarea"
+                  :rows="8"
+                  class="sign-input"
+                  style="
+                    width: 330px;
+                    text-align: left;
+                    margin-top: 15px;
+                    border: 1px solid #000000;
+                    border-radius: 15px;
+                  "
+                  placeholder="请输入个人签名"
                 />
-                <div style="color: #000" class="captcha-img" @click="refreshCaptcha">
-                  {{ captchaCode }}
-                </div>
               </div>
-            </el-form-item>
+            </div>
           </template>
+        </el-card>
 
-          <!-- ========== 方式2：当前账号密码验证（原有逻辑完整保留） ========== -->
-          <el-form-item v-if="verifyType === 'password'" label="当前账号密码" prop="oldPwd">
-            <el-input
-              v-model="editPhoneForm.oldPwd"
-              type="password"
-              placeholder="请输入你的账号登录密码"
-              show-password
-            />
-          </el-form-item>
-
-          <!-- 验证通过按钮 -->
-          <el-form-item>
-            <el-button type="success" @click="checkIdentity">验证身份</el-button>
-            <span v-if="isPass" style="color: #67c230; margin-left: 12px">✅ 身份验证已通过</span>
-          </el-form-item>
-
-          <el-divider />
-
-          <!-- 新手机号：未验证之前全程禁用，表单校验规则正常 -->
-          <el-form-item label="新手机号" prop="newPhone">
-            <el-input
-              v-model="editPhoneForm.newPhone"
-              placeholder="请输入新的绑定手机号"
-              maxlength="11"
-              :disabled="!isPass"
-            />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="showEditPhoneDialog = false">取消</el-button>
-          <el-button type="primary" @click="confirmEditPhone" :disabled="!isPass"
-            >确认修改</el-button
+        <!-- 修改头像弹窗 -->
+        <el-dialog v-model="showAvatarDialog" title="修改头像" width="500px">
+          <el-upload
+            class="avatar-uploader"
+            :http-request="customUpload"
+            :show-file-list="false"
+            :before-upload="beforeAvatarUpload"
           >
-        </template>
-      </el-dialog>
+            <el-avatar
+              v-if="previewAvatar"
+              :src="previewAvatar"
+              size="120"
+              class="preview-avatar"
+            />
+            <el-icon v-else class="upload-icon"><Plus /></el-icon>
+          </el-upload>
+          <div style="margin-top: 15px; text-align: center; color: #909399; font-size: 13px;">
+            支持 jpg/png 格式，大小不超过 2MB
+          </div>
+          <template #footer>
+            <el-button @click="showAvatarDialog = false">取消</el-button>
+          </template>
+        </el-dialog>
 
-      <!-- 订单区域（原有全部代码完全不动） -->
-      <div class="order-section">
-        <h3 class="sci-fi-subtitle">我的订单</h3>
-        <el-button type="link" @click="getOrderList" class="refresh-btn">刷新订单</el-button>
-        <el-table :data="orderList" border stripe v-loading="loading">
-          <el-table-column prop="orderNo" label="订单编号" width="220" />
-          <el-table-column label="图书封面" width="100">
-            <template #default="scope">
-              <img
-                :src="scope.row.bookCover || '/default-book.png'"
-                class="order-book-cover"
-                style="cursor: pointer"
-                @click="$router.push(`/order/${scope.row.orderNo}`)"
+        <!-- 修改账密弹窗 -->
+        <el-dialog
+          v-model="showEditDialog"
+          title="修改用户名/密码"
+          width="500px"
+          style="padding: 20px !important"
+          :close-on-click-modal="false"
+        >
+          <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
+            <el-form-item style="margin-bottom: 20px" label="用户名/账号" prop="username">
+              <el-input
+                v-model="editForm.username"
+                maxlength="13"
+                placeholder="不修改请保持原样"
+                clearable
               />
+            </el-form-item>
+            <el-form-item style="margin-bottom: 20px" label="新密码" prop="password">
+              <el-input
+                v-model="editForm.password"
+                type="password"
+                placeholder="不修改请留空"
+                show-password
+                maxlength="13"
+              />
+            </el-form-item>
+            <el-form-item label="确认密码" prop="confirmPwd">
+              <el-input
+                v-model="editForm.confirmPwd"
+                type="password"
+                placeholder="再次输入新密码"
+                show-password
+                maxlength="13"
+              />
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button
+              style="margin-right: 10px; padding-left: 10px; padding-right: 10px"
+              @click="showEditDialog = false"
+              >取消</el-button
+            >
+            <el-button type="primary" @click="submitEdit">确认修改</el-button>
+          </template>
+        </el-dialog>
+
+        <!-- 修改手机号弹窗 -->
+        <el-dialog
+          v-model="showEditPhoneDialog"
+          title="修改绑定手机号"
+          width="550px"
+          :close-on-click-modal="false"
+          @close="resetPhoneDialog"
+        >
+          <el-form
+            ref="editPhoneFormRef"
+            :model="editPhoneForm"
+            label-width="110px"
+            :rules="editPhoneRules"
+          >
+            <el-form-item label="身份验证方式">
+              <el-radio-group v-model="verifyType">
+                <el-radio label="原绑定手机号验证" value="phone" />
+                <el-radio label="当前账号密码验证" value="password" />
+              </el-radio-group>
+            </el-form-item>
+
+            <template v-if="verifyType === 'phone'">
+              <el-form-item label="原绑定手机号">
+                <el-input v-model="originalPhone" disabled placeholder="当前账号已绑定手机号" />
+              </el-form-item>
+              <el-form-item label="原手机验证码" prop="oldSmsCode">
+                <div class="code-box">
+                  <el-input
+                    v-model="editPhoneForm.oldSmsCode"
+                    placeholder="请输入6位验证码"
+                    maxlength="6"
+                  />
+                  <el-button type="primary" @click="sendOldPhoneSms" :disabled="smsCountdown > 0">
+                    {{ smsCountdown > 0 ? `${smsCountdown}秒后重发` : '发送验证码' }}
+                  </el-button>
+                </div>
+              </el-form-item>
+              <el-form-item v-if="showCaptcha" label="安全核验" prop="captcha">
+                <div class="captcha-row">
+                  <el-input
+                    v-model="editPhoneForm.captcha"
+                    placeholder="请输入验证码"
+                    maxlength="4"
+                    style="flex: 1"
+                  />
+                  <div style="color: #000" class="captcha-img" @click="refreshCaptcha">
+                    {{ captchaCode }}
+                  </div>
+                </div>
+              </el-form-item>
             </template>
-          </el-table-column>
-          <el-table-column prop="bookName" label="图书名称" min-width="200" />
-          <el-table-column prop="count" label="购买数量" width="100" />
-          <el-table-column prop="totalPrice" label="订单总价" width="120">
-            <template #default="scope">¥{{ toFixedNumber(scope.row.totalPrice, 2) }}</template>
-          </el-table-column>
-          <el-table-column label="支付时间" width="200">
-            <template #default="scope">{{ formatTime(scope.row.createTime) }}</template>
-          </el-table-column>
-          <el-table-column prop="status" label="订单状态" width="120">
-            <template #default="scope">
-              <el-tag :type="getStatusTagType(scope.row.status)">{{ scope.row.status }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template #default="scope">
-              <el-button
-                type="link"
-                icon="el-icon-delete"
-                @click="handleDeleteOrder(scope.row.orderNo)"
-                >退货退款</el-button
-              >
-            </template>
-          </el-table-column>
-        </el-table>
-        <div v-if="!loading && orderList.length === 0" class="empty-order">
-          <p>暂无订单记录~</p>
-          <el-button type="primary" @click="$router.push('/home')">去首页逛逛</el-button>
+
+            <el-form-item v-if="verifyType === 'password'" label="当前账号密码" prop="oldPwd">
+              <el-input
+                v-model="editPhoneForm.oldPwd"
+                type="password"
+                placeholder="输入登录密码"
+                show-password
+              />
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="success" @click="checkIdentity">验证身份</el-button>
+              <span v-if="isPass" style="color: #67c230; margin-left: 12px">✅ 身份验证已通过</span>
+            </el-form-item>
+
+            <el-divider />
+
+            <el-form-item label="新手机号" prop="newPhone">
+              <el-input
+                v-model="editPhoneForm.newPhone"
+                placeholder="请输入新手机号"
+                maxlength="11"
+                :disabled="!isPass"
+              />
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button @click="showEditPhoneDialog = false">取消</el-button>
+            <el-button type="primary" @click="confirmEditPhone" :disabled="!isPass"
+              >确认修改</el-button
+            >
+          </template>
+        </el-dialog>
+
+        <!-- 订单 -->
+        <div class="order-section">
+          <h3 class="sci-fi-subtitle">我的订单</h3>
+          <el-button type="link" @click="getOrderList" class="refresh-btn">刷新订单</el-button>
+          <el-table :data="orderList" border stripe v-loading="loading">
+            <el-table-column prop="orderNo" label="订单编号" width="220" />
+            <el-table-column label="图书封面" width="100">
+              <template #default="scope">
+                <img
+                  :src="scope.row.bookCover || '/default-book.png'"
+                  class="order-book-cover"
+                  style="cursor: pointer"
+                  @click="$router.push(`/order/${scope.row.orderNo}`)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="bookName" label="图书名称" min-width="200" />
+            <el-table-column prop="count" label="购买数量" width="100" />
+            <el-table-column prop="totalPrice" label="订单总价" width="120">
+              <template #default="scope">¥{{ toFixedNumber(scope.row.totalPrice, 2) }}</template>
+            </el-table-column>
+            <el-table-column label="支付时间" width="200">
+              <template #default="scope">{{ formatTime(scope.row.createTime) }}</template>
+            </el-table-column>
+            <el-table-column prop="status" label="订单状态" width="120">
+              <template #default="scope">
+                <el-tag :type="getStatusTagType(scope.row.status)">{{ scope.row.status }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="120">
+              <template #default="scope">
+                <el-button
+                  type="link"
+                  icon="el-icon-delete"
+                  @click="handleDeleteOrder(scope.row.orderNo)"
+                  >退货退款</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-if="!loading && orderList.length === 0" class="empty-order">
+            <p>暂无订单记录~</p>
+            <el-button type="primary" @click="$router.push('/home')">去首页逛逛</el-button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-else class="no-login-tip">
-      <h3>请先登录</h3>
-      <el-button type="primary" @click="$router.push('/login')">立即登录</el-button>
+      <div v-else class="no-login-tip">
+        <h3>请先登录</h3>
+        <el-button type="primary" @click="$router.push('/login')">立即登录</el-button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, reactive, onUnmounted } from 'vue'
+import { ref, onMounted, onActivated, reactive, onUnmounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import { deleteOrder, getUserOrderList } from '@/api/front/order'
-// ========== 【完整导入你所有用户接口，包含新增的短信验证码核验接口 verifyPaySmsCode】 ==========
 import {
   bindPhone,
   sendSmsCode,
@@ -333,97 +387,85 @@ import {
   updateUserInfoApi,
   getSign,
   updasign,
+  uploadAvatar,
 } from '@/api/front/user'
 import dayjs from 'dayjs'
+import type { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const userStore = useUserStore()
 const router = useRouter()
 const phone = ref('')
 
-// ===================== 修改手机号 全部变量 =====================
+// ===================== 头像功能 =====================
+const showAvatarDialog = ref(false)
+const previewAvatar = ref('')
+
+const currentAvatar = computed(() => {
+  return userStore.user?.avatar || 'https://cube.elemecdn.com/0/5/0df5cf44e51f1197950fddc469d08jpeg.jpeg'
+})
+
+const openAvatarDialog = () => {
+  previewAvatar.value = userStore.user?.avatar || ''
+  showAvatarDialog.value = true
+}
+
+const beforeAvatarUpload = (file: any) => {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
+  if (!isJpgOrPng) {
+    ElMessage.error('头像只能是 JPG/PNG 格式')
+    return false
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('头像大小不能超过 2MB')
+    return false
+  }
+  return true
+}
+
+const customUpload = async (options: any) => {
+  try {
+    const res = await uploadAvatar(options.file)
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('头像上传成功')
+      previewAvatar.value = res.data.url
+      if (userStore.user) {
+        userStore.user.avatar = res.data.url
+      }
+      showAvatarDialog.value = false
+    } else {
+       //@ts-ignore
+      ElMessage.error(res.msg || '上传失败')
+    }
+  } catch (err) {
+    ElMessage.error('上传失败')
+  }
+}
+
+
 const showEditPhoneDialog = ref(false)
-// 验证方式：phone=原手机短信验证  password=账号密码验证
 const verifyType = ref<'phone' | 'password'>('phone')
-// 原始绑定手机号（从用户信息自动读取，**只读**）
 const originalPhone = ref('')
-// 短信倒计时（和登录页完全一致）
 const smsCountdown = ref(0)
 let smsTimer: any = null
 
-// ========== 图片验证码全套逻辑（1:1复制你登录页源码，完全统一） ==========
 const chars = '0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ'
 const captchaCode = ref('')
-const showCaptcha = ref(false)
-const inputtext = ref(``)
+const showCaptcha = ref(false) //@ts-ignore
+const inputtext = ref(``) //@ts-ignore
 const bcqm = ref(``)
 const km = ref(false)
-const generateCaptcha = () => {
-  let code = ''
-  for (let i = 0; i < 4; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
-  captchaCode.value = code
-}
-const refreshCaptcha = () => generateCaptcha()
-// 获取用户签名
-const fetchUserSign = async () => {
-  try {
-    const res = await getSign()
-    //@ts-ignore
-    if (res.code === 200 && res.data) {
-      //@ts-ignore
-      if (userStore.user) {
-        //@ts-ignore
-        userStore.user.sign = res.data.sign || ''
-      }
-    }
-  } catch (error) {
-    console.error('获取签名失败', error)
-  }
-}
-const updetaqm = async () => {
-  // 如果 km 是 false，说明是点击"设置签名"，只显示输入框并填充当前签名
-  if (!km.value) {
-    km.value = true
-    inputtext.value = userStore.user?.sign || ''
-    return
-  }
 
-  // 如果 km 是 true，说明是点击"保存签名"，真正保存签名
-  try {
-    // 调用更新个人签名接口
-    const res = await updasign(inputtext.value)
-    //@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success('🎉 个人签名保存成功！')
-      // 重新获取签名确保数据同步
-      await fetchUserSign()
-      inputtext.value = ''
-      km.value = false
-    } else {
-      //@ts-ignore
-      ElMessage.error(res.msg || '个人签名保存失败')
-    }
-  } catch (error) {
-    ElMessage.error('网络异常，保存失败，请稍后重试')
-  }
-}
-const quxiqm = () => {
-  km.value = false
-  return km.value
-}
-// 表单数据
 const editPhoneForm = ref({
-  oldSmsCode: '', // 原手机短信验证码
-  oldPwd: '', // 账号密码验证用
-  newPhone: '', // 最终要修改的新手机号
-  captcha: '', // 图片验证码（发送短信前置校验）
+  oldSmsCode: '',
+  oldPwd: '',
+  newPhone: '',
+  captcha: '',
 })
 const editPhoneFormRef = ref<FormInstance>()
-// 身份验证通过锁（未通过无法修改新手机号）
 const isPass = ref(false)
 
-// ===================== 原有全部基础变量 完全不动 =====================
 const orderList = ref<any>([])
 const loading = ref(false)
 const originalUsername = ref(userStore.user?.username || '')
@@ -436,53 +478,12 @@ const editForm = ref({
   confirmPwd: '',
 })
 
-// 通用手机号格式校验（复用你原有完整规则）
 const validMobilePrefixes = [
-  '130',
-  '131',
-  '132',
-  '133',
-  '134',
-  '135',
-  '136',
-  '137',
-  '138',
-  '139',
-  '150',
-  '151',
-  '152',
-  '153',
-  '155',
-  '156',
-  '157',
-  '158',
-  '159',
-  '166',
-  '172',
-  '173',
-  '175',
-  '176',
-  '177',
-  '178',
-  '180',
-  '181',
-  '182',
-  '183',
-  '184',
-  '185',
-  '186',
-  '187',
-  '188',
-  '189',
-  '190',
-  '191',
-  '192',
-  '193',
-  '195',
-  '196',
-  '197',
-  '198',
-  '199',
+  '130','131','132','133','134','135','136','137','138','139',
+  '150','151','152','153','155','156','157','158','159','166',
+  '172','173','175','176','177','178','180','181','182','183',
+  '184','185','186','187','188','189','190','191','192','193',
+  '195','196','197','198','199',
 ]
 const isValidPhone = (phone: string): boolean => {
   if (!/^\d{11}$/.test(phone)) return false
@@ -493,11 +494,10 @@ const isValidAccount = (str: string): boolean => {
   const hasLetter = /[a-zA-Z]/.test(str)
   const digitMatch = str.match(/\d/g)
   const hasEnoughDigits = digitMatch && digitMatch.length >= 5
-  const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str)
+  const onlyLetterAndDigit = /^[a-zA-Z0-9]+$/.test(str) //@ts-ignore
   return hasLetter && hasEnoughDigits && onlyLetterAndDigit
 }
 
-// ===================== 修改手机号 表单校验规则【修复：删除原手机号多余必填校验】 =====================
 const editPhoneRules = reactive<FormRules>({
   oldPwd: [
     { required: true, message: '请输入当前账号密码', trigger: 'blur' },
@@ -505,49 +505,33 @@ const editPhoneRules = reactive<FormRules>({
   ],
   oldSmsCode: [{ required: true, message: '请输入原手机短信验证码', trigger: 'blur' }],
   captcha: [
-    {
+    { //@ts-ignore
       validator: (rule, value, callback) => {
-        if (value?.toUpperCase() === captchaCode.value) {
-          callback()
-        } else {
-          callback(new Error('图片验证码错误'))
-        }
+        if (value?.toUpperCase() === captchaCode.value) callback()
+        else callback(new Error('图片验证码错误'))
       },
     },
   ],
   newPhone: [
     { required: true, message: '请输入新手机号', trigger: 'blur' },
-    {
+    { //@ts-ignore
       validator: (rule, value, callback) => {
-        if (!isValidPhone(value)) {
-          callback(new Error('请输入11位正规手机号'))
-          return
-        }
-        if (value === originalPhone.value) {
-          callback(new Error('新手机号不能与原绑定手机号一致'))
-          return
-        }
+        if (!isValidPhone(value)) return callback(new Error('请输入11位正规手机号'))
+        if (value === originalPhone.value) return callback(new Error('不能与原手机号一致'))
         callback()
       },
     },
   ],
 })
 
-// 打开修改手机号弹窗
 const handleEditPhone = () => {
   originalPhone.value = userStore.user?.phone || ''
   resetPhoneDialog()
   showEditPhoneDialog.value = true
 }
 
-// 弹窗关闭/重开 全部重置所有数据、定时器、验证状态
 const resetPhoneDialog = () => {
-  editPhoneForm.value = {
-    oldSmsCode: '',
-    oldPwd: '',
-    newPhone: '',
-    captcha: '',
-  }
+  editPhoneForm.value = { oldSmsCode: '', oldPwd: '', newPhone: '', captcha: '' }
   isPass.value = false
   showCaptcha.value = false
   smsCountdown.value = 0
@@ -555,66 +539,46 @@ const resetPhoneDialog = () => {
   editPhoneFormRef.value?.clearValidate()
 }
 
-// ===================== 【核心1：原手机发送短信验证码】1:1复刻登录页完整逻辑 =====================
-const sendOldPhoneSms = async () => {
-  if (!originalPhone.value) {
-    ElMessage.error('当前账号未绑定手机号，无法使用此验证方式')
-    return
-  }
-  if (!isValidPhone(originalPhone.value)) {
-    ElMessage.error('原绑定手机号格式异常')
-    return
-  }
+const generateCaptcha = () => {
+  let code = ''
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  captchaCode.value = code
+}
+const refreshCaptcha = () => generateCaptcha()
 
-  // 完全照搬登录页：第一次点击 → 弹出图片验证码
+const sendOldPhoneSms = async () => {
+  if (!originalPhone.value) return ElMessage.error('未绑定手机号')
+  if (!isValidPhone(originalPhone.value)) return ElMessage.error('手机号格式异常')
   if (!showCaptcha.value) {
     showCaptcha.value = true
     generateCaptcha()
-    ElMessage.info('请完成图片安全验证')
-    return
+    return ElMessage.info('请完成图片验证')
   }
-
-  // 第二次点击：校验图片验证码
   if (editPhoneForm.value.captcha?.toUpperCase() !== captchaCode.value) {
-    ElMessage.error('图片验证码错误')
     refreshCaptcha()
-    return
+    return ElMessage.error('图片验证码错误')
   }
-
-  // 图片验证码通过 → 调用后端接口发送短信验证码
   try {
     const res = await sendSmsCode({ phone: originalPhone.value })
     //@ts-ignore
     if (res.code === 200) {
-      ElMessage.success('短信验证码已发送：' + res.data.code)
-      // 开启60秒倒计时，和登录页完全一致
+      ElMessage.success('验证码已发送：' + res.data.code)
       smsCountdown.value = 60
       smsTimer = setInterval(() => {
         smsCountdown.value--
         if (smsCountdown.value <= 0) clearInterval(smsTimer)
       }, 1000)
-      // 发送成功隐藏图片验证码、清空图片验证码输入
       showCaptcha.value = false
       editPhoneForm.value.captcha = ''
-    } else {
-      ElMessage.error(res.msg || '短信发送失败')
     }
-  } catch (err) {
-    //ElMessage.error('网络异常，短信发送失败')
-  }
+  } catch (e) {}
   refreshCaptcha()
 }
 
-// ===================== 【核心2：身份总核验函数 新增后端真实短信校验】 =====================
 const checkIdentity = async () => {
   if (!editPhoneFormRef.value) return
-
-  // 分支1：原手机短信验证模式【关键修复：调用你后端verifyPaySmsCode接口真实核验验证码】
-  if (verifyType.value === 'phone') {
-    // 先校验短信验证码表单非空
-    await editPhoneFormRef.value.validate((prop) => prop === 'oldSmsCode')
-
-    // ========== 调用你接口文件里专属的短信验证码核验接口 ==========
+  if (verifyType.value === 'phone') { //@ts-ignore
+    await editPhoneFormRef.value.validate((p) => p === 'oldSmsCode')
     try {
       const res = await verifyPaySmsCode({
         phone: originalPhone.value,
@@ -622,78 +586,41 @@ const checkIdentity = async () => {
       })
       //@ts-ignore
       if (res.code === 200) {
-        // 后端校验验证码完全正确，才解锁权限
         isPass.value = true
-        ElMessage.success('✅ 原手机短信验证成功，可修改新手机号')
-      } else {
-        ElMessage.error(res.msg || '短信验证码错误，请重新输入')
-      }
-    } catch (error) {
-      ElMessage.error('验证码校验失败，请检查验证码是否正确')
-    }
-  }
-  // 分支2：当前账号密码验证模式（原有纯前端格式校验完整保留）
-  else {
-    const pwd = editPhoneForm.value.oldPwd
-    if (pwd.length >= 6 && pwd.length <= 13) {
+        ElMessage.success('✅ 验证成功')
+      } else ElMessage.error('验证码错误')
+    } catch (e) {}
+  } else {
+    const p = editPhoneForm.value.oldPwd
+    if (p.length >= 6 && p.length <= 13) {
       isPass.value = true
-      ElMessage.success('✅ 账号密码验证成功，可修改新手机号')
-    } else {
-      ElMessage.error('密码格式不正确，请输入正确的账号密码')
-    }
+      ElMessage.success('✅ 验证成功')
+    } else ElMessage.error('密码格式错误')
   }
 }
 
-// ===================== 【最终确认修改新手机号】仅调用你原有bindPhone接口 =====================
 const confirmEditPhone = async () => {
-  if (!editPhoneFormRef.value) return
-  // 全表单最终校验
+  if (!editPhoneFormRef.value || !isPass.value) return
   await editPhoneFormRef.value.validate()
-
-  // 兜底锁：必须身份核验全部通过才能修改
-  if (!isPass.value) {
-    ElMessage.warning('请先完成身份安全验证，再修改手机号')
-    return
-  }
-
   try {
-    // 全程只用你原本就有的修改手机号接口，零新增后端接口
     const res = await bindPhone(editPhoneForm.value.newPhone)
     //@ts-ignore
     if (res.code === 200) {
-      ElMessage.success('🎉 绑定手机号修改成功！')
-      // 更新本地Pinia用户信息
-      if (userStore.user) {
-        userStore.user.phone = editPhoneForm.value.newPhone
-      }
-      // 同步后端最新用户信息
-      await userStore.getUserInfo()
-      // 关闭弹窗、全部数据重置
+      ElMessage.success('🎉 修改成功')
+      userStore.user.phone = editPhoneForm.value.newPhone
       showEditPhoneDialog.value = false
       resetPhoneDialog()
-    } else {
-      //@ts-ignore
-      ElMessage.error(res.msg || '手机号修改失败')
     }
-  } catch (error) {
-    // ElMessage.error('网络异常，修改失败，请稍后重试')
-  }
+  } catch (e) {}
 }
 
-// ===================== 以下全部为你原始代码 一字未改 完全保留 =====================
-// 首次绑定手机号（未绑定用户）
 const handleBind = async () => {
-  if (!phone.value) {
-    ElMessage.error('请输入手机号')
-    return
-  }
-  const res = await bindPhone(phone.value) //@ts-ignore
+  if (!phone.value) return ElMessage.error('请输入手机号')
+  const res = await bindPhone(phone.value)
+  //@ts-ignore
   if (res.code === 200) {
     ElMessage.success('绑定成功')
-    if (userStore.user) {
-      userStore.user.phone = phone.value
-    }
-    await userStore.getUserInfo()
+    userStore.user.phone = phone.value
     phone.value = ''
   } else {
     //@ts-ignore
@@ -704,30 +631,22 @@ const handleBind = async () => {
 const editRules = reactive<FormRules>({
   username: [
     { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
-    {
-      //@ts-ignore
+    { //@ts-ignore
       validator: (rule: any, value: string, callback: any) => {
-        if (value === originalUsername.value && editForm.value.password === '')
-          callback(new Error('新账号与原账号一致'))
-        if (isValidAccount(value) || isValidPhone(value)) {
-          callback()
-        } else {
-          callback(new Error('格式：1字母+5位数字 或 11位正规手机号'))
-        }
+        if (value === originalUsername.value && !editForm.value.password)
+          return callback(new Error('未做任何修改'))
+        if (isValidAccount(value) || isValidPhone(value)) callback()
+        else callback(new Error('格式：字母+数字 或 11位手机号'))
       },
       trigger: 'blur',
     },
   ],
   password: [{ min: 6, max: 13, message: '长度6-13位', trigger: 'blur' }],
   confirmPwd: [
-    {
-      //@ts-ignore
-      validator: (r, newpassword, cb) => {
-        if (editForm.value.password && newpassword !== editForm.value.password) {
-          cb(new Error('两次密码不一致'))
-        } else {
-          cb()
-        }
+    { //@ts-ignore
+      validator: (r, p, cb) => {
+        if (editForm.value.password && p !== editForm.value.password) cb(new Error('两次密码不一致'))
+        else cb()
       },
       trigger: 'blur',
     },
@@ -750,7 +669,8 @@ const submitEdit = async () => {
       password: editForm.value.password || undefined,
       originalUsername: originalUsername.value,
     }
-    const res = await updateUserInfoApi(params) //@ts-ignore
+    const res = await updateUserInfoApi(params)
+    //@ts-ignore
     if (res.code === 200) {
       ElMessage.success('修改成功，请重新登录')
       userStore.logout()
@@ -765,6 +685,44 @@ const submitEdit = async () => {
   }
 }
 
+const go = (path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) => {
+  setTimeout(() => router.push(path), 10)
+}
+
+const fetchUserSign = async () => {
+  try {
+    const res = await getSign()
+    //@ts-ignore
+    if (res.code === 200 && res.data) {
+      userStore.user.sign = res.data.sign || ''
+    }
+  } catch (e) {}
+}
+
+const updetaqm = async () => {
+  if (!km.value) {
+    km.value = true
+    inputtext.value = userStore.user?.sign || ''
+    return
+  }
+  try {
+    const res = await updasign(inputtext.value)
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('🎉 保存成功')
+      await fetchUserSign()
+      inputtext.value = ''
+      km.value = false
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+const quxiqm = () => {
+  km.value = false
+}
+
 const toFixedNumber = (num: any, digits: number) => {
   if (num == null) return '0.00'
   return Number(num).toFixed(digits)
@@ -772,7 +730,7 @@ const toFixedNumber = (num: any, digits: number) => {
 
 const handleLogout = () => {
   userStore.logout()
-  ElMessage.success('退出登录成功')
+  ElMessage.success('退出成功')
   router.push('/login')
 }
 
@@ -784,8 +742,9 @@ const getStatusTagType = (status: string) => {
     已发货: 'success',
     已完成: 'success',
     已取消: 'danger',
-  } //@ts-ignore
-  return map[status as keyof map] || 'info'
+  }
+  //@ts-ignore
+  return map[status] || 'info'
 }
 
 const formatTime = (t: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : '暂无')
@@ -794,7 +753,8 @@ const getOrderList = async () => {
   if (!userStore.isLogin) return
   loading.value = true
   try {
-    const res = await getUserOrderList() //@ts-ignore
+    const res = await getUserOrderList()
+    //@ts-ignore
     if (res.code === 200) orderList.value = res.data
   } catch (e) {
     ElMessage.error('获取订单失败')
@@ -805,7 +765,8 @@ const getOrderList = async () => {
 
 const handleDeleteOrder = async (no: string) => {
   await ElMessageBox.confirm('确定删除？')
-  const res = await deleteOrder(no) //@ts-ignore
+  const res = await deleteOrder(no)
+  //@ts-ignore
   if (res.code === 200) {
     ElMessage.success('删除成功')
     getOrderList()
@@ -828,144 +789,621 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 全部原有样式+登录页同款验证码样式*/
-.qmhh {
-  display: inline-block;
-  white-space: normal;
-  word-break: break-all;
-  line-height: 1.8;
-  width: 450px;
+/* 头像容器 */
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
 }
 
-.sign-input :deep(.el-textarea__inner) {
-  background-color: rgba(220, 220, 220, 0.312) !important;
-  color: #000;
-}
-.code-box {
+/* 头像加号按钮 */
+.avatar-upload-btn {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+  background: #409eff;
+  border-radius: 50%;
   display: flex;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+
+/* 上传组件样式 */
+.avatar-uploader {
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed #d9d9d9;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #409eff;
+}
+
+.upload-icon {
+  font-size: 32px;
+  color: #c0c4cc;
+}
+
+.preview-avatar {
+  width: 100%;
+  height: 100%;
+}
+/*全局页面*/
+.page-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+
+  background:
+    radial-gradient(circle at top right, rgba(64, 158, 255, 0.12), transparent 22%),
+    radial-gradient(circle at bottom left, rgba(255, 170, 0, 0.1), transparent 25%),
+    linear-gradient(135deg, #f5f7fb, #eef3ff);
+
+  color: #1f2937;
+  overflow-x: hidden;
+}
+
+/*顶部导航栏*/
+.topse {
+  position: fixed;
+  top: 0;
+  z-index: 999;
+margin-left: -23.5px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  width: 1279px;
+  height: 68px;
+
+  padding: 0 24px;
+  margin-bottom: 35px;
+
+  border-radius: 18px;
+
+  background: rgba(231, 231, 231, 0.75);
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.121),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* 返回首页按钮 */
+.gwy {
+  height: 42px;
+  padding: 0 18px !important;
+
+  border-radius: 12px !important;
+
+  background: linear-gradient(135deg, #409eff, #6bc3ff) !important;
+  border: none !important;
+
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+  box-shadow: 0 8px 20px rgba(64, 158, 255, 0.25);
+
+  transition: all 0.25s ease;
+}
+
+.gwy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(64, 158, 255, 0.35);
+}
+
+/* 顶部功能按钮 */
+.zise,
+.zise1 {
+  position: static !important;
+  margin-left: 0 !important;
+  top: auto !important;
+
+  display: flex;
+  align-items: center;
+
+  padding: 8px 14px;
+
+  border-radius: 12px;
+
+  font-size: 15px !important;
+  font-weight: 700;
+
+  transition: all 0.25s ease;
+}
+
+.zise {
+  color: #ff7b00;
+  background: rgba(255, 180, 0, 0.08);
+}
+
+.zise1 {
+  color: #ff4d8d;
+  background: rgba(255, 77, 141, 0.08);
+}
+
+.zise:hover,
+.zise1:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* 图标动画 */
+.gwdh,
+.gwdh1 {
+  width: 24px;
+  height: auto;
+  margin-right: 6px;
+}
+
+.gwdh {
+  animation: cartFloat 2s infinite ease-in-out;
+}
+
+.gwdh1 {
+  animation: favFloat 2s infinite ease-in-out;
+}
+
+@keyframes cartFloat {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(8deg) scale(1.08);
+  }
+}
+
+@keyframes favFloat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+/* 标题区域 */
+.sci-fi-title {
+  position: relative;
+
+  width: fit-content;
+
+  margin: 0 auto 40px;
+
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 800;
+
+  color: #1f2937;
+
+  letter-spacing: 2px;
+}
+
+.sci-fi-title::before {
+  content: '👤';
+  margin-right: 12px;
+}
+
+.sci-fi-title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+
+  transform: translateX(-50%);
+
+  width: 70%;
+  height: 4px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(
+    90deg,
+    rgba(64, 158, 255, 0),
+    rgba(64, 158, 255, 1),
+    rgba(64, 158, 255, 0)
+  );
+}
+
+/* 卡片主体 */
+.user-info-card {
+  overflow: hidden;
+
+  border: none !important;
+  border-radius: 24px !important;
+
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  transition: all 0.3s ease;
+}
+
+.user-info-card:hover {
+  transform: translateY(0px);
+}
+
+/* 卡片标题 */
+.card-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* 用户信息 */
+.user-info-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+
+  gap: 18px;
+
+  margin-top: 10px;
+
+  line-height: 2;
+  color: #1f2937;
+}
+
+.user-info-content p,
+.phone-binded,
+.user-info-content h3 {
+  padding: 18px;
+
+  border-radius: 18px;
+
+  background: rgba(245, 248, 255, 0.9);
+
+  border: 1px solid rgba(64, 158, 255, 0.08);
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
+}
+
+/* 标签 */
+:deep(.el-tag) {
+  border-radius: 999px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+/*个人签名*/
+.qmhh {
+  display: block;
+
+  width: 100%;
+
+  padding: 20px;
+
+  margin-top: 12px;
+
+  border-radius: 16px;
+
+  line-height: 2;
+
+  background: linear-gradient(135deg, #f7faff, #eef4ff);
+
+  border: 1px solid rgba(64, 158, 255, 0.08);
+
+  color: #374151;
+
+  font-size: 15px !important;
+}
+
+/* 输入框 */
+.sign-input :deep(.el-textarea__inner) {
+  border-radius: 18px !important;
+
+  padding: 18px !important;
+
+  background: rgba(255, 255, 255, 0.9) !important;
+
+  border: 1px solid rgba(64, 158, 255, 0.15);
+
+  color: #111827;
+
+  font-size: 15px;
+
+  transition: all 0.25s ease;
+}
+
+.sign-input :deep(.el-textarea__inner:focus) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 4px rgba(64, 158, 255, 0.1);
+}
+
+/* 验证码区域 */
+.code-box,
 .captcha-row {
   display: flex;
-  gap: 10px;
   align-items: center;
-}
-.captcha-img {
-  width: 120px;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  user-select: none;
+  gap: 12px;
 }
 
-.refresh-btn {
-  margin-bottom: 10px;
-  color: #252f39;
-  font-size: 19px;
-}
-.refresh-btn:hover {
-  text-decoration: underline;
-}
-.empty-order {
+.captcha-img {
+  width: 120px;
+  height: 42px;
+
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #409eff, #7ec9ff);
+
+  color: white;
+
   text-align: center;
-  padding: 40px 0;
-  color: #999;
+  line-height: 42px;
+
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 3px;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  transition: all 0.25s ease;
 }
+
+.captcha-img:hover {
+  transform: scale(1.03);
+}
+
+/*订单区域*/
+.order-section {
+  margin-top: 45px;
+}
+
+.sci-fi-subtitle {
+  display: flex;
+  align-items: center;
+
+  font-size: 28px;
+  font-weight: 800;
+
+  color: #1f2937;
+
+  margin-bottom: 18px;
+}
+
+.sci-fi-subtitle::before {
+  content: '📦';
+  margin-right: 10px;
+}
+
+/* 刷新按钮 */
+.refresh-btn {
+  margin-bottom: 18px;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #409eff;
+
+  transition: all 0.25s ease;
+}
+
+.refresh-btn:hover {
+  color: #0b7cff;
+  transform: translateX(2px);
+}
+
+/*表格美化*/
+:deep(.el-table) {
+  overflow: hidden;
+
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  border: none !important;
+
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.06);
+
+  --el-table-header-bg-color: #f7faff;
+  --el-table-row-hover-bg-color: #f0f7ff;
+  --el-table-header-text-color: #1f2937;
+  --el-table-text-color: #374151;
+}
+
+:deep(.el-table th) {
+  height: 58px;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  background: #f7faff !important;
+}
+
+:deep(.el-table td) {
+  padding: 14px 0;
+}
+
+:deep(.el-table__row) {
+  transition: all 0.25s ease;
+}
+
+:deep(.el-table__row:hover) {
+  transform: scale(0.997);
+}
+
+/* 图书封面 */
 .order-book-cover {
-  width: 80px;
-  height: 100px;
+  width: 72px;
+  height: 96px;
+
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #eee;
+
+  border-radius: 12px;
+
+  border: 2px solid rgba(64, 158, 255, 0.08);
+
+  transition: all 0.25s ease;
 }
+
+.order-book-cover:hover {
+  transform: scale(1.05);
+}
+
+/*空订单*/
+.empty-order {
+  padding: 60px 20px;
+
+  margin-top: 20px;
+
+  border-radius: 24px;
+
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.78);
+
+  color: #6b7280;
+
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.05);
+}
+
+/*未登录*/
+.no-login-tip {
+  margin-top: 100px;
+  padding: 80px 30px;
+
+  border-radius: 26px;
+
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.no-login-tip h3 {
+  font-size: 34px;
+  color: #1f2937;
+  margin-bottom: 20px;
+}
+
+/*按钮*/
+:deep(.el-button--primary) {
+  border: none !important;
+
+  background: linear-gradient(135deg, #409eff, #73c0ff) !important;
+
+  box-shadow: 0 8px 20px rgba(64, 158, 255, 0.2);
+
+  transition: all 0.25s ease;
+}
+
+:deep(.el-button--primary:hover) {
+  transform: translateY(-2px);
+}
+
+:deep(.el-button--danger) {
+  border: none !important;
+
+  background: linear-gradient(135deg, #ff6b6b, #ff8787) !important;
+}
+
+
+:deep(.el-dialog) {
+  border-radius: 24px !important;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.95);
+
+  backdrop-filter: blur(20px);
+
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+}
+
+:deep(.el-dialog__header) {
+  padding: 24px 24px 10px;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-dialog__title) {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+}
+
+:deep(.el-dialog__body) {
+  padding: 24px;
+}
+
+/*  响应式  */
+@media (max-width: 768px) {
+  .topse {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 14px;
+  }
+
+  .user-info-content {
+    grid-template-columns: 1fr;
+  }
+
+  .sci-fi-title {
+  position: relative;
+    font-size: 34px;
+    top: -2px !important;
+   
+  }
+
+  .sci-fi-subtitle {
+    font-size: 24px;
+  }
+
+  .qmhh {
+    width: 100%;
+  }
+
+  .code-box,
+  .captcha-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .captcha-img {
+    width: 100%;
+  }
+}
+
+/* 全局基础 */
 * {
-  user-select: none !important;
-  -webkit-user-select: none !important;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
+
 input,
 textarea,
 button {
   user-select: auto !important;
   -webkit-user-select: auto !important;
-}
-.page-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #dfdfe0;
-  min-height: 100vh;
-  color: #e0e6ff;
-}
-.gwy {
-  position: absolute;
-  top: 65px;
-  z-index: 10;
-  padding: 0 5px 0 5px;
-}
-.sci-fi-title {
-  font-size: 28px;
-  color: #409eff;
-  text-align: center;
-  margin: 30px 0;
-  text-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
-}
-.sci-fi-subtitle {
-  font-size: 22px;
-  color: #409eff;
-  margin: 40px 0 20px;
-  text-shadow: 0 0 8px rgba(64, 158, 255, 0.4);
-}
-.user-info-card {
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  padding: 20px;
-  border-radius: 8px;
-}
-.card-title {
-  color: #409eff;
-  font-size: 18px;
-  font-weight: 700;
-}
-.user-info-content {
-  line-height: 2;
-  font-size: 16px;
-  color: rgb(0, 0, 0);
-}
-.no-login-tip {
-  text-align: center;
-  padding: 60px 20px;
-  background-color: rgba(18, 26, 40, 0.9);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  border-radius: 8px;
-  margin-top: 100px;
-}
-.order-section {
-  margin-top: 30px;
-}
-:deep(.el-table) {
-  --el-table-header-bg-color: #ffffff !important;
-  --el-table-row-hover-bg-color: #f5f7fa;
-  --el-table-header-text-color: #409eff;
-  --el-table-text-color: #151515;
-  --el-table-bg-color: #fff;
-  background-color: #fff !important;
-  border: 1px solid #e4e7ed !important;
-}
-:deep(.el-table th) {
-  background-color: #f6f2f2 !important;
-}
-:deep(.el-table td),
-:deep(.el-table th) {
-  border-color: #e4e7ed;
 }
 </style>

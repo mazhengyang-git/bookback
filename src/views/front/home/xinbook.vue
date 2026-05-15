@@ -18,7 +18,7 @@
           class="new-book-item"
           @click="go(`/book/${book.id}?source=new`)"
         >
-          <img
+          <!--@vue-ignore--><img
             :src="book.cover || '/img/default-book.jpg'"
             alt="图书封面"
             class="new-book-cover"
@@ -27,20 +27,22 @@
           <div class="new-book-info">
             <h3 class="new-book-name">{{ book.name || '未知图书' }}</h3>
             <div class="book-score">
-              <el-rate v-model="book.avg_score" disabled max="5" size="small" color="#ffb400" />
-              <span class="score-num">{{ book.avg_score || 0.0 }}</span>
+            
+             
+          <pj style="margin-left: -9px;" class="pjwy" v-if="book.id != null" :book-id="book.id" source="new"/>
+          
             </div>
             <p class="new-book-author">作者：{{ book.author || '未知作者' }}</p>
             <div class="book-tags">
               <span class="tag category-tag">{{ book.category || '未分类' }}</span>
-              <span v-if="book.up_month" class="tag month-tag"
-                >连续上榜{{ book.up_month }}个月</span
+             <!--@vue-ignore--> <span v-if="book.up_month" class="tag month-tag"
+                >连续上榜<!--@vue-ignore-->{{ book.up_month }}个月</span
               >
             </div>
           </div>
         </div>
 
-        <!-- 分页：改成你要的 <上一页 1 2 3 下一页> 样式 -->
+        <!-- 分页：<上一页 1 2 3 下一页> 样式 -->
         <div class="pagination-box">
           <button @click="prevPage" :disabled="currentPage === 1" class="page-btn text-btn">
             上一页
@@ -70,7 +72,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { newBook } from '@/types/index'
 import { useBookStore1 } from '@/store/newbook'
-
+import pj from '@/views/front/book/抽离短评价.vue'
 const router = useRouter()
 const loading = ref(true)
 const bookStore1 = useBookStore1()

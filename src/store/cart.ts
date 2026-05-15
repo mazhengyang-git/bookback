@@ -8,7 +8,7 @@ interface CartItem {
   count: number // 数量
   cover: string // 封面
   spec: string // 规格
-  stock: number // 🔥 新增：商品库存（关键！用于限制购买数量）
+  stock: number // 商品库存
 }
 
 export const useCartStore = defineStore('cart', {

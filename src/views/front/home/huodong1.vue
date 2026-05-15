@@ -127,7 +127,7 @@ import type { Zixun } from '@/types/front/zixun'
 
 const userStore = useUserStore()
 const router = useRouter()
-const xianshi = ref(false)
+const xianshi = ref(true)
 
 const huodongList = ref<Huodong[]>([])
 const zixunList = ref<Zixun[]>([])
@@ -188,8 +188,8 @@ const tz = (e: Huodong) => {
 }
 
 onMounted(async () => {
-   window.scrollTo(0,0)
   // 先获取数据，再执行随机
+  window.scrollTo(0,0)
   await getHuodongList()
   await getZixunList()
   random.value = getRandomList(huodongList.value, 4)

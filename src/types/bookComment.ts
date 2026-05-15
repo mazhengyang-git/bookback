@@ -25,6 +25,7 @@ export interface CommentItem {
   content: string
   nickname: string
   createTime: string
+  source:string
 }
 
 /**

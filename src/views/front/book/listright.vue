@@ -1,5 +1,6 @@
 <template>
   <div class="listright-container">
+
     <!-- 图书鉴赏 -->
     <div class="right-module1">
       <h3 class="module-title" style="user-select: none;">
@@ -100,177 +101,15 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-
-import { getBookListApi } from '@/api/front/book'
-import type { Book } from '@/types/index'
-import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
-import { useUserStore } from '@/store/modules/user'
-import { getHuodongListApi } from '@/api/front/huodong'
-
-import type { Huodong } from '@/types/front/huodong'
-
-const router = useRouter()
-const huodongList = ref<Huodong[]>([])
-async function getHuodongList() {
-  const res = await getHuodongListApi()
-  if (res.code === 200) {
-    return res.data || []
-  }
-  return []
-}
-const random=ref<Huodong[]>([])
-function getRandomList(list: any[],count=4){
-  if(!list||list.length===0)return[]
-const hdcopy=[...list]
-for(let i=hdcopy.length-1;i>0;i--){
-  const j=Math.floor(Math.random()*(i+1))
-  ;[hdcopy[i],hdcopy[j]]=[hdcopy[j],hdcopy[i]]
-
-}
-  return hdcopy.slice(0,count)
-}
-// 数字状态 → 文字
-const getStatusText = (status: number) => {
-  switch (status) {
-    case 0: return '未开始'
-    case 1: return '进行中'
-    case 2: return '快结束'
-    case 3: return '已结束'
-      case 4: return '已取消'
-    default: return '未知'
-  }
-}
-
-// 状态标签类型
-const getStatusTagType = (status: number) => {
-  switch (status) {
-    case 0: return 'info'
-    case 1: return 'primary'
-    case 2: return 'success'
-    case 3: return 'danger'
-    case 4: return 'warning'
-    default: return 'info'
-  }
-}
-// 热门图书数据
-const hotBooks = ref<Book[]>([])
-// 热门标签
-const hotTags = ref<string[]>([
-  '太空歌剧',
-  '赛博朋克',
-  '时间旅行',
-  '智能纪元',
-  '外星文明',
-  '末世废土',
-  '星际灾厄',
-  '虚幻惊悚',
-])
-// 热门作者
-const hotAuthors = ref([
-  { name: '刘慈欣', works: 6 },
-  { name: '[美]艾萨克·阿西莫夫', works: 12 },
-  { name: '[波]斯坦尼斯瓦夫·莱姆', works: 2 },
-  { name: '[美]安迪.威尔', works: 1 },
-  { name: '[美]特德·姜', works: 2 },
-])
-// 新书推荐
-const newBooks = ref<Book[]>([])
-// 活动公告
-const notices = ref([
-  { id: 1, tag: '限时', content: '科幻图书全场8折优惠' },
-  { id: 2, tag: '新书', content: '《星际穿越》全新上市' },
-  { id: 3, tag: '活动', content: '读书月活动火热进行中' },
-])
-
-// 格式化价格
-const formatPrice = (price: any): string => {
-  const num = Number(price) || 0
-  return num.toFixed(2)
-}
-
-// 图书点击
-const handleBookClick = (book: Book) => {
-  router.push(`/book/${book.id}`)
-}
-
-// 标签点击
-const handleTagClick = (tag: string) => {
-  // 触发父组件事件，传递标签
-  router.push({ path: '/books', query: { category: tag } })
-}
-
-// 作者点击
-const handleAuthorClick = (authorName: string) => {
-  router.push({ path: '/books', query: { aauthor: authorName } })
-}
-
-// 加载热门图书
-const loadHotBooks = async () => {
-  try {
-    const res = await getBookListApi('全部')
-    const data = (res as any).data || []
-    if (Array.isArray(data)) {
-      // 取前5本作为热门图书（实际项目中可以根据评分、销量等排序）
-      hotBooks.value = data.slice(3, 8)
-    }
-  } catch (error) {
-    console.error('加载热门图书失败:', error)
-  }
-}
-
-// 加载新书推荐
-const loadNewBooks = async () => {
-  try {
-    const res = await getBookListApi('全部')
-    const data = (res as any).data || []
-    if (Array.isArray(data)) {
-      // 取后3本作为新书推荐（实际项目中应该有专门的新书接口）
-      newBooks.value = data.slice(-3)
-    }
-  } catch (error) {
-    console.error('加载新书推荐失败:', error)
-  }
-}
-
-// 从父组件接收数据的方法（可选）
-const updateData = (data: any) => {
-  if (data.hotBooks) hotBooks.value = data.hotBooks
-  if (data.newBooks) newBooks.value = data.newBooks
-  if (data.hotTags) hotTags.value = data.hotTags
-}
-
-// 暴露方法给父组件
-defineExpose({
-  updateData,
-})
-
-onMounted( () => {
-   loadHotBooks()
-  loadNewBooks()
-
-  // 等待活动接口加载完成
- 
-})
-onMounted( async() => {
- const list = await getHuodongList()
-  huodongList.value = list
-  // 再取随机
-random.value = getRandomList(huodongList.value, 4)
- })
-</script>
-
 <style scoped>
 .listright-container {
   width: 490px;
-  background: #fff;
+ 
   border-radius: 8px;
   padding: 20px;
 
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  position: sticky;
+ position: static;
  
   max-height: 1800px;
   overflow-y: auto;
@@ -585,3 +424,170 @@ random.value = getRandomList(huodongList.value, 4)
   background: #999;
 }
 </style>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+
+import { getBookListApi } from '@/api/front/book'
+import type { Book } from '@/types/index'
+//@ts-ignore
+import { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric, useRouter } from 'vue-router'
+//@ts-ignore
+import { useUserStore } from '@/store/modules/user'
+import { getHuodongListApi } from '@/api/front/huodong'
+
+import type { Huodong } from '@/types/front/huodong'
+
+const router = useRouter()
+const huodongList = ref<Huodong[]>([])
+async function getHuodongList() {
+  const res = await getHuodongListApi()
+  if (res.code === 200) {
+    return res.data || []
+  }
+  return []
+}
+const random=ref<Huodong[]>([])
+function getRandomList(list: any[],count=4){
+  if(!list||list.length===0)return[]
+const hdcopy=[...list]
+for(let i=hdcopy.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1))
+  ;[hdcopy[i],hdcopy[j]]=[hdcopy[j],hdcopy[i]]
+
+}
+  return hdcopy.slice(0,count)
+}
+// 数字状态 → 文字
+const getStatusText = (status: number) => {
+  switch (status) {
+    case 0: return '未开始'
+    case 1: return '进行中'
+    case 2: return '快结束'
+    case 3: return '已结束'
+      case 4: return '已取消'
+    default: return '未知'
+  }
+}
+
+// 状态标签类型
+//@ts-ignore
+const getStatusTagType = (status: number) => {
+  switch (status) {
+    case 0: return 'info'
+    case 1: return 'primary'
+    case 2: return 'success'
+    case 3: return 'danger'
+    case 4: return 'warning'
+    default: return 'info'
+  }
+}
+// 热门图书数据
+const hotBooks = ref<Book[]>([])
+// 热门标签
+const hotTags = ref<string[]>([
+  '太空歌剧',
+  '赛博朋克',
+  '时间旅行',
+  '智能纪元',
+  '外星文明',
+  '末世废土',
+  '星际灾厄',
+  '虚幻惊悚',
+])
+// 热门作者
+const hotAuthors = ref([
+  { name: '刘慈欣', works: 6 },
+  { name: '[美]艾萨克·阿西莫夫', works: 12 },
+  { name: '[波]斯坦尼斯瓦夫·莱姆', works: 2 },
+  { name: '[美]安迪.威尔', works: 1 },
+  { name: '[美]特德·姜', works: 2 },
+])
+// 新书推荐
+const newBooks = ref<Book[]>([])
+// 活动公告
+//@ts-ignore
+const notices = ref([
+  { id: 1, tag: '限时', content: '科幻图书全场8折优惠' },
+  { id: 2, tag: '新书', content: '《星际穿越》全新上市' },
+  { id: 3, tag: '活动', content: '读书月活动火热进行中' },
+])
+
+// 格式化价格
+const formatPrice = (price: any): string => {
+  const num = Number(price) || 0
+  return num.toFixed(2)
+}
+
+// 图书点击
+const handleBookClick = (book: Book) => {
+  router.push(`/book/${book.id}`)
+}
+
+// 标签点击
+const handleTagClick = (tag: string) => {
+  // 触发父组件事件，传递标签
+  router.push({ path: '/books', query: { category: tag } })
+}
+
+// 作者点击
+const handleAuthorClick = (authorName: string) => {
+  router.push({ path: '/books', query: { aauthor: authorName } })
+}
+
+// 加载热门图书
+const loadHotBooks = async () => {
+  try {
+    const res = await getBookListApi('全部')
+    const data = (res as any).data || []
+    if (Array.isArray(data)) {
+      // 取前5本作为热门图书（实际项目中可以根据评分、销量等排序）
+      hotBooks.value = getRandomList(data, 5)
+    }
+  } catch (error) {
+    console.error('加载热门图书失败:', error)
+  }
+}
+
+// 加载新书推荐
+const loadNewBooks = async () => {
+  try {
+    const res = await getBookListApi('全部')
+    const data = (res as any).data || []
+    if (Array.isArray(data)) {
+      // 取后3本作为新书推荐（实际项目中应该有专门的新书接口）
+      newBooks.value = data.slice(-3)
+    }
+  } catch (error) {
+    console.error('加载新书推荐失败:', error)
+  }
+}
+
+// 从父组件接收数据的方法（可选）
+const updateData = (data: any) => {
+  if (data.hotBooks) hotBooks.value = data.hotBooks
+  if (data.newBooks) newBooks.value = data.newBooks
+  if (data.hotTags) hotTags.value = data.hotTags
+}
+
+// 暴露方法给父组件
+defineExpose({
+  updateData,
+})
+
+onMounted( () => {
+   loadHotBooks()
+  loadNewBooks()
+
+  // 等待活动接口加载完成
+ 
+})
+onMounted( async() => {
+ const list = await getHuodongList()//@ts-ignore
+  huodongList.value = list
+  // 再取随机
+random.value = getRandomList(huodongList.value, 4)
+ })
+</script>
+
+

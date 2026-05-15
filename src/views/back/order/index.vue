@@ -1,9 +1,9 @@
 <template>
-  <div class="admin-order-container">
+  <div class="admin-order-container" >
     <div class="admin-header">
-      <h2>订单管理</h2>
+      <h2 style="color: #000;">订单管理</h2>
       <!-- 筛选导航条 -->
-      <div class="filter-scroll-wrapper">
+      <div class="filter-scroll-wrapper" style="font-weight: bold;">
         <el-scrollbar class="filter-scroll" horizontal>
           <div class="filter-btn-group">
             <div
@@ -40,6 +40,13 @@
               @click="handleFilter('已发货')"
             >
               已发货
+            </div>
+            <div
+              class="filter-btn"
+              :class="{ active: selectedStatus === '已收货' }"
+              @click="handleFilter('已收货')"
+            >
+              已收货
             </div>
             <div
               class="filter-btn"
@@ -98,6 +105,7 @@
               <el-option label="已付款" value="已付款" />
               <el-option label="待发货" value="待发货" />
               <el-option label="已发货" value="已发货" />
+              <el-option label="已收货" value="已收货" />
               <el-option label="已完成" value="已完成" />
               <el-option label="已取消" value="已取消" />
             </el-select>
@@ -149,6 +157,8 @@ const getStatusTagType = (status: string) => {
     case '待发货':
       return 'primary'
     case '已发货':
+      return 'success'
+    case '已收货':
       return 'success'
     case '已完成':
       return 'success'
@@ -214,7 +224,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* 未选中状态文字改为纯黑 */
+/* 未选中状态文字纯黑 */
 .filter-btn {
   padding: 6px 16px;
   border-radius: 20px;

@@ -82,7 +82,13 @@
       <div v-else class="comment-item-wrap">
         <div v-for="item in commentList" :key="item.id" class="comment-item">
           <div class="comment-item-top">
-            <span class="username">{{ item.nickname }}</span>
+       <span 
+  class="username" 
+  style="cursor:pointer;color:#409eff" 
+  @click="goUserInfo(item.nickname)"
+>
+  {{ item.nickname }}
+</span>
             <div class="item-score">
               <el-rate
                 v-model="item.score"
@@ -114,15 +120,17 @@ import {
   getCommentList,
   addComment,
   getRandomComments,
-} from '@/api/front/bookComment'
+} from '@/api/front/bookComment'//@ts-ignore
 import type { CommentAuth, BookScore, CommentItem } from '@/types/index'
+import { useRouter } from 'vue-router'
 
 interface CommentForm {
   score: number
   content: string
 }
 
-const props = defineProps<{ bookId: number }>()
+//  source 参数
+const props = defineProps<{ bookId: number; source: string }>()
 const userStore = useUserStore()
 
 const allImagesLoaded = ref(false)
@@ -134,7 +142,7 @@ const userAuthInfo = ref<CommentAuth>({ hasAuth: false, hasCommented: false })
 const commentForm = ref<CommentForm>({ score: 5.0, content: '' })
 const commentList = ref<CommentItem[]>([])
 const randomComments = ref<CommentItem[]>([])
-
+const emit = defineEmits(['comment-updated'])
 const handleScoreChange = (val: number) => {
   commentForm.value.score = parseFloat(val.toFixed(1))
 }
@@ -145,10 +153,11 @@ const handleInputScoreChange = () => {
   commentForm.value.score = parseFloat(val.toFixed(1))
 }
 
+// 传入 source
 const fetchRandomComments = async () => {
   if (!props.bookId) return
   try {
-    const res = await getRandomComments(props.bookId)
+    const res = await getRandomComments(props.bookId, props.source)//@ts-ignore
     if (res.code === 200) {
       randomComments.value = res.data || []
     }
@@ -157,13 +166,14 @@ const fetchRandomComments = async () => {
   }
 }
 
+//  source
 const fetchCommentAuth = async () => {
   if (!userStore.user?.id) {
     userAuthInfo.value = { hasAuth: false, hasCommented: false }
     return
   }
   try {
-    const res = await checkCommentAuth(props.bookId)
+    const res = await checkCommentAuth(props.bookId, props.source)//@ts-ignore
     if (res.code === 200) {
       userAuthInfo.value = res.data
     }
@@ -172,9 +182,10 @@ const fetchCommentAuth = async () => {
   }
 }
 
+//  source
 const fetchBookScore = async () => {
   try {
-    const res = await getBookAvgScore(props.bookId)
+    const res = await getBookAvgScore(props.bookId, props.source)//@ts-ignore
     if (res.code === 200) {
       bookAvgScore.value = res.data.avgScore || 0.0
       commentTotalCount.value = res.data.commentCount || 0
@@ -184,9 +195,10 @@ const fetchBookScore = async () => {
   }
 }
 
+//  传入 source
 const fetchCommentList = async () => {
   try {
-    const res = await getCommentList(props.bookId)
+    const res = await getCommentList(props.bookId, props.source)//@ts-ignore
     if (res.code === 200) {
       commentList.value = res.data || []
     }
@@ -195,6 +207,7 @@ const fetchCommentList = async () => {
   }
 }
 
+//提交评价传入 source
 const submitComment = async () => {
   if (!submitFormRef.value) return
   if (commentForm.value.score <= 0) {
@@ -205,19 +218,21 @@ const submitComment = async () => {
     ElMessage.warning('请输入评价内容')
     return
   }
-
-  submitLoading.value = true
+ submitLoading.value = true
   try {
     const res = await addComment({
       bookId: props.bookId,
       score: commentForm.value.score,
       content: commentForm.value.content,
-    })
+      source: props.source
+    })//@ts-ignore
     if (res.code === 200) {
       ElMessage.success('评价提交成功！')
       await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
       commentForm.value = { score: 5.0, content: '' }
-    } else {
+      // 提交成功后，给父组件发事件，让它刷新数据
+      emit('comment-updated')
+    } else {//@ts-ignore
       ElMessage.error(res.msg || '提交失败')
     }
   } catch (err) {
@@ -233,6 +248,15 @@ const formatTime = (time: string) => {
   return new Date(time).toLocaleString()
 }
 
+const router = useRouter()
+
+const goUserInfo = (nickname: string) => {
+  if (!nickname) return
+  router.push({
+    path: '/userinfo',
+    query: { username: nickname }
+  })
+}
 onMounted(async () => {
   if (props.bookId) {
     await Promise.all([

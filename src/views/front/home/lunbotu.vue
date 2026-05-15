@@ -25,7 +25,7 @@
       <button @click="next" class="pw prev" v-if="slides.length > 0">></button>
       <button @click="prev" class="pw next" v-if="slides.length > 0"><</button>
 
-      <!-- ============== 【仅移动：指示器移入缩放容器内部！】============== -->
+      <!-- 指示器  -->
       <div class="dots" v-if="slides.length > 0">
         <span
           v-for="(item, index) in slides"
@@ -42,6 +42,7 @@
   </div>
 </template>
 <script lang="ts" setup>
+//@ts-ignore
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { useBookStore } from '@/store/book'
 import { useRouter } from 'vue-router'
@@ -126,9 +127,9 @@ const godianlun = (index: number) => {
 }
 
 onMounted(async () => {
-  await initSlides()
+  await initSlides()//@ts-ignore
   if (cdlun.value > 0) zilun = setInterval(next, 3000)
-})
+})//@ts-ignore
 const chuyu = ref(false)
 onUnmounted(() => zilun && clearInterval(zilun))
 </script>

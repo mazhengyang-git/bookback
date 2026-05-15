@@ -91,3 +91,31 @@ export const getSign = () => {
     method: 'post',
   })
 }
+// 修改头像
+export function updateAvatar(avatar) {
+  return request({
+    url: '/user/updatecover',
+    method: 'post',
+    data: { avatar }
+  })
+}
+// 上传头像（文件上传）
+export function uploadAvatar(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '/api/user/upload-avatar',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+export const getUserPublicInfo = (username: string) => {
+  return request({
+    url: '/api/user/user/userinfo',
+    method: 'get',
+    params: { username }
+  })
+}

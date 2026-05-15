@@ -2,10 +2,8 @@
   <div class="beij">
     <div class="home-top-navwy">
       <div>
-        <h2 class="sci-fi-title">星途科幻图书</h2>
-        <h3 class="sci-fi-title" style="color: #000; font-size: 20px">
-          管理员热线: 15934213121(如您需要重置密码)
-        </h3>
+        <h2 style="margin-top: 0px;" class="sci-fi-title">星途科幻图书</h2>
+      
       </div>
     </div>
     <div class="login-page">
@@ -62,8 +60,8 @@
             </div>
           </el-form-item>
 
-          <!-- ================== 图片验证码 共用区域 ================== -->
-          <el-form-item v-if="showCaptcha" style="font-weight: 700" label="核验" prop="captcha">
+          <!-- 图片验证码并行验证 -->
+          <el-form-item label="验证" prop="captcha">
             <div class="captcha-row">
               <el-input
                 v-model="form.captcha"
@@ -109,9 +107,6 @@ const loginType = ref('password')
 const countdown = ref(0)
 let timer: any = null
 
-// 图片验证码显示控制
-const showCaptcha = ref(false)
-
 const form = ref({
   username: '',
   password: '',
@@ -122,7 +117,7 @@ const form = ref({
 
 const formRef = ref<FormInstance>()
 
-// ================== 图片验证码生成逻辑 ==================
+// 图片验证码
 const chars = '0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ'
 const captchaCode = ref('')
 
@@ -134,8 +129,9 @@ const generateCaptcha = () => {
   captchaCode.value = code
 }
 const refreshCaptcha = () => generateCaptcha()
+generateCaptcha()
 
-// ================== 表单校验规则 ==================
+//图片验证码必填 
 const rules = ref<FormRules>({
   username: [{ required: true, message: '请输入用户名/手机号', trigger: 'blur' }],
   password: [
@@ -143,21 +139,18 @@ const rules = ref<FormRules>({
     { min: 6, max: 13, message: '密码长度6-13位', trigger: 'blur' },
   ],
   code: [{ required: true, message: '请输入短信验证码', trigger: 'blur' }],
-  // 图片验证码不做全局必填校验，我们手动分场景控制
   captcha: [
-    {
+    { required: true, message: '请输入图片验证码', trigger: 'blur' },
+    {//@ts-ignore
       validator: (rule: any, value: string, callback: any) => {
-        if (value?.toUpperCase() === captchaCode.value) {
-          callback()
-        } else {
-          callback(new Error('图片验证码错误'))
-        }
+        if (value?.toUpperCase() === captchaCode.value) callback()
+        else callback(new Error('图片验证码错误'))
       },
     },
   ],
 })
 
-// ============== 发送短信验证码（原有逻辑100%完全保留） ==============
+// 发送短信验证码 
 const handleSendCode = async () => {
   const phone = form.value.username
   if (!/^1[3-9]\d{9}$/.test(phone)) {
@@ -165,24 +158,8 @@ const handleSendCode = async () => {
     return
   }
 
-  // 第一次点击：显示图片验证码
-  if (!showCaptcha.value) {
-    showCaptcha.value = true
-    generateCaptcha()
-    ElMessage.info('请完成图片验证')
-    return
-  }
-
-  // 第二次点击：校验图片验证码
-  if (form.value.captcha?.toUpperCase() !== captchaCode.value) {
-    ElMessage.error('图片验证码错误')
-    refreshCaptcha()
-    return
-  }
-
-  // 校验通过 → 发送短信
   try {
-    const res = await sendSmsCode({ phone })
+    const res = await sendSmsCode({ phone })//@ts-ignore
     if (res.code === 200) {
       ElMessage.success('短信已发送：' + res.data.code)
       countdown.value = 60
@@ -190,115 +167,66 @@ const handleSendCode = async () => {
         countdown.value--
         if (countdown.value <= 0) clearInterval(timer)
       }, 1000)
-      // 发送成功 → 隐藏图片验证码、清空字段！后续登录不再二次校验
-      showCaptcha.value = false
-      form.value.captcha = ''
-    } else {
-      ElMessage.error(res.msg)
+    } else {//@ts-ignore
+      ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
     ElMessage.error('发送失败')
   }
-  refreshCaptcha()
 }
 
-// ============== 登录提交函数【核心改造：分登录方式区分校验逻辑】 ==============
+// 登录校验 
 const submitLogin = async () => {
   if (!formRef.value) return ElMessage.error('表单异常')
 
-  // ========== 分支1：密码登录（完整保留图片验证码前置校验） ==========
+  try {
+    await formRef.value.validate()
+  } catch {
+    ElMessage.warning('请完善信息')
+    return
+  }
+
   if (loginType.value === 'password') {
-    // 先校验账号、密码基础表单
     try {
-      await formRef.value.validate((prop) => prop !== 'captcha')
-    } catch {
-      ElMessage.warning('请完善账号、密码信息')
-      return
-    }
-
-    // 密码登录专属：必须走图片验证码分步校验
-    if (!showCaptcha.value) {
-      showCaptcha.value = true
-      generateCaptcha()
-      ElMessage.info('请完成图片安全核验')
-      return
-    }
-    // 校验图片验证码
-    if (form.value.captcha?.toUpperCase() !== captchaCode.value) {
-      ElMessage.error('图片验证码错误，请重新输入')
-      refreshCaptcha()
-      return
-    }
-
-    // 校验全部通过，执行密码登录
-    try {
-      const res = await login(form.value)
-      if (res.code === 200) {
-        // 登录成功清空重置
-        showCaptcha.value = false
-        form.value.captcha = ''
-        userStore.login({
-          token: res.data.token,
-          user: { ...res.data.user, role: form.value.role },
-        })
+      const res = await login(form.value)//@ts-ignore
+      if (res.code === 200) {//@ts-ignore
+        userStore.login({ token: res.data.token, user: { ...res.data.user, role: form.value.role } })
         ElMessage.success('登录成功')
-        // 路由跳转
         switch (form.value.role) {
-          case 'admin':
-            router.replace('/admin')
-            break
-          case 'seller':
-            router.replace('/seller')
-            break
-          default:
-            router.replace('/home')
+          case 'admin': router.replace('/admin'); break
+          case 'seller': router.replace('/seller'); break
+          default: router.replace('/home')
         }
-      } else {
+      } else {//@ts-ignore
         ElMessage.error(res.msg || '登录失败')
+        refreshCaptcha()
       }
     } catch (err) {
-      ElMessage.error('服务器异常，请稍后重试')
+      ElMessage.error('服务器异常')
+      refreshCaptcha()
     }
-  }
-  // ========== 分支2：验证码登录【核心修复：不再二次校验图片验证码！】 ==========
-  else {
-    // 只校验账号、短信验证码基础字段
-    try {
-      await formRef.value.validate((prop) => prop !== 'captcha')
-    } catch {
-      ElMessage.warning('请完善账号、短信验证码信息')
-      return
-    }
-
-    // 【重点】短信登录：发送验证码阶段已经校验过图片验证码了，登录环节不再校验！
+  } else {
     try {
       const res = await loginByCode({
         phone: form.value.username,
         code: form.value.code,
         role: form.value.role,
-      })
-      if (res.code === 200) {
-        userStore.login({
-          token: res.data.token,
-          user: { ...res.data.user, role: form.value.role },
-        })
+      })//@ts-ignore
+      if (res.code === 200) {//@ts-ignore
+        userStore.login({ token: res.data.token, user: { ...res.data.user, role: form.value.role } })
         ElMessage.success('登录成功')
-        // 路由跳转
         switch (form.value.role) {
-          case 'admin':
-            router.replace('/admin')
-            break
-          case 'seller':
-            router.replace('/seller')
-            break
-          default:
-            router.replace('/home')
+          case 'admin': router.replace('/admin'); break
+          case 'seller': router.replace('/seller'); break
+          default: router.replace('/home')
         }
-      } else {
+      } else {//@ts-ignore
         ElMessage.error(res.msg || '登录失败')
+        refreshCaptcha()
       }
     } catch (err) {
-      ElMessage.error('服务器异常，请稍后重试')
+      ElMessage.error('服务器异常')
+      refreshCaptcha()
     }
   }
 }
@@ -306,8 +234,9 @@ const submitLogin = async () => {
 onUnmounted(() => clearInterval(timer))
 </script>
 
+
+
 <style scoped>
-/* 你原有页面的所有css样式完全保留，这里自动继承，无需改动 */
 .code-box {
   display: flex;
   gap: 10px;
@@ -385,6 +314,9 @@ button {
 
 .login-page {
   height: 100vh;
+  position: relative;
+  top: 30px;
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,7 +343,6 @@ button {
   border: 1px solid rgb(0, 0, 0);
 }
 
-/* 短信验证码框布局 */
 .code-box {
   display: flex;
   gap: 10px;
@@ -421,7 +352,6 @@ button {
   margin-bottom: 20px;
 }
 
-/* 图片验证码样式 完美适配页面 */
 .captcha-row {
   display: flex;
   gap: 10px;
@@ -446,7 +376,6 @@ button {
   background: #e9edf2;
 }
 
-/* 按钮布局修复，解决原来错位问题 */
 .btn-group {
   display: flex;
   gap: 15px;

@@ -203,18 +203,36 @@
       <span  style=" font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'rating' }" @click="handleRatingSort"
         >评分最高</span
       >
+      <span
+        style=" font-weight: 600;"
+        class="sort-btn"
+        :class="{ active: sortBy === 'sales' }"
+        @click="handleSalesSort"
+        >销量最高</span
+      >
     </div>
   </div>
-
+  <el-button
+         class="ziwy" style="position: absolute;  font-size: 17px; margin-left: 250px; top: 19px;z-index:10 "
+          link
+          @click="go('/shoucang')"
+          ><img
+            class="gwdh1"
+            style="width: 32px; height: auto; margin-right: 3px;"
+            src="/public/img/收藏夹.png"
+          /><span style="color:red">收藏夹</span></el-button
+        >
   <!-- 图书列表区域 -->
   <div v-if="!loading" class="book-list-container"    v-cloak>
+    
     <div class="main-content-wrapper">
+     
       <!-- 左侧图书列表 -->
       <div class="left-content">
         <div class="book-card-list">
           <el-card v-for="book in showBooks" :key="book.id" class="book-card">
             <div class="book-card-content">
-              <img
+             <!--@vue-ignore--> <img
                 :src="book.cover || '/img/default-book.jpg'"
                 referrerpolicy="no-referrer"
                 alt="图书封面"
@@ -228,7 +246,7 @@
                 <p class="book-category">分类：{{ book.category || '未知分类' }}</p>
                 <p class="book-price">¥{{ formatPrice(book.price) }}</p>
                 <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
-                <el-button
+               <li style="list-style:none"><el-button
                   type="primary"
                   size="large"
                   class="add-cart-btn"
@@ -236,11 +254,20 @@
                 >
                   查看详情
                 </el-button>
+                 <el-button
+          type="primary"
+          size="large"
+          class="add-cart-btn2"
+          @click="addToShoucang(book)"
+          :disabled="!userStore.token"
+        >
+          {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
+        </el-button></li> 
               </div>
             </div>
             <!--  v-if 防止列表渲染时星星闪烁 -->
-            <div style="position: absolute; left: 646px; top: 10px; width: 86%">
-              <bookping v-if="book.id != null" :book-id="book.id" />
+            <div style="position: absolute;  top: 10px; width: 86%;left: 560px;">
+               <p class="xlwy">销量：{{ Number(book.sales_count) || 0 }}件</p><bookping v-if="book.id != null" :book-id="book.id" :source="showType"/>
             </div>
           </el-card>
         </div>
@@ -268,13 +295,16 @@
       <!-- 右侧组件 -->
       <div class="right-content">
         <listright />
+        
       </div>
+      
     </div>
   </div>
 
   <!-- 加载中 -->
   <div v-else class="loading-tip">加载中...</div>
- <div v-if="!loading" v-cloak> <div class="page-footer">
+ <div v-if="!loading" v-cloak>
+   <div class="page-footer">
     <div class="footer-content">
       <div class="footer-left">
         <h3 class="footer-title">星途科幻图书</h3>
@@ -302,8 +332,8 @@
       <p class="legal-text">互联网违法和不良信息举报中心:0571-81683755 blxx@list.alixingxin-inc.com</p>
     </div>
   </div></div></template>
-
-<script setup lang="ts">
+  <script setup lang="ts">
+  //@ts-ignore
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
@@ -313,7 +343,9 @@ import { useUserStore } from '@/store/modules/user'
 import { useRouter, useRoute } from 'vue-router'
 import bookping from '@/views/front/book/抽离评价.vue'
 import { useBookStore1 } from '@/store/newbook'
-import footere from '@/views/front/biaoqian/footer.vue'
+import { useShoucangStore } from '@/store/shoucang'
+import request from '@/utils/request'  //@ts-ignore
+const shoucangStore = useShoucangStore()
 import listright from './listright.vue'
 const userStore = useUserStore()
 const router = useRouter()
@@ -330,12 +362,15 @@ const handleBookClick = (book: Book) => {
     router.push(path)
   }
 }
+function go(path: string) {
+  router.push(path)
+}
 
-// 加载状态（和详情页完全一致）
+// 加载状态
 const loading = ref(true)
 
 const paixu = ref('')
-const sortBy = ref<'price' | 'rating' | ''>('')
+const sortBy = ref<'price' | 'rating' | 'sales' | ''>('')
 const currentSortDirection = ref<'asc' | 'desc'>('asc')
 const selectedAAuthor = ref('全部')
 const authorSearch = ref('')
@@ -361,7 +396,50 @@ const pageSize = ref(6)
 const total = ref(0)
 const showType = ref('normal')
 const shouldShufflePage = ref(false)
-const hasRandomizedInitialPage = ref(false)
+const hasRandomizedInitialPage = ref(false)//@ts-ignore
+const addToShoucang = async (book) => {
+  // 用当前点击的 book
+  if (!userStore.token) {
+    ElMessage.warning({ 
+      message: '请先登录后再收藏', 
+      offset: 160 
+    })
+    return
+  }
+
+  try {
+    // 直接用当前点击的图书信息
+    const res = await request.post('/api/shoucang/add', {
+      goodsId: book.id,
+      num: 1,                  // 收藏默认 1
+      spec: '平装版',
+      source: 'normal',        // 固定普通来源
+      bookName: book.name,
+      bookCover: book.cover,
+      bookPrice: book.price 
+    })
+//@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success({ 
+        message: '收藏成功', 
+        offset: 160 
+      })
+    } else {
+      // 显示后端返回的：该图书已在收藏夹中
+      //@ts-ignore
+      ElMessage.error({ //@ts-ignore
+        message: res.msg, 
+        offset: 160 
+      })
+    }
+
+  } catch (err) {
+    ElMessage.error({ //@ts-ignore
+      message: err?.response?.data?.msg || '收藏失败，请稍后重试', 
+      offset: 160 
+    })
+  }
+}
 const defaultListSnapshot = ref<{
   filteredBooks: Book[]
   showBooks: Book[]
@@ -381,6 +459,8 @@ const normalizePrice = (value: any): number | null => {
 
 const getBookAvgScore = (book: Book) =>
   Number((book as any).avg_score ?? (book as any).avgScore ?? 0)
+
+const getBookSales = (book: Book) => Number(book.sales_count ?? 0)
 
 const restoreDefaultSnapshot = (): boolean => {
   if (!defaultListSnapshot.value) return false
@@ -444,7 +524,20 @@ const handleRatingSort = () => {
     shouldShufflePage.value = true
   } else {
     sortBy.value = 'rating'
-    shouldShufflePage.value = false   // ✅ 关键
+    shouldShufflePage.value = false   
+  }
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 销量排序（整表排序后分页切片，不打乱筛选结果）
+const handleSalesSort = () => {
+  if (sortBy.value === 'sales') {
+    sortBy.value = ''
+    shouldShufflePage.value = true
+  } else {
+    sortBy.value = 'sales'
+    shouldShufflePage.value = false
   }
   currentPage.value = 1
   doFilterAndShuffle()
@@ -492,9 +585,10 @@ const refreshAllData = async () => {
 }
 
 // 加载普通图书
+//@ts-ignore
 const loadBookList = async (showMask = true) => {
   try {
-    const res = await getBookListApi('全部')
+    const res = await getBookListApi('全部')//@ts-ignore
     allBooks.value = res.code === 200 ? res.data || [] : []
   } catch (error) {
     allBooks.value = []
@@ -515,7 +609,7 @@ const doFilterAndShuffle = () => {
   const sourceList = showType.value === 'new' ? [...newBookList.value] : [...allBooks.value]
   const keyword = searchKeyword.value.trim().toLowerCase()
 
-  // 1. 筛选（补全所有条件）
+  // 1. 筛选
   const filtered = sourceList.filter((book) => {
     const matchName = keyword ? book.name?.toLowerCase().includes(keyword) : true
     const matchCategory = selectedCategory.value === '全部' || book.category === selectedCategory.value
@@ -540,7 +634,7 @@ const doFilterAndShuffle = () => {
     )
   })
 
-  // 2. 随机打乱（刷新或需要随机时），排序在分页后对当前页执行
+  // 2. 随机打乱，排序在分页后对当前页执行
   let processedList = [...filtered]
   if (shouldShufflePage.value) {
     processedList.sort(() => Math.random() - 0.5)
@@ -560,6 +654,8 @@ const doPaginationSlice = () => {
 
   if (sortBy.value === 'rating') {
     pageBooks.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
+  } else if (sortBy.value === 'sales') {
+    pageBooks.sort((a, b) => getBookSales(b) - getBookSales(a))
   } else if (sortBy.value === 'price') {
     if (currentSortDirection.value === 'asc') {
       pageBooks.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
@@ -601,7 +697,7 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-// 初始化加载（和详情页完全统一）
+// 初始化加载
 onMounted(async () => {
   loading.value = true
 
@@ -670,7 +766,58 @@ onMounted(() => {
   }
 })
 </script>
+
+
 <style scoped>
+.xlwy {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 14px;
+  color: #000000;
+  font-size: px;
+}
+.ziwy{
+   position: fixed !important;
+  top: 49.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  width: auto; 
+  height: auto;
+  background-color: #0000001e !important;
+  border-radius: 12px 0 0 12px;
+  transform: translateX(55px);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 7px;
+transition: all 0.25s ease;
+}
+.ziwy:hover{
+  
+  transform: translateX(0px);
+  
+  
+}
+.gwdh1 {
+ 
+  animation: gwdh1 2s infinite;
+}
+@keyframes gwdh1 {
+  0%,
+  100% {
+    transform: scale(1) rotate3d(0, 0, 0, 0deg);
+  }
+  25% {
+    transform: scale(1.1) ;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  75% {
+    transform: scale(1.1) ;
+  }
+}
+
 .gwdh {
   animation: gwdh 2s infinite;
 }
@@ -693,7 +840,7 @@ onMounted(() => {
 :root {
   font-size: 16px;
 }
-/* 简介：2行显示 + 末尾省略号 */
+/* 简介：2行显示+末尾省略号 */
 .book-desc {
   user-select: none !important;
   -webkit-user-select: none !important;
@@ -815,7 +962,8 @@ onMounted(() => {
   flex: 1;
   min-width: fit-content;
   position: relative;
-  left: 6.1%;
+ margin-left: -40px;
+ margin-right: 36px;
   @media (max-width: 768px) {
     width: 100%;
     left: 0;
@@ -971,10 +1119,11 @@ onMounted(() => {
 /*  图书列表容器 */
 .book-list-container {
   width: 101.9%;
+
   left: -14px;
   max-width: 104vw;
   margin: 0 auto;
-  padding: 1.25rem 1.25rem 4rem 1.25rem; /* 底部加大内边距 */
+  padding: 1.25rem 1.25rem 4rem 1.25rem; /* 底部内边距 */
   background-color: #eaeceec5;
   min-height: calc(100vh - 3.75rem - 80px);
   position: relative;
@@ -985,11 +1134,15 @@ onMounted(() => {
   }
 }
 
-/* 主内容包装器 - 两栏布局 */
+/* 主内容包装器-两栏布局 */
 .main-content-wrapper {
  
+    display: flex;
+  align-items: flex-start;
+
   gap: 20px;
   width: 100%;
+
 }
 
 /* 左侧内容区域 */
@@ -1000,19 +1153,105 @@ onMounted(() => {
 
 /* 右侧内容区域 */
 .right-content {
- top:3px;
-  margin-top: 5px;
-  position: absolute;
-  left: 1000px;
-  flex-shrink: 0;
+      position: relative;
+      right: 150px;
+top: -65px;
+      width: 320px;
+      height: fit-content;
+    
+
+      align-self: flex-start;
+ 
+}
+@media (max-width: 1470px) {
+  .right-content {
+  right: 120px;
+  }
+}
+@media (max-width: 1440px) {
+  .right-content {
+ right: 80px;
+  }
+}
+@media (max-width: 1400px) {
+  .right-content {
+ right: 25px;
+  }
+}
+@media (max-width: 1350px) {
+  .right-content {
+ right: -15px;
+  }
+}
+@media (max-width: 1300px) {
+  .right-content {
+ right: -75px;
+  }
+}@media (max-width: 1280px) {
+  .right-content {
+ right: -115px;
+  }
+}
+@media (max-width: 1200px) {
+  .right-content {
+   right: -135px;
+  }
+}
+@media (max-width: 1170px) {
+  .right-content {
+   right: -165px;
+  }
 }
 
+
+@media (max-width: 1160px) {
+  .right-content {
+   right: -185px;
+  
+  }
+}
+@media (max-width: 1130px) {
+  .right-content {
+   right: -205px;
+   
+  }
+}
+@media (max-width: 1100px) {
+  .right-content {
+   right: -245px;
+   
+  }
+}
+@media (max-width: 1070px) {
+  .right-content {
+   right: -275px;
+   
+  }
+}
+@media (max-width: 1040px) {
+  .right-content {
+   right: -310px;
+   
+  }
+}
+@media (max-width: 1000px) {
+  .right-content {
+   right: -335px;
+   
+  }
+}
+@media (max-width: 980px) {
+  .right-content {
+  right: -370px;
+   
+  }
+}
 .book-card-list {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  width: 100%;
+  width: 150%;
   gap: 1.25rem;
-  margin-bottom: 1.5rem; /* 缩小卡片底部间距 */
+  margin-bottom: 1.5rem; /* 卡片底部间距 */
   margin-bottom: 0px;
   margin-left: 0;
 }
@@ -1021,7 +1260,8 @@ onMounted(() => {
   background: #fff !important;
   border: none !important;
   transition: all 0.3s;
-  width: 1000px;
+   width: 1000px;
+  max-width: 1000px;
 }
 .book-card:hover {
   background: rgba(226, 223, 223, 0.033) !important;
@@ -1037,8 +1277,8 @@ onMounted(() => {
   cursor: pointer;
   user-select: none !important;
   -webkit-user-select: none !important;
-  width: clamp(80px, 15vw, 100px);
-  height: clamp(120px, 20vw, 150px);
+  width: clamp(108px, 15vw, 113px);
+  height: clamp(130px, 20vw, 155px);
   object-fit: cover;
   margin-right: clamp(0.75rem, 2vw, 0.9375rem);
   border-radius: 0.25rem;
@@ -1096,14 +1336,14 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
-/* 分页栏样式（豆瓣同款+金色主题+居中强制展示） */
+/* 分页栏样式（豆瓣同款） */
 .pagination-wrapper {
   width: 100%;
  
   display: flex;
   position: relative;
  left: 44px;
- margin-left: 20.2vw;
+ margin-left: 18.2vw;
   margin-top: 2rem;
 }
 /* 页面全部金色按钮主题 */
@@ -1196,15 +1436,29 @@ onMounted(() => {
 }
 </style>
 <style scoped>
+.add-cart-btn2 {
+ width: 130px;
+ 
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  background-color: #e6a23c !important;
+  border: none !important;
+  margin-left: 16px;
+  position: relative;
+ 
+}
+.add-cart-btn2:disabled {
+  background-color: #95a5a6 !important;
+  cursor: not-allowed;
+}
 .page-footer {
   width: 103.95vw;
   min-width: 100%;
   background: linear-gradient(1.5deg, #333333 0%, #b2b0b0 100%);
   padding: 30px 0;
-  position: relative;
+  position: absolute;
   left: -33px;
   right: 0;
- 
+top: -16px;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -1306,6 +1560,10 @@ onMounted(() => {
   white-space: nowrap;
 }
 </style>
+
+
+
+
 
 
 

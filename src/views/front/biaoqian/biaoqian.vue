@@ -93,7 +93,7 @@ const finalAuthorTags = computed(() => {
 })
 
 const router = useRouter()
-// 直接跳转，无需任何延迟，性能更好
+// 直接跳转，无需任何延迟
 function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
   setTimeout(() => {
     router.push(path)
@@ -133,7 +133,7 @@ onMounted(async () => {
   border-radius: 20%;
 }
 
-/* 标题样式 - 1:1还原原项目设计 完全不动 */
+/* 标题样式 */
 .sci-fi-title {
   text-align: center;
   margin: clamp(20px, 2.5vw, 30px) 0;
@@ -147,7 +147,7 @@ onMounted(async () => {
   animation: titlePulse 2s infinite alternate;
 }
 
-/* 标题呼吸动画 完全不动 */
+/* 标题呼吸动画 */
 @keyframes titlePulse {
   0% {
     text-shadow: 0 0 15px rgba(236, 218, 218, 0.3);
@@ -157,37 +157,37 @@ onMounted(async () => {
   }
 }
 
-/* ====================== 核心排版重构：严格两列网格布局 ====================== */
-/* 统一所有标签容器：强制严格2列均分网格，再也不受文字长度影响！ */
+/*严格两列网格布局  */
+/* 标签容器 */
 .two-col-grid {
   display: grid;
-  /*永远两列，宽度1:1完全均分，所有标签强制等宽！ */
+  /*永远两列 所有标签强制等宽 */
   grid-template-columns: repeat(2, 1fr);
-  gap: 29px 20px; /* 上下间距、左右间距 */
+  gap: 29px 20px; 
   justify-items: center; /* 标签在格子内居中 */
   width: 100%;
   margin: 0 auto 40px;
   margin-left: 5px;
 }
 
-/* 标签样式 - 100%保留你原本所有外观、渐变、hover效果，仅适配网格 */
+/* 标签样式  */
 .hot-tag {
   cursor: pointer;
-  /*  强制占满整个网格格子宽度，所有标签宽度完全一模一样！ */
+  /*  强制占满整个网格格子宽度 */
   width: 47.2%;
   box-sizing: border-box;
   margin-top: 15px;
   margin-bottom: 15px;
-  /* 文字自适应：超长名字自动缩小字号，短名字保持大小，不会挤压变形 */
+  /* 文字自适应*/
   padding: 18px 12px;
   margin-left: 10px;
   font-size: clamp(18px, 1.1vw, 20px);
   text-align: center; /* 文字永远居中 */
   white-space: nowrap; /* 文字不换行 */
   overflow: hidden; /* 防止超长出框 */
-  text-overflow: ellipsis; /* 极端超长自动省略兜底 */
+  text-overflow: ellipsis; /* 自动省略兜底 */
 
-  /* 你原本的渐变背景、圆角、动画全部完整保留 */
+  /* 渐变背景、圆角、动画 */
   background: linear-gradient(135deg, #d7dfe7, #64b5f6);
   color: #000000;
   font-weight: 600;
@@ -198,13 +198,13 @@ onMounted(async () => {
   opacity: 0.66;
 }
 
-/* hover效果完全原样保留 */
+/* hover效果 */
 .hot-tag:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 15px rgba(64, 158, 255, 0.4);
 }
 
-/* 空数据提示 完全不动 */
+/* 空数据提示*/
 .empty-tip {
   text-align: center;
   padding: clamp(40px, 5vw, 60px) 0;
@@ -236,7 +236,7 @@ onMounted(async () => {
   opacity: 1;
 }
 
-/* 增强的悬停效果 */
+/* 悬停效果 */
 .hot-tag:hover {
   transform: scale(1.08);
   box-shadow: 0 6px 20px rgba(64, 158, 255, 0.5);
@@ -247,22 +247,22 @@ onMounted(async () => {
   border-radius: 12px;
  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(64, 158, 255, 0.1);
-  /* 调高透明度，更容易看出毛玻璃 */
+  /* 调高透明度，毛玻璃 */
   background: rgba(255, 255, 255, 0.35);
-  /* 适度模糊，不要太大太糊 */
+  /* 适度模糊 */
   backdrop-filter: blur(12px) saturate(120%);
   -webkit-backdrop-filter: blur(12px) saturate(120%);
 
-  /* 关键：强制创建层叠上下文，解决被遮挡不生效 */
+  /* 创建层叠上下文*/
   isolation: isolate;
   position: relative;
 }
-/* 添加Apple风格的平滑动画 */
+/* Apple风格的平滑动画 */
 .hot-tag {
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* 添加Google Material Design的涟漪效果 */
+/* Google Material Design的涟漪效果 */
 .hot-tag {
   position: relative;
   overflow: hidden;

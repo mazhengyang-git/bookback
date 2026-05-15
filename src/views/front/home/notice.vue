@@ -40,8 +40,8 @@ const noticeList = ref<Announcement[]>([])
 
 const getNotice = async () => {
   try {
-    const res = await getAnnouncementList()
-    if (res?.code === 200) {
+    const res = await getAnnouncementList()//@ts-ignore
+    if (res?.code === 200) {//@ts-ignore
       noticeList.value = res.data
     }
   } catch (e) {}

@@ -155,9 +155,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onActivated, reactive } from 'vue'
+//@ts-ignore
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'//@ts-ignore
 import { deleteOrder, getUserOrderList } from '@/api/front/order'
 import { updateUserInfoApi } from '@/api/front/user'
 import { bindPhone } from '@/api/back/announcement'

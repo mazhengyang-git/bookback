@@ -100,22 +100,23 @@
 </template>
 
 <script setup lang="ts">
+//@ts-ignore
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSystemConfig, updateSystemConfig } from '@/api/back/config'
 import { getAdminBookList } from '@/api/back/book'
 import type { Book } from '@/types/index'
 
-// ============== 核心稳定机制：标记组件状态 ==============
+// 标记组件状态
 let isComponentMounted = false
 let isLoadingData = false
 
-// ============== 状态定义（全部加默认值，严格兜底） ==============
+//状态定义
 const saveLoading = ref(false)
 const bookListLoading = ref(false)
 const bookSelectDialogVisible = ref(false)
 
-// 核心数据：ID列表和图书列表分离，避免数据不一致
+//ID列表和图书列表分离，避免数据不一致
 const topBookIds = ref<(number | string)[]>([])
 const selectedBookList = ref<Book[]>([])
 const allBookList = ref<Book[]>([])
@@ -124,7 +125,7 @@ const tempSelectedBooks = ref<Book[]>([])
 // ============== 安全的API调用封装 ==============
 const safeApiCall = async <T,>(
   apiFn: () => Promise<T>,
-  errorMsg: string = '操作失败',
+  errorMsg: string = '操作失败',//@ts-ignore
 ): T | null => {
   if (!isComponentMounted) return null
   try {
@@ -138,7 +139,7 @@ const safeApiCall = async <T,>(
   }
 }
 
-// ============== 1. 加载配置（极简版，无watch） ==============
+// 1. 加载配置
 const loadConfig = async () => {
   if (isLoadingData || !isComponentMounted) return
   isLoadingData = true
@@ -158,7 +159,7 @@ const loadConfig = async () => {
   isLoadingData = false
 }
 
-// ============== 2. 加载所有图书（严格数据兜底） ==============
+// 2. 加载所有图书（严格数据兜底）
 const loadAllBooks = async () => {
   if (!isComponentMounted) return
   bookListLoading.value = true
@@ -177,14 +178,14 @@ const loadAllBooks = async () => {
     } else {
       allBookList.value = []
     }
-    // 图书列表加载完后，手动更新已选列表（替代watch，更稳定）
+    // 图书列表加载完后，手动更新已选列表
     updateSelectedBookList()
   }
 
   if (isComponentMounted) bookListLoading.value = false
 }
 
-// ============== 3. 手动更新已选图书列表（替代watch，避免循环触发） ==============
+// 3. 手动更新已选图书列表（替代watch，避免循环触发）
 const updateSelectedBookList = () => {
   if (!isComponentMounted) return
 
@@ -203,7 +204,7 @@ const updateSelectedBookList = () => {
   selectedBookList.value = result
 }
 
-// ============== 4. 保存配置（极简，无多余操作） ==============
+// 4. 保存配置（极简，无多余操作）
 const handleSave = async () => {
   if (!isComponentMounted || saveLoading.value) return
   saveLoading.value = true
@@ -228,17 +229,17 @@ const handleSave = async () => {
   if (isComponentMounted) saveLoading.value = false
 }
 
-// ============== 5. 移除图书（直接操作数组，无副作用） ==============
+// 5. 移除图书
 const handleRemove = (index: number) => {
   if (!isComponentMounted || !Array.isArray(topBookIds.value)) return
   if (index < 0 || index >= topBookIds.value.length) return
 
   topBookIds.value.splice(index, 1)
-  // 手动更新，替代watch
+  // 手动更新
   updateSelectedBookList()
 }
 
-// ============== 6. 图书选择对话框（极简，无复杂逻辑） ==============
+// 6. 图书选择对话框
 const openBookSelectDialog = async () => {
   if (!isComponentMounted) return
   tempSelectedBooks.value = []
@@ -250,7 +251,7 @@ const openBookSelectDialog = async () => {
   }
 }
 
-// 判断图书是否可选（已选的禁用）
+// 判断图书是否可选（已选禁用）
 const checkSelectable = (row: Book) => {
   if (!row?.id) return false
   return !topBookIds.value.includes(row.id)
@@ -280,7 +281,7 @@ const handleConfirmSelect = () => {
   tempSelectedBooks.value = []
 }
 
-// ============== 生命周期（严格的状态管理） ==============
+// 生命周期（状态管理）
 onMounted(() => {
   isComponentMounted = true
   // 延迟一点加载，避免和首页切换动画冲突
@@ -292,7 +293,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // 核心：组件卸载时，标记状态，停止所有操作
+  // 组件卸载时，标记状态，停止所有操作
   isComponentMounted = false
   isLoadingData = false
   // 清空所有状态，避免内存泄漏

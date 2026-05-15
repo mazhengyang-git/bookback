@@ -1,5 +1,6 @@
 <template>
   <div class="order-container"    v-cloak>
+    <router-link style="background-color: black;color: white;font-size: 20px;" to="/userinfo">返回个人中心</router-link>
     <div class="action-row">
       <h2 class="page-title">我的订单</h2>
       <div class="button-group">
@@ -12,17 +13,17 @@
         <div class="order-header">订单号：{{ order.orderNo }}</div>
         <div class="order-note">备注：发生交易争议时,商品封面可作为判断依据</div>
         <div class="order-body">
-          <img :src="order.bookCover || '/public/default-book.png'" class="cover" />
+          <!--@vue-ignore--><img :src="order.bookCover || '/public/default-book.png'" class="cover" />
           <div class="info">
-            <p class="name">{{ order.bookName }}</p>
+            <p class="name"><!--@vue-ignore-->{{ order.bookName }}</p>
             <p class="info-text">数量：{{ order.count }}</p>
             <p class="info-text">总价：¥{{ order.totalPrice }}</p>
             <p class="info-text">
               状态：<el-tag type="success">{{ order.status }}</el-tag>
             </p>
-            <p
+           <!--@vue-ignore--> <p
               class="detail-link"
-              @click="go(`/book/${order.bookId}?source=${order.source || 'normal'}`)"
+              @click="go(`/book1/${order.bookId}?source=${order.source || 'normal'}`)"
             >
               查看商品详情
             </p>
@@ -42,21 +43,17 @@ import dayjs from 'dayjs'
 import type { Order } from '@/types/index'
 import { getUserOrderList } from '@/api/front/order'
 import router from '@/router'
+//@ts-ignore
 import { RouteLocationAsRelativeGeneric, RouteLocationAsPathGeneric } from 'vue-router'
 
 const orderList = ref<Order[]>([])
 
-const go = (path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) => {
-  // 1. 如果是字符串路径
-  if (typeof path === 'string') {
-    // 检查当前是否已经在 /book/ 开头详情页
-    if (router.currentRoute.value.path.startsWith('/book/')) {
-      // 如果已经在详情页，强制刷新整个页面
-      window.location.href = path
-      return
-    }
+const go = (path: string) => {
+  // 不管当前在哪，跳图书详情都强制刷新页面
+  if (path.startsWith('/book') || path.startsWith('/book1')) {
+    window.location.href = path
+    return
   }
-  // 2. 如果不是详情页，走正常路由跳转
   router.push(path)
 }
 const getMyOrder = async () => {

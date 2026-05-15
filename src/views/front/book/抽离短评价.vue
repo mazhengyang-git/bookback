@@ -7,12 +7,10 @@
           v-model="bookAvgScore"
           disabled
           :max="5"
-          show-score
           text-color="#ff7d00"
           score-format="(value) => value.toFixed(1)"
         />
         <span class="avg-score-text">{{ bookAvgScore.toFixed(1) }} 分</span>
-        <span class="count-text">共 {{ commentTotalCount }} 人评价</span>
       </div>
       <!-- 数据没加载时：用空占位，保持布局位置不变 -->
       <div v-else class="score-summary placeholder"></div>
@@ -39,8 +37,8 @@ const commentList = ref<CommentItem[]>([])
 const fetchRandomComments = async () => {
   if (!props.bookId) return
   try {
-    // 传入 source
-    const res = await getRandomComments(props.bookId, props.source)//@ts-ignore
+    // 🔥 传入 source
+    const res = await getRandomComments(props.bookId, props.source)
     if (res.code === 200) {
       commentList.value = res.data || []
     }
@@ -94,45 +92,27 @@ watch(
 </script>
 
 <style scoped>
-/* 占位容器 */
-.score-summary.placeholder {
-  height: 32px; /* 和真实 score-summary 高度一致 */
-  width: 100%;
-}
-</style>
-<style scoped>
 .book-comment-container {
-  width: 40%;
-  margin-top: 10px;
-  height: 100px;
-  padding: 12px;
+ 
+ transform: scale(0.86);
 user-select: none;
   border-radius: 8px;
-  border: 1px solid #eee;
+ 
 }
-.comment-header {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-  margin-bottom: 20px;
-}
-.comment-title {
-  font-size: 20px;
-  color: #333;
-  margin: 0 0 12px 0;
-  font-weight: 600;
-}
+
+
 .score-summary {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
 }
 .avg-score-text {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 600;
   color: #ff7d00;
 }
 .count-text {
-  font-size: 14px;
+  font-size: 1px;
   color: #666;
   margin-left: 10px;
 }

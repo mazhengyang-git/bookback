@@ -7,7 +7,7 @@
 
     <!-- 表格容器 -->
     <div class="table-scroll-wrapper">
-      <el-table style="color:black;-webkit-text-stroke:0.07px #333" v-loading="loading" :data="bookList" border stripe 
+      <el-table style="color:black;-webkit-text-stroke:0.01px #333" v-loading="loading" :data="bookList" border stripe 
         :header-cell-style="{ color: '#333', fontSize: '15px', fontWeight: 900 }">
         <el-table-column type="index" label="序号" width="80" />
         <el-table-column prop="book_name" label="图书名称" min-width="200" />
@@ -28,8 +28,8 @@
 
         <el-table-column label="操作" width="180">
           <template #default="scope">
-            <el-button style="font-weight:550" type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button style="font-weight:550" type="danger" size="small" @click="handleDelete(scope.row.id)"
+            <el-button style="font-weight:550;font-size: 15px;" type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button style="font-weight:550;font-size: 15px;" type="danger" size="small" @click="handleDelete(scope.row.id)"
               >删除</el-button
             >
           </template>

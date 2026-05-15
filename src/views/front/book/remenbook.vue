@@ -4,7 +4,7 @@
     <h2 class="section-title">每月热门图书榜</h2>
 
     <!-- 加载中 -->
-    <div v-if="bookStore?.loading" class="loading-tip">
+   <!--@vue-ignore--> <div v-if="bookStore?.loading" class="loading-tip">
       <el-skeleton :rows="3" animated />
     </div>
 
@@ -25,7 +25,7 @@
         <span class="rank" :class="{ 'top-three': index < 3 }">{{ book.rank }}</span>
 
         <!-- 图书封面 -->
-        <img
+       <!--@vue-ignore--> <img
           :src="book.cover || '/img/default-book.jpg'"
           referrerpolicy="no-referrer"
           alt="图书封面"
@@ -57,7 +57,7 @@ const router = useRouter()
 const route = useRoute()
 const bookStore = useBookStore()
 
-// ====================== 置顶图书ID ======================
+// 置顶图书ID 
 const topBookIds = ref<(number | string)[]>([])
 const configLoading = ref(true)
 
@@ -202,9 +202,9 @@ const formatPrice = (price: unknown): string => {
   return num.toFixed(2)
 }
 
-// ==============================================
-// 新书速递 的跳转逻辑
-// ==============================================
+
+// 新书速递跳转逻辑
+
 const go = (path: string) => {
   if (router.currentRoute.value.path.startsWith('/book/')) {
     router.replace(path)
@@ -341,7 +341,7 @@ watch(
   flex-direction: column;
   gap: clamp(6px, 0.8vw, 8px);
 }
-/* 【修复】文字颜色太浅导致看不见的问题 */
+
 .book-name {
   font-size: clamp(19px, 1.8vw, 23px);
   font-weight: 600;
@@ -376,7 +376,7 @@ watch(
   }
 }
 
-/* 增强的卡片效果 */
+/* 卡片效果 */
 .book-item {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -388,7 +388,7 @@ watch(
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* 增强的排名效果 */
+/* 排名效果 */
 .rank {
   position: relative;
 }
@@ -405,7 +405,7 @@ watch(
   border-radius: 50%;
 }
 
-/* 增强的封面效果 */
+/* 封面效果 */
 .book-cover {
   transition:
     transform 0.3s ease,
@@ -417,7 +417,7 @@ watch(
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* 增强的价格效果 */
+/* 价格效果 */
 .book-price {
   background: linear-gradient(90deg, #e6a23c, #fbbf24);
   background-clip: text;

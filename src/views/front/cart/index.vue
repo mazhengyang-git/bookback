@@ -23,7 +23,7 @@
           @change="(val: any) => handleItemCheck(item.cartId, val)"
         />
 
-        <img
+       <!--@vue-ignore--> <img
           :src="item.cover || '/default-book.png'"
           alt="图书封面"
           class="item-cover"
@@ -39,7 +39,7 @@
 
         <div class="item-count">
           <button class="count-btn" @click="handleReduce(item.cartId)">-</button>
-          <el-input-number
+         <!--@vue-ignore--> <el-input-number
             v-model="item.count"
             :min="1"
             :max="item.stock"
@@ -75,7 +75,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/store/cart'
 import { useUserStore } from '@/store/user'
-import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/cart'
+import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/front/cart'
 import { getBookDetailApi } from '@/api/front/book'
 import { useBookStore1 } from '@/store/newbook'
 
@@ -156,7 +156,7 @@ const loadCartData = async () => {
 
   try {
     const [_bookReady, cartRes] = await Promise.all([bookStore1.fetchBookList(), getCartList()])
-
+//@ts-ignore
     if (cartRes.code === 200 && cartRes.data) {
       cartStore.clearCart()
 
@@ -164,22 +164,22 @@ const loadCartData = async () => {
         const source = item.source || 'normal'
         let realBookData = null
 
-        if (source === 'new') {
+        if (source === 'new') {//@ts-ignore
           realBookData = bookStore1.bookList1.find((b) => b.id === item.goodsId)
         } else {
           const res = await getBookDetailApi(item.goodsId)
           realBookData = res.data
         }
-
+//@ts-ignore
         cartStore.addToCart({
           cartId: item.id,
-          id: item.goodsId,
-          name: realBookData?.name || item.bookName || '未知图书',
+          id: item.goodsId,//@ts-ignore
+          name: realBookData?.name || item.bookName || '未知图书',//@ts-ignore
           price: Number(realBookData?.price || item.bookPrice || 0),
-          count: item.quantity || item.count,
+          count: item.quantity || item.count,//@ts-ignore
           cover: realBookData?.cover || item.bookCover || '/default-book.png',
-          spec: item.spec || '平装版',
-          stock: realBookData?.stock || 999,
+          spec: item.spec || '平装版',//@ts-ignore
+          stock: realBookData?.stock || 999,//@ts-ignore
           source: source,
         })
       }
@@ -316,7 +316,7 @@ button {
   opacity: 0;
 }
 
-/* ========== 核心响应式容器 ========== */
+/* 响应式容器 */
 .syses11 {
   position: absolute;
   color: #000000;
@@ -358,7 +358,7 @@ button {
   background: linear-gradient(90deg, rgba(255, 145, 0, 0.9), rgba(255, 145, 0, 0.2));
 }
 
-/* ========== 购物车列表容器 ========== */
+/* 购物车列表容器 */
 .cart-list {
   background: rgba(255, 255, 255, 0.96);
   padding: clamp(18px, 3vw, 28px);
@@ -368,7 +368,7 @@ button {
   border: 1px solid rgba(255, 145, 0, 0.14);
 }
 
-/* ========== 全选栏 - 右侧总价永远贴边 ========== */
+/* 全选栏-右侧总价永远贴边 */
 .check-all-bar {
   display: flex;
   align-items: center;
@@ -386,11 +386,11 @@ button {
   font-weight: bold;
   font-size: clamp(16px, 3vw, 20px);
   color: #000000;
-  margin-left: auto; /* 核心：自动推到最右侧 */
+  margin-left: auto; /* 自动推到最右侧 */
   white-space: nowrap;
 }
 
-/* ========== 购物车单项 - 响应式弹性布局 ========== */
+/* 购物车单项-响应式弹性布局 */
 .cart-item {
   display: flex;
   align-items: center;
@@ -427,7 +427,7 @@ button {
 /* 图书信息区 */
 .item-info {
   flex: 1; /* 填充剩余空间 */
-  min-width: 0; /* 核心：解决flex文本溢出问题 */
+  min-width: 0; /* 解决flex文本溢出问题 */
 }
 .item-name {
   font-size: clamp(18px, 2.5vw, 20px);
@@ -514,12 +514,12 @@ button {
   background: linear-gradient(135deg, #ff7b7b, #e60000);
 }
 
-/* ========== 底部按钮区-永远贴右边缘 ========== */
+/* 底部按钮区-永远贴右边缘 */
 .cart-footer {
   margin-top: 20px;
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* 核心：按钮永远贴右侧 */
+  justify-content: flex-end; /* 按钮永远贴右侧 */
   gap: clamp(10px, 2vw, 14px);
   width: 100%;
   flex-wrap: wrap;
@@ -559,7 +559,7 @@ button {
   transition: all 0.25s ease;
 }
 
-/* ========== 空购物车 ========== */
+/*空购物车*/
 .empty-cart {
   text-align: center;
   padding: clamp(40px, 8vw, 60px) 0;

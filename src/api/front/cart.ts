@@ -28,7 +28,7 @@ export const deleteCartItem = (cartId: number) => {
 export const clearCart = () => {
   return request.post('/api/cart/clear')
 }
-// 5. 切换选中状态（可选，暂时保留空实现，后续可扩展）
+// 5. 切换选中状态（暂时保留空实现，后续可扩展）
 export const toggleCartChecked = (id: number, checked: boolean) => {
   // 先返回空Promise，后续需要时再对接后端
   return Promise.resolve({ code: 200, msg: '暂未实现' })

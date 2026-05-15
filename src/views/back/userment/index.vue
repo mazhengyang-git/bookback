@@ -1,10 +1,11 @@
 <template>
   <div class="notice-manage">
+    <!--@vue-ignore-->
     <h2 style="-webkit-user-select: none; color: #000">用户信息</h2>
-    <h3 style="-webkit-user-select: none; color: #000; margin-top: 30px">最新统计数据:</h3>
+    <!--@vue-ignore--><h3 style="-webkit-user-select: none; color: #000; margin-top: 30px">最新统计数据:</h3>
 
     <!-- 统计面板 -->
-    <div class="stats-box" style="-webkit-user-select: none">
+    <!--@vue-ignore--><div class="stats-box" style="-webkit-user-select: none">
       <div class="stats-item">
         <span style="color: #000;font-weight: 600;">总用户数</span>
         <strong>{{ stats.totalUserCount }}</strong>
@@ -104,7 +105,7 @@ const verifyDialog = ref(false)
 const currentUser = ref<any>({})
 const verifyPhone = ref('')
 const verifyCode = ref('')
-// 存储随机验证码（核心新增）
+// 存储随机验证码
 const codeCache = ref('')
 
 // 打开验证弹窗
@@ -120,7 +121,7 @@ const openVerify = (user: userment) => {
   verifyDialog.value = true
 }
 
-// ===================== 改造：获取随机验证码（弹窗+控制台双显示） =====================
+// 获取随机验证码（弹窗+控制台双显示）
 const getCode = () => {
   // 校验必须先输入手机号
   if (!verifyPhone.value) {

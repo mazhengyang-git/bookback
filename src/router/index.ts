@@ -8,13 +8,24 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('@/views/front/login/index.vue') },
   { path: '/register', name: 'Register', component: () => import('@/views/front/register/index.vue') },
   { path: '/user', name: 'UserCenter', component: () => import('@/views/front/user/index.vue'), meta: { requiresAuth: true } },
+  { path: '/userinfo', name: 'UserInfo', component: () => import('@/views/front/user/user.vue'), meta: { requiresAuth: true } },
   { path: '/books', name: 'BookList', component: () => import('@/views/front/book/list.vue') },
   { path: '/book/:id', name: 'BookDetail', component: () => import('@/views/front/book/detail.vue') },
+  { path: '/book1/:id', name: 'BookDetail1', component: () => import('@/views/front/book/detail1.vue') },
   { path: '/cart', name: 'CartList', component: () => import('@/views/front/cart/index.vue'), meta: { requiresAuth: true } },
+   { path: '/shoucang', name: 'ShoucangList', component: () => import('@/views/front/cart/shoucang.vue'), meta: { requiresAuth: true } },
   { path: '/pay', name: 'CartConfirm', component: () => import('@/views/front/pay/index.vue'), meta: { requiresAuth: true } },
   { path: '/pay/direct', name: 'BookConfirm', component: () => import('@/views/front/pay/direct.vue'), meta: { requiresAuth: true } },
   { path: '/order/:orderNo', name: 'OrderDetail', component: () => import('@/views/front/order/detail.vue'), meta: { requiresAuth: true } },
   { path: '/huodong', name: 'homehuodong', component: () => import('@/views/front/home/huodong.vue') },
+  { path: `/huodong `, name: 'homehuodong.', component: () => import('@/views/front/home/huodong1.vue') },
+  { path: '/activity/:id', name: 'ActivityDetail', component: () => import('@/views/front/activity/ActivityDetail.vue') },
+  
+  {
+  path: '/activity/:id/:title',
+  name: 'ActivityDetail',
+  component: () => import('@/views/front/activity/ActivityDetail.vue'),
+},
   {
     path: '/admin',
     name: 'Admin',
@@ -33,7 +44,7 @@ const routes = [
         { path: 'huodongzx', name: 'huodongzxadmin', component: () => import('@/views/back/huodongzx/huodongzx.vue') },
     ]
   },
-  { path: '/seller', name: 'SellerCenter', component: () => import('@/views/front/seller/index.vue'), meta: { requiresAuth: true } },
+  { path: '/seller', name: 'SellerCenter', component: () => import('@/views/seller/index.vue'), meta: { requiresAuth: true } },
   { path: '/404', name: 'NotFound', component: () => import('@/views/404.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/404' },
 ]

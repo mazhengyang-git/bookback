@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-// 底部组件，无逻辑
+// 底部组件
 </script>
 
 <style scoped>

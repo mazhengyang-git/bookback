@@ -1,49 +1,53 @@
-// 引入你项目封装好的 axios 请求工具
+// 引入项目封装好的 axios 请求工具
 import request from '@/utils/request'
 
 /**
- * 1. 校验用户评价权限
+ * 1. 校验用户评价权限 +  source 参数
  */
-export function checkCommentAuth(bookId: number) {
+export function checkCommentAuth(bookId: number, source: string) {
   return request({
     url: '/api/comment/checkAuth',
     method: 'get',
-    params: { bookId },
+    params: { bookId, source },
   })
 }
 
 /**
- * 2. 获取图书平均分 + 评价总数
+ * 2. 获取图书平均分 + 评价总数 +  source 参数
  */
-export function getBookAvgScore(bookId: number) {
+export function getBookAvgScore(bookId: number, source: string) {
   return request({
     url: '/api/comment/avg',
     method: 'get',
-    params: { bookId },
+    params: { bookId, source },
   })
 }
 
 /**
- * 3. 获取图书评价列表
+ * 3. 获取图书评价列表 +  source 参数
  */
-export function getCommentList(bookId: number) {
+export function getCommentList(bookId: number, source: string) {
   return request({
     url: '/api/comment/list',
     method: 'get',
-    params: { bookId },
+    params: { bookId, source },
   })
 }
 
 /**
- * 4. 提交图书评价
+ * 4. 提交图书评价 +  source 字段
  */
-export function addComment(data: { bookId: number; score: number; content: string }) {
+export function addComment(data: { bookId: number; score: number; content: string; source: string }) {
   return request({
     url: '/api/comment/add',
     method: 'post',
     data,
   })
 }
-export function getRandomComments(bookId: number) {
-  return getCommentList(bookId)
+
+/**
+ * 5. 获取随机评论 +  source 参数
+ */
+export function getRandomComments(bookId: number, source: string) {
+  return getCommentList(bookId, source)
 }

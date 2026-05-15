@@ -199,7 +199,7 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/*导航栏：文字+完全居中对称+LOGO + 响应式缩放*/
+/*导航栏：文字+完全居中对称+LOGO+响应式缩放*/
 .home-top-nav {
   /* 宽度响应式：最小700px，最大850px（原固定值），中间随屏幕缩放 */
   width: clamp(700px, 70vw, 850px);
@@ -456,8 +456,8 @@ const handleLogout = () => {
 </style>
 
 <style scoped>
-/* 按钮交互风格视觉*/
-/* 按钮交互效果 */
+/* 按钮交互视觉*/
+
 .syws {
   transition: all 0.2s ease-out;
 }

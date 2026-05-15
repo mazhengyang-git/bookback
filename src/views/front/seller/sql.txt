@@ -1,0 +1,18 @@
+-- 图书销量字段与订单销量记账标记（数据库：sci_fi_book_platform）
+-- 执行前请确认库名；若列已存在会报错，可跳过对应 ALTER。
+-- 业务规则：订单进入「已收货」或「已完成」时按购买件数计入图书 sales_count；离开上述状态则回退；用户删除订单（退货退款）若已计入则扣回。
+-- 以下语句可逐条复制执行。
+
+USE sci_fi_book_platform;
+
+-- 1. 普通图书表：累计销量（已收货订单件数之和，退款已扣回）
+ALTER TABLE `book`
+  ADD COLUMN `sales_count` int NOT NULL DEFAULT 0 COMMENT '累计销量' AFTER `stock`;
+
+-- 2. 新书表：累计销量
+ALTER TABLE `newbook`
+  ADD COLUMN `sales_count` int NOT NULL DEFAULT 0 COMMENT '累计销量' AFTER `stock`;
+
+-- 3. 订单表：是否已将本单件数计入图书销量（防止重复加减）
+ALTER TABLE `order`
+  ADD COLUMN `sales_recorded` tinyint NOT NULL DEFAULT 0 COMMENT '1=本单销量已计入图书sales_count' AFTER `source`;

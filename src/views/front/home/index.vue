@@ -78,7 +78,8 @@
             class="hot-book-card"
             @click="go(`/book/${book.id}`)"
           >
-            <img
+           <pj class="pjwy" v-if="book.id != null" :book-id="book.id" source="normal"/>
+            <!--@vue-ignore--><img
               :src="book.cover || '/img/default-book.jpg'"
               alt="图书封面"
               class="hot-book-cover"
@@ -87,11 +88,14 @@
             <h3>{{ book.name || '未知图书' }}</h3>
             <p>作者：{{ book.author || '未知作者' }}</p>
             <p class="hot-book-price">¥{{ formatPrice(book.price) }}</p>
+          
+             
+          
           </el-card>
         </div>
       </div>
     </div>
-
+<div style="margin-top: -400px;"><hbottom /></div>
     <span
       ref="doubaoBtn1"
       @mousedown="handleMouseDown1"
@@ -111,11 +115,13 @@
 
     <notice v-model="showNotice" />
   </div>
+
  <span style=""><footere /></span>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+//@ts-ignore
 import { ElMessage, ElEmpty } from 'element-plus'
 import type { Book } from '@/types/index'
 import { useRouter } from 'vue-router'
@@ -130,6 +136,8 @@ import editorrecommend from '@/views/front/home/editorrecommend.vue'
 import HomeTopNav from '@/views/front/home/hometopnav.vue'
 import notice from '@/views/front/home/notice.vue'
 import footere from '@/views/front/biaoqian/footer.vue'
+import hbottom from '@/views/front/biaoqian/homebottom.vue'
+import pj from '@/views/front/book/抽离短评价.vue'
 const router = useRouter()
 const bookStore = useBookStore()
 
@@ -146,7 +154,7 @@ const noticeList = ref<Announcement[]>([])
 const doubaoBtn = ref(null)
 const doubaoBtn1 = ref(null)
 const isDragging = ref(false)
-const hasDragged = ref(false)
+const hasDragged = ref(false)//@ts-ignore
 const startPos = ref({ x: 0, y: 0 })
 const currentPos = ref({ x: 6, y: 110 })
 const DRAG_THRESHOLD = 5
@@ -175,17 +183,17 @@ const getRandomBooks = (list: Book[], count = 10): Book[] => {
   return arr.slice(0, count)
 }
 
-// ==============================================
-// 双线路加载：本地静态优先 + 后端兜底
-// ==============================================
+
+// 双线路加载：本地静态优先+后端兜底
+
 const loadHomeData = async () => {
   try {
-    // 1. 优先加载本地静态JSON（极速）
+    // 1. 优先加载本地静态JSON
     const res = await fetch('/home-static.json')
     const data = await res.json()
 
     // 2. 如果本地有数据 → 直接用
-    if (data?.bookList?.length) {
+    if (data?.bookList?.length) {//@ts-ignore
       bookStore.setBookList(data.bookList)
       hotBooks.value = getRandomBooks(data.bookList, 10)
       console.log('✅ 首页使用本地加速数据')
@@ -193,7 +201,7 @@ const loadHomeData = async () => {
     }
   } catch (e) {}
 
-  // 3. 本地无数据 → 自动走后端（兜底）
+  // 3. 本地无数据 → 自动走后端
   console.log('⚠️ 本地数据为空，使用后端接口')
   await bookStore.fetchBookList()
   hotBooks.value = getRandomBooks(bookStore.bookList || [], 10)
@@ -201,7 +209,7 @@ const loadHomeData = async () => {
 
 const getNotice = async () => {
   try {
-    const res = await getAnnouncementList()
+    const res = await getAnnouncementList()//@ts-ignore
     if (res?.code === 200) noticeList.value = res.data
   } catch (e) {}
 }
@@ -231,8 +239,8 @@ const handleMouseDown = (e: MouseEvent) => {
     }
     currentPos.value.x = left + dx
     currentPos.value.y = top + dy
-    if (doubaoBtn.value) {
-      doubaoBtn.value.style.left = currentPos.value.x + 'px'
+    if (doubaoBtn.value) {//@ts-ignore
+      doubaoBtn.value.style.left = currentPos.value.x + 'px'//@ts-ignore
       doubaoBtn.value.style.top = currentPos.value.y + 'px'
     }
   }
@@ -263,10 +271,10 @@ const handleMouseDown1 = (e: MouseEvent) => {
     }
     currentPos1.value.x = left + dx
     currentPos1.value.y = top + dy
-    if (doubaoBtn1.value) {
-      doubaoBtn1.value.style.left = currentPos1.value.x + 'px'
-      doubaoBtn1.value.style.top = currentPos1.value.y + 'px'
-      doubaoBtn1.value.style.right = 'unset'
+    if (doubaoBtn1.value) {//@ts-ignore
+      doubaoBtn1.value.style.left = currentPos1.value.x + 'px'//@ts-ignore
+      doubaoBtn1.value.style.top = currentPos1.value.y + 'px'//@ts-ignore
+      doubaoBtn1.value.style.right = 'unset'//@ts-ignore
       doubaoBtn1.value.style.transform = 'unset'
     }
   }
@@ -283,7 +291,7 @@ const handleMouseDown1 = (e: MouseEvent) => {
 
 const handleLinkClick = (e: Event) => {
   if (hasDragged.value) e.preventDefault()
-}
+}//@ts-ignore
 const handleLinkClick1 = (e: Event) => {
   if (hasDragged1.value) e.preventDefault()
 }
@@ -320,7 +328,7 @@ onMounted(async () => {
   margin-top: 80px;
   height: auto;
 }
-/* 完全独立的标题类，自带蓝线效果 */
+/* 标题蓝线效果 */
 .sci-fi-title-custom {
   text-align: center;
   margin: clamp(20px, 2.5vw, 30px) 0;
@@ -353,7 +361,7 @@ onMounted(async () => {
   position: absolute;
   bottom: 840px;
   left: 74.5px; /* 0 = 和文字左对齐，50% = 居中 */
-  width: 100px; /* 蓝线长度，可自由改 */
+  width: 100px; /* 蓝线长度 */
   height: 2px;
   background: linear-gradient(90deg, transparent, #409eff, transparent);
   border-radius: 2px;
@@ -475,7 +483,7 @@ onMounted(async () => {
   margin: clamp(15px, 2vw, 20px) 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-/* 子容器：用margin占位 */
+/* 子容器：margin占位 */
 .monthly-inner {
   position: static;
   /* 缩放比例 */
@@ -576,7 +584,7 @@ onMounted(async () => {
 @media (max-width: 1160px) {
   .editor-recommend-container {
     right: -266px;
-   transition: right 0.3s ease;
+  
   }
 
 }
@@ -734,7 +742,8 @@ onMounted(async () => {
   position: relative;
   right: 96px;
   top: -8vh;
-} /*默认样式*/
+  transition: all 0.05s ease-in;
+} 
 
 @media (max-width: 1110px) {
   .banner-content {
@@ -742,133 +751,85 @@ onMounted(async () => {
     right: 111px;
     top: -11vh;
     
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 1060px) {
   .banner-content {
     transform: scale(0.98);
     right: 121px;
     top: -8.8vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+  
+}}
 @media (max-width: 1010px) {
   .banner-content {
     transform: scale(0.95);
     right: 136px;
     top: -10vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+ 
+}}
 @media (max-width: 960px) {
   .banner-content {
     transform: scale(0.9);
     right: 151px;
     top: -11vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 910px) {
   .banner-content {
     transform: scale(0.86);
     right: 157px;
     top: -12vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+  
+}}
 @media (max-width: 860px) {
   .banner-content {
     transform: scale(0.82);
     right: 162px;
     top: -12.8vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 810px) {
   .banner-content {
     transform: scale(0.75);
     right: 177px;
     top: -14.8vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 760px) {
   .banner-content {
     transform: scale(0.69);
     right: 183px;
     top: -15vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 710px) {
   .banner-content {
     transform: scale(0.69);
     right: 177px;
     top: -16.5vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 660px) {
   .banner-content {
     transform: scale(0.64);
     right: 177px;
     top: -18.2vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 @media (max-width: 600px) {
   .banner-content {
     transform: scale(0.59);
     right: 169px;
     top: -19.6vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+  
+}}
 @media (max-width: 500px) {
   .banner-content {
     transform: scale(0.55);
     right: 166px;
     top: -20.7vh;
-    transition:
-      top,
-      right,
-      transform 0.3s ease;
-  }
-}
+   
+}}
 input,
 textarea,
 button {
@@ -1056,7 +1017,7 @@ button {
   padding: 25px;
   width: 80px;
   height: 80px;
-  /* 关键：透明背景确保空白区域也能触发事件 */
+  /* 透明背景确保空白区域也能触发事件 */
   background: transparent !important;
   pointer-events: auto;
 }
@@ -1078,7 +1039,7 @@ button {
   border: 2px solid rgba(102, 177, 255, 0.5);
   /* 恢复点击光标 */
   cursor: pointer !important;
-  /* 移除pointer-events: none */
+ 
   pointer-events: auto !important;
 }
 
@@ -1088,7 +1049,7 @@ button {
   transform: scale(1.05);
 }
 
-/* 统一光标样式（拖动时是move，静止时是pointer） */
+/* 光标样式（拖动时是move，静止时是pointer） */
 .doubao-entrance:not(.dragging) .doubao-btn,
 .doubao-entrance:not(.dragging) .doubao {
   cursor: pointer !important;
@@ -1106,7 +1067,7 @@ button {
   -webkit-user-drag: none !important;
   user-drag: none !important;
 }
-/* 页面容器：在后面合并 */
+/* 页面容器 */
 .black-mask {
   position: fixed;
   inset: 0;
@@ -1157,7 +1118,7 @@ button {
   align-items: center;
   gap: clamp(8px, 1vw, 10px);
 }
-/* 轮播区域：在后面合并 */
+/* 轮播区域 */
 
 @keyframes cardShine {
   0% {
@@ -1430,6 +1391,12 @@ button {
 </style>
 
 <style scoped>
+.pjwy{
+  position: absolute;
+  margin-top: -31px;
+  margin-left: -18px;
+  white-space: nowrap;
+}
 * {
 }
 /* 豆包按钮效果 */
@@ -1442,9 +1409,9 @@ button {
   box-shadow: 0 0 15px rgba(64, 158, 255, 0.5);
 }
 
-/* ========== 大厂风格视觉优化 ========== */
 
-/* 页面背景：干净的浅灰色 */
+
+/* 页面背景*/
 .home-container {
   /* 布局 */
   width: 100%;
@@ -1493,10 +1460,10 @@ button {
   border-radius: 12px;
 }
 
-/* 图书卡片：合并所有效果 */
+/* 图书卡片 */
 .hot-book-card {
   /* 基础布局 */
-  width: clamp(180px, 18vw, 216px);
+  width: clamp(190px, 18vw, 216px);
   cursor: pointer;
   text-align: center;
   height: auto;
@@ -1505,12 +1472,14 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-
+  
+left: -10px;
   /* 七彩边框效果 */
   position: relative;
   background: #ffffff;
   border-radius: 12px;
   padding: 2px;
+  padding-top: 13px;
 }
 
 .hot-book-card::before {
@@ -1569,11 +1538,11 @@ button {
 /* 图书封面 */
 .hot-book-cover {
   /* 尺寸和布局 */
-  width: 100%;
+  width: 103%;
   height: clamp(195px, 17vw, 240px);
   object-fit: cover;
-  margin: 0 auto clamp(10px, 1.2vw, 15px);
-
+  margin: 0 auto clamp(8px, 1.2vw, 3px);
+margin-top: 2px;
   /* 视觉效果 */
   border-radius: 8px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.785);
@@ -1585,7 +1554,7 @@ button {
   transform: scale(1.08);
 }
 
-/* 价格：合并所有效果 */
+/* 价格 */
 .hot-book-price {
   color: #1d1d1f;
   font-weight: 600;
@@ -1598,7 +1567,7 @@ button {
   font-size: clamp(14px, 1.2vw, 16px);
 }
 
-/* 标题合并所有效果 */
+/* 标题 */
 .sci-fi-title {
   /* 基础样式 */
   text-align: center;

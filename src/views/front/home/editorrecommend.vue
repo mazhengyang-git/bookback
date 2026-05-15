@@ -15,7 +15,7 @@
         @click="go(`/book/${book.id}?source=editor`)"
       >
         <div class="rank-num" :class="'rank-' + (index + 1)">{{ index + 1 }}</div>
-        <img
+        <!--@vue-ignore--><img
           :src="book.cover || '/img/default-book.jpg'"
           alt="图书封面"
           class="recommend-cover"

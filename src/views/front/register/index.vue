@@ -122,7 +122,7 @@ import { register } from '@/api/front/user'
 const router = useRouter()
 const registerFormRef = ref<FormInstance>()
 
-// ================== 【核心修复】captcha 放入表单对象 ==================
+// captcha 放入表单对象
 const registerForm = reactive({
   username: '',
   password: '',
@@ -134,7 +134,7 @@ const registerForm = reactive({
 
 const ADMIN_REGISTER_KEY = 'admin123456'
 
-// ================== 图片验证码 ==================
+// 图片验证码 
 const captchaCode = ref('')
 const chars = '0123456789ABCDEFGHIJKLMNPQRSTWXYZ'
 
@@ -210,12 +210,12 @@ const isValidPhone = (phone: string): boolean => {
   return validMobilePrefixes.includes(prefix)
 }
 
-// ================== 【核心修复】验证码加入表单校验 ==================
+//验证码加入表单校验
 const registerRules = reactive<FormRules>({
   username: [
     { required: true, message: '请输入用户名/手机号', trigger: 'blur' },
     { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
-    {
+    { //@ts-ignore
       validator: (rule, value, cb) => {
         if (!value) return cb()
         if (isValidAccount(value) || isValidPhone(value)) cb()
@@ -237,7 +237,7 @@ const registerRules = reactive<FormRules>({
   ],
   captcha: [
     { required: true, message: '请输入图片验证码', trigger: 'blur' },
-    {
+    { //@ts-ignore
       validator: (rule, value, cb) => {
         if (value?.toUpperCase() === captchaCode.value) cb()
         else cb(new Error('图片验证码错误'))
@@ -252,7 +252,7 @@ const handleRoleChange = () => {
   if (registerForm.role !== 'admin') registerForm.adminKey = ''
 }
 
-// ================== 注册逻辑（修复版） ==================
+// 注册逻辑
 const handleRegister = async () => {
   if (!registerFormRef.value) return ElMessage.error('表单异常')
 
@@ -275,11 +275,11 @@ const handleRegister = async () => {
       username: registerForm.username,
       password: registerForm.password,
       role: registerForm.role,
-    })
+    }) //@ts-ignore
     if (res.code === 200) {
       ElMessage.success('注册成功')
       router.push('/login')
-    } else {
+    } else { //@ts-ignore
       ElMessage.error(res.msg || '注册失败')
       refreshCaptcha()
     }
@@ -327,6 +327,8 @@ button {
 .register-container {
   width: 100%;
   height: 100vh;
+  position: relative;
+  top: 32px;
   display: flex;
   justify-content: center;
   align-items: center;

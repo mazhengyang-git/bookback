@@ -9,6 +9,7 @@ export interface Book {
   cover: string // 封面图
   desc: string // 简介
   stock: number // 库存
+  sales_count?: number // 累计销量
   mulu: string //目录展示
   author_into: string //作者简介
 }
@@ -21,6 +22,7 @@ export interface newBook {
   cover: string // 封面图
   desc: string // 简介
   stock: number // 库存
+  sales_count?: number // 累计销量
   mulu: string //目录展示
   author_into: string //作者简介
 }
@@ -35,6 +37,7 @@ export interface User {
   update_time?: string
   phone: string
   sign: string
+   avatar: string 
 }
 
 // 购物车项
@@ -55,7 +58,10 @@ export interface Order {
   book_name: string
   book_cover: string
 }
-
+export interface ShoucangItem extends Book {
+  count: number // 购买数量
+  checked: boolean // 是否选中
+}
 // 原有 User 和 Book 类型保留，新增 Order 即可
 // 公告数据类型（和后端对应）
 export interface Announcement {
