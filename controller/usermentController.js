@@ -4,7 +4,7 @@ const pool = require('../config/db');
 //管理员获取所有用户信息（含买家/卖家数量统计）
 exports.getuserment = async (req, res) => {
   try {
-    //1.管理员权限校验（失败直接return，无需else）
+    //1.管理员权限校验（失败直接return）
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({ code: 403, msg: '无管理员权限，禁止访问' });
     }
@@ -42,7 +42,7 @@ exports.getuserment = async (req, res) => {
     res.json({
       code: 200,
       data: {
-        list: list, // 变量名统一为list
+        list: list, 
         statistics: statistics
       },
       msg: '获取用户列表及统计数据成功'

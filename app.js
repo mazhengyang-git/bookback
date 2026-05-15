@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); 
 require('dotenv').config();
 
 const app = express();
@@ -38,6 +39,7 @@ const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
 const newbookguan = require('./router/newbookguanli');
 const bookcom = require('./router/bookComrute');
+const shoucang = require('./router/shoucangroute');
 const bookpaihang = require('./router/systembookpaihang');
 app.use('/api/user', userRouter);
 app.use('/api', orderRouter);
@@ -52,9 +54,12 @@ app.use('/api/pay', payRouter);
 app.use('/api', userdate);
 app.use('/api', bookcom);
 app.use('/api', hdzx);
-// 订单后台路由（前缀和前端的 /api/back/order 完全匹配）
+
+app.use('/api/shoucang', shoucang);
+// 订单后台路由
 app.use('/api', orderadmin);
 app.use('/api', bookpaihang);
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 //启动服务器
 app.listen(3002, () => {
   console.log(`后端服务器运行在：http://localhost:3002 ✅`);

@@ -87,10 +87,10 @@ exports.bindPhone = async (req, res) => {
 };
 
 // ==============================================
-// 管理员 → 重置用户密码（核心最终版）
+// 管理员 → 重置用户密码
 // 验证手机号 + 生成临时密码 + 插入私密公告到 gonggao 表
 // ==============================================
-// 管理员重置用户密码（安全版：仅后端打印新密码）
+// 管理员重置用户密码（安全：仅后端打印新密码）
 exports.resetUserPassword = async (req, res) => {
   try {
     const { userId, phone } = req.body;
@@ -104,7 +104,7 @@ exports.resetUserPassword = async (req, res) => {
     // 2. 生成随机8位新密码（字母+数字）
     const newPassword = Math.random().toString(36).slice(2, 10);
     
-    // 🔴 安全核心：仅后端控制台打印新密码，不返回前端！
+    // 仅后端控制台打印新密码，不返回前端！
     console.log('====================================');
     console.log('【管理员重置用户密码】');
     console.log('用户ID：', userId);

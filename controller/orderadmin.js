@@ -1,4 +1,8 @@
 const pool = require('../config/db');
+const {
+  isSalesCountedStatus,
+  adjustBookSalesDelta,
+} = require('../utils/bookSales');
 
 // 管理员获取所有订单（新书+普通书）
 exports.adminGetAllOrders = async (req, res) => {
@@ -31,7 +35,6 @@ exports.adminGetAllOrders = async (req, res) => {
     sql += ` ORDER BY o.create_time DESC`;
     const [rows] = await pool.execute(sql, params);
 
-    // 格式化书名
     const data = rows.map(item => ({
       ...item,
       bookName: item.source === 'new' ? item.newBookName : item.bookName || '未知图书'
@@ -46,24 +49,69 @@ exports.adminGetAllOrders = async (req, res) => {
 
 // 管理员修改订单状态
 exports.adminUpdateOrderStatus = async (req, res) => {
+  let connection;
   try {
     const { orderId, status } = req.body;
     if (!orderId || !status) {
       return res.json({ code: 400, msg: '参数错误' });
     }
 
-    const [result] = await pool.execute(
-      'UPDATE `order` SET status = ? WHERE id = ?',
-      [status, orderId]
-    );
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
 
-    if (result.affectedRows === 0) {
+    // 强制读取 sales_recorded，NULL 转 0
+    const [rows] = await connection.execute(
+      'SELECT id, book_id, `count`, status, source, IFNULL(sales_recorded, 0) AS sales_recorded FROM `order` WHERE id = ? FOR UPDATE',
+      [orderId]
+    );
+    if (!rows.length) {
+      await connection.rollback();
       return res.json({ code: 404, msg: '订单不存在' });
     }
 
+    const oldRow = rows[0];
+    if (oldRow.status === status) {
+      await connection.commit();
+      return res.json({ code: 200, msg: '订单状态未变化' });
+    }
+
+    // 先更新状态
+    await connection.execute('UPDATE `order` SET status = ? WHERE id = ?', [status, orderId]);
+
+    const oldCounted = isSalesCountedStatus(oldRow.status);
+    const newCounted = isSalesCountedStatus(status);
+    const recorded = !!oldRow.sales_recorded;
+
+    console.log('===== 销量调试日志 =====');
+    console.log('旧状态:', oldRow.status, '是否计数:', oldCounted);
+    console.log('新状态:', status, '是否计数:', newCounted);
+    console.log('是否已记录销量:', recorded);
+    console.log('========================');
+
+    // ==============================================
+    // 核心逻辑（锁死，绝对不会出错）
+    // 1. 非计数状态 → 计数状态：加销量 + 标记1
+    if (newCounted && !oldCounted && !recorded) {
+      console.log('✅ 执行：增加销量');
+      await adjustBookSalesDelta(connection, oldRow, Number(oldRow.count) || 0);
+      await connection.execute('UPDATE `order` SET sales_recorded = 1 WHERE id = ?', [orderId]);
+    }
+
+    // 2. 计数状态 → 非计数状态：减销量 + 标记0
+    else if (!newCounted && oldCounted && recorded) {
+      console.log('✅ 执行：减少销量');
+      await adjustBookSalesDelta(connection, oldRow, -Math.abs(Number(oldRow.count) || 0));
+      await connection.execute('UPDATE `order` SET sales_recorded = 0 WHERE id = ?', [orderId]);
+    }
+    // ==============================================
+
+    await connection.commit();
     res.json({ code: 200, msg: '订单状态修改成功' });
   } catch (err) {
+    if (connection) await connection.rollback();
     console.error('修改订单状态错误：', err);
     res.json({ code: 500, msg: '修改失败' });
+  } finally {
+    if (connection) connection.release();
   }
 };

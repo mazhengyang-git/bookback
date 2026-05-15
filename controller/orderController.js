@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { adjustBookSalesDelta } = require('../utils/bookSales');
 
 // 获取当前用户订单列表（兼容新书+普通书）
 const getUserOrders = async (req, res) => {
@@ -55,9 +56,9 @@ const deleteOrders=async(req,res)=>{
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. 查询订单 + source字段
+    // 1. 查询订单 + source + 销量记账
     const [orderResult]=await connection.execute(
-      `SELECT book_id, count, status, source FROM \`order\` WHERE \`order_no\` = ? AND user_id = ?`, 
+      `SELECT book_id, \`count\`, status, source, COALESCE(sales_recorded,0) AS sales_recorded FROM \`order\` WHERE \`order_no\` = ? AND user_id = ?`, 
       [orderno, userId]
     ); 
 
@@ -67,12 +68,17 @@ const deleteOrders=async(req,res)=>{
     }   
 
     const order = orderResult[0];
-    const paidStatus = ["已付款", "待发货", "已完成", "已发货"];
+    const paidStatus = ["已付款", "待发货", "已完成", "已发货", "已收货"];
+
+    // 1.5 退货退款：若本单曾计入销量，先扣回（与库存回滚对称）
+    if (Number(order.sales_recorded) === 1) {
+      await adjustBookSalesDelta(connection, order, -Math.abs(Number(order.count) || 0));
+    }
     
-    // 2. 根据source回加库存（核心修复）
+    // 2. 根据source回加库存
     if (paidStatus.includes(order.status)) {
       if (order.source === 'new') {
-        // 🔥 新书：回加 newbook 表库存
+        // 新书：回加 newbook 表库存
         await connection.execute(
           `UPDATE newbook SET stock = stock + ? WHERE id = ?`,
           [order.count, order.book_id]

@@ -13,5 +13,9 @@ router.post('/verify-code', userController.verifyCode);
 router.post('/bind-phone', userController.bindPhone);
 router.post('/sign', userController.getSign);
 router.post('/updasign', userController.updasign);
+router.post('/updatecover',userController.updateAvatar)
+router.get('/user/userinfo',userController.userinfo)
+// 上传头像
+router.post('/upload-avatar', userController.uploadAvatar);
 router.post('/get-random-comments', userController.getRandomComments);
 module.exports = router;

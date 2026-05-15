@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { adjustBookSalesDelta } = require('../utils/bookSales');
 
 // 统一订单号生成逻辑
 const createOrderNo = (userId) => {
@@ -8,7 +9,7 @@ const createOrderNo = (userId) => {
   return 'OD' + timestamp + random + userIdSuffix;
 };
 
-// 1. 购物车支付-获取支付信息（完整版：新书+普通书 都查库存）
+// 1. 购物车支付-获取支付信息（新书+普通书 都查库存）
 const getPayInfo = async (req, res) => {
   try {
     let { cartIds } = req.body;
@@ -63,7 +64,7 @@ const getPayInfo = async (req, res) => {
   }
 };
 
-// 2. 购物车支付-提交支付（终极版：新书+普通书 统一库存校验+扣减）
+// 2. 购物车支付-提交支付（新书+普通书 统一库存校验+扣减）
 const submitPay = async (req, res) => {
   let connection;
   try {
@@ -107,7 +108,7 @@ const submitPay = async (req, res) => {
 
       let stock = 0;
       // ==============================================
-      // 统一库存校验（新书/普通书 逻辑完全一致）
+      // 统一库存校验（新书/普通书逻辑完全一致）
       // ==============================================
       if (source === 'new') {
         // 1. 新书：查 newbook 表库存（加行锁防超卖）
@@ -183,7 +184,7 @@ const submitPay = async (req, res) => {
     if (connection) connection.release();
   }
 };
-// 3. 直付-获取商品信息（修复版：支持新书+普通书）
+// 3. 直付-获取商品信息（支持新书+普通书）
 const getDirectPayGoodsInfo = async (req, res) => {
   try {
     const { bookId, buyCount, source } = req.body;
@@ -199,7 +200,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
     }
 
     let book = null;
-    // 2. 🔥 根据source查询对应表
+    // 2. 根据source查询对应表
     if (source === 'new') {
       const [newBook] = await pool.execute('SELECT id, book_name, price, cover, stock FROM newbook WHERE id = ?', [bookId]);
       book = newBook[0];
@@ -249,7 +250,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
   }
 };
 
-// 4. 直付-提交支付（终极版：新书+普通书+防超卖+source）
+// 4. 直付-提交支付（新书+普通书+防超卖+source）
 const submitDirectPay = async (req, res) => {
   let connection;
   try {
@@ -270,7 +271,7 @@ const submitDirectPay = async (req, res) => {
     await connection.beginTransaction();
 
     let book = null;
-    // 3. 🔥 根据source加行锁查询库存（防超卖）
+    // 3.  根据source加行锁查询库存（防超卖）
     if (source === 'new') {
       const [newBook] = await connection.execute('SELECT id, book_name, price, stock FROM newbook WHERE id = ? FOR UPDATE', [bookId]);
       book = newBook[0];
@@ -303,13 +304,13 @@ const submitDirectPay = async (req, res) => {
     const orderNo = createOrderNo(userId);
     const totalAmount = (book.price * buyCount).toFixed(2);
 
-    // 5. 🔥 插入订单（携带source）
+    // 5.  插入订单（携带source）
     await connection.execute(
       'INSERT INTO `order` (order_no, user_id, book_id, count, total_price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [orderNo, userId, bookId, buyCount, totalAmount, '已付款', source]
     );
 
-    // 6. 🔥 根据source扣减库存
+    // 6.  根据source扣减库存
     if (source === 'new') {
       await connection.execute('UPDATE newbook SET stock = stock - ? WHERE id = ?', [buyCount, bookId]);
     } else {
@@ -339,10 +340,8 @@ const submitDirectPay = async (req, res) => {
   }
 };
 // ==========================================================
-// 🔥 新增核心功能：删除订单 + 自动回加图书库存
-// ==========================================================
-// ==========================================================
-// 🔥 终极修复版：按orderNo删除订单 + 自动恢复库存（前端0修改）
+// 删除订单 + 自动回加图书库存
+// 按orderNo删除订单 + 自动恢复库存（前端0修改）
 // 支持：已付款 / 待发货 / 已完成 所有支付成功状态
 // ==========================================================
 const deleteOrder = async (req, res) => {
@@ -362,7 +361,7 @@ const deleteOrder = async (req, res) => {
 
     // 1. 根据【订单号+用户ID】查询订单（精准匹配，防止越权）
    const [orders] = await connection.execute(
-      `SELECT id, book_id, count, status, source FROM \`order\` WHERE order_no = ? AND user_id = ?`,
+      `SELECT id, book_id, \`count\`, status, source, COALESCE(sales_recorded,0) AS sales_recorded FROM \`order\` WHERE order_no = ? AND user_id = ?`,
       [orderNo, userId]
     );
     if (orders.length === 0) {
@@ -371,8 +370,11 @@ const deleteOrder = async (req, res) => {
     }
 
     const order = orders[0];
+    if (Number(order.sales_recorded) === 1) {
+      await adjustBookSalesDelta(connection, order, -Math.abs(Number(order.count) || 0));
+    }
     // 2. 支付后的订单，删除就恢复库存
-    const paidStatus = ["已付款", "待发货", "已完成", "已发货"];
+    const paidStatus = ["已付款", "待发货", "已完成", "已发货", "已收货"];
     if (paidStatus.includes(order.status)) {
       if (order.source === 'new') {
         await connection.execute('UPDATE newbook SET stock = stock + ? WHERE id = ?', [order.count, order.book_id]);
@@ -398,11 +400,11 @@ const deleteOrder = async (req, res) => {
     if (connection) connection.release();
   }
 };
-// 导出所有方法（新增 deleteOrder）
+// 导出所有方法
 module.exports = { 
   getPayInfo, 
   submitPay,
   getDirectPayGoodsInfo,
   submitDirectPay,
-  deleteOrder  // 👈 导出新增接口
+  deleteOrder 
 };

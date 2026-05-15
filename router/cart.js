@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cartController = require('../controller/cartController');
-const auth = require('../middleware/auth'); //复用鉴权中间件（和order路由一致）
+const auth = require('../middleware/auth'); //复用鉴权中间件
 
 //所有cart接口都鉴权
 router.post('/add', auth, cartController.addCart); //加入购物车

@@ -23,7 +23,7 @@ const [userRows] = await pool.execute('SELECT password FROM user WHERE id = ?', 
 
     //只有用户填了新密码，才做校验
     if (password && password.trim() !== '') {
-      // 用bcrypt.compare正确对比：明文新密码 和 原哈希
+      // bcrypt.compare对比：明文新密码 和 原哈希
       const isSamePassword = await bcrypt.compare(password, oldPasswordHash);
       if (isSamePassword) {
         //新密码和原密码一致，拦截报错

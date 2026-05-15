@@ -39,7 +39,7 @@ exports.addCart = async (req, res) => {
       bookInfo = bookRows[0];
     }
 
-    //3.查询当前购物车已有的数量
+    
    //3.查询当前购物车已有的数量（根据source区分新书/普通书）
 const [existCart] = await pool.execute(
   'SELECT id, quantity FROM cart WHERE user_id = ? AND goods_id = ? AND spec = ? AND source = ?',
@@ -79,7 +79,7 @@ const [existCart] = await pool.execute(
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
-//backend/controller/cartController.js-getCartList方法
+
 exports.getCartList = async (req, res) => {
   try {
     const userId = req.user.id;
