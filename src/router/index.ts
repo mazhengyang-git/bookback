@@ -10,6 +10,7 @@ const routes = [
   { path: '/user', name: 'UserCenter', component: () => import('@/views/front/user/index.vue'), meta: { requiresAuth: true } },
   { path: '/userinfo', name: 'UserInfo', component: () => import('@/views/front/user/user.vue'), meta: { requiresAuth: true } },
   { path: '/books', name: 'BookList', component: () => import('@/views/front/book/list.vue') },
+   { path: '/books1', name: 'BookList1', component: () => import('@/views/front/book/list1.vue') },
   { path: '/book/:id', name: 'BookDetail', component: () => import('@/views/front/book/detail.vue') },
   { path: '/book1/:id', name: 'BookDetail1', component: () => import('@/views/front/book/detail1.vue') },
   { path: '/cart', name: 'CartList', component: () => import('@/views/front/cart/index.vue'), meta: { requiresAuth: true } },

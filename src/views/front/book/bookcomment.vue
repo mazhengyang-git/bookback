@@ -100,6 +100,15 @@
               />
             </div>
             <span class="comment-time">{{ formatTime(item.createTime) }}</span>
+             <el-button 
+      v-if="userStore.user?.id === item.userId"
+      type="danger" 
+      link 
+      size="small"
+      @click="handleDeleteComment(item.id)"
+    >
+      删除
+    </el-button>
           </div>
           <div class="comment-content">{{ item.content || '用户未填写文字评价' }}</div>
         </div>
@@ -110,7 +119,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue'
-import { ElMessage, FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { InfoFilled, SuccessFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 
@@ -255,6 +264,38 @@ const goUserInfo = (nickname: string) => {
   router.push({
     path: '/userinfo',
     query: { username: nickname }
+  })
+}
+import { deleteCommentApi } from '@/api/front/bookComment'
+
+// 删除评价方法
+const handleDeleteComment = async (commentId: number) => {
+  ElMessageBox.confirm('确定要删除这条评价吗？删除后无法恢复', '提示', {
+    confirmButtonText: '确定删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await deleteCommentApi({
+        commentId,
+        bookId: props.bookId,
+        source: props.source
+      })
+      //@ts-ignore
+      if (res.code === 200) {
+        ElMessage.success('评价已删除')
+        // 删除后刷新评价列表和评分
+        await Promise.all([fetchBookScore(), fetchCommentList()])
+        emit('comment-updated') // 通知父组件更新
+      } else {
+        //@ts-ignore
+        ElMessage.error(res.msg || '删除失败')
+      }
+    } catch (err) {
+      ElMessage.error('删除失败，请稍后重试')
+    }
+  }).catch(() => {
+    ElMessage.info('已取消删除')
   })
 }
 onMounted(async () => {

@@ -62,7 +62,22 @@
           </h3>
 
           <div class="book-meta">
-            <span>💰 {{ item.price?.toFixed(2) || '价格未知' }}</span>
+            <!-- 优惠价格展示（划线原价+红色优惠价） -->
+            <template v-if="hasDiscount(item)">
+              <span style="text-decoration: line-through; color: #999;user-select: none;">
+                原价¥{{ formatPrice(item.price) }}
+              </span>
+              <li style="list-style: none;user-select: none;"><span style="color: #f56c6c; font-weight: bold; margin-left: -9px;">
+                优惠价¥{{ formatPrice(getDiscountPrice(item)) }}
+              </span>
+              <el-tag type="danger" size="small" style="margin-left: 5px;">
+                {{ getDynamicDiscountRate(item) }}
+              </el-tag></li>
+            </template>
+            <span v-else>
+              💰 ¥{{ formatPrice(item.price || 0) }}
+            </span>
+
             <span>📚 {{ item.spec || '普通版' }}</span>
           </div>
         </div>
@@ -122,7 +137,9 @@ import { useUserStore } from '@/store/user'
 import { getShoucangList, deleteShoucangItem, clearShoucang } from '@/api/front/shoucang'
 import { getBookDetailApi } from '@/api/front/book'
 import { useBookStore1 } from '@/store/newbook'
+import request from '@/utils/request'
 import type { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric } from 'vue-router'
+
 const shoucangStore = useShoucangStore()
 const userStore = useUserStore()
 const router = useRouter()
@@ -131,11 +148,26 @@ const bookStore1 = useBookStore1()
 const loading = ref(true)
 const checkedIds = ref<number[]>([])
 const isAllChecked = ref(false)
+
+// ✅ 核心：价格计算函数（和图书列表完全统一）
+const formatPrice = (price: any): string => {
+  const num = Number(price) || 0
+  return num.toFixed(2)
+}
+const getDiscountPrice = (item: any) => Number(item.discount_price ?? item.price) || 0
+const hasDiscount = (item: any) => !!item.discount_price && item.discount_price < item.price
+const getDynamicDiscountRate = (item: any) => {
+  if (!hasDiscount(item)) return ''
+  const rate = (Number(item.discount_price) / Number(item.price)) * 10
+  return rate.toFixed(1) + '折'
+}
+
 function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
   setTimeout(() => {
     router.push(path)
-  }, 10) // 只延迟10毫秒，浏览器能缓过来
+  }, 10)
 }
+
 // 单选收藏项
 const handleItemCheck = (shoucangId: number, checked: boolean) => {
   if (checked) {
@@ -156,6 +188,17 @@ const handleBookClick = (item: any) => {
   }
 }
 
+// 加载优惠图书数据
+const discountBooks = ref<any[]>([])
+const loadDiscountBooks = async () => {
+  try {
+    const res = await request.get('/api/front/discount/book/list')
+    discountBooks.value = res.data || []
+  } catch (e) {
+    discountBooks.value = []
+  }
+}
+
 // 加载收藏数据
 const loadShoucangData = async () => {
   if (!userStore.token) {
@@ -166,8 +209,10 @@ const loadShoucangData = async () => {
   }
 
   try {
-    await bookStore1.fetchBookList()
+    // 并行加载：新书 + 优惠图书
+    await Promise.all([bookStore1.fetchBookList(), loadDiscountBooks()])
     const shoucangRes = await getShoucangList()
+
 //@ts-ignore
     if (shoucangRes.code === 200 && shoucangRes.data) {
       shoucangStore.clearShoucang()
@@ -176,6 +221,7 @@ const loadShoucangData = async () => {
         const source = item.source || 'normal'
         let realBookData = null
 
+        // 获取图书真实数据
         if (source === 'new') {//@ts-ignore
           realBookData = bookStore1.bookList1.find((b) => b.id === item.goodsId)
         } else {
@@ -183,11 +229,18 @@ const loadShoucangData = async () => {
           realBookData = res.data
         }
 
+        // 注入优惠价数据
+        let discount_price = 0
+        const discountItem = discountBooks.value.find(d => d.book_id === item.goodsId || d.id === item.goodsId)
+        if (discountItem) discount_price = discountItem.discount_price
+
+        // 添加到收藏
         shoucangStore.addToShoucang({
           shoucangId: item.id,
           id: item.goodsId,//@ts-ignore
           name: realBookData?.name || item.bookName || '未知图书',
-        price: Number(item.bookPrice) || 0,//@ts-ignore
+          price: Number(realBookData?.price || item.bookPrice) || 0,
+          discount_price: Number(discount_price) || 0, // 优惠价
           cover: realBookData?.cover || item.bookCover || '/default-book.png',
           spec: item.spec || '平装版',
           source: source,
@@ -238,6 +291,16 @@ onMounted(() => {
 })
 </script>
 
+
+<style scoped>
+.book-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 39.4%;
+  align-items: flex-start;
+}
+</style>
 
 <style>
 .loading-box {

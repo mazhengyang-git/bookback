@@ -8,15 +8,15 @@
     <!-- 表格容器 -->
     <div class="table-scroll-wrapper">
       <el-table style="color:black;-webkit-text-stroke:0.01px #333" v-loading="loading" :data="bookList" border stripe :header-cell-style="{ color: '#333', fontSize: '15px', fontWeight: 900 }">
-        <el-table-column type="index" label="序号" width="80" />
+         <el-table-column type="index" label="序号" width="50" />
         <el-table-column prop="book_name" label="图书名称" min-width="200" />
         <el-table-column prop="author" label="作者" width="120" />
-        <el-table-column prop="category" label="分类" width="100" />
+        <el-table-column prop="category" label="分类" width="86" />
         <el-table-column prop="price" label="价格（元）" width="110">
           <template #default="scope"> ¥{{ Number(scope.row.price || 0).toFixed(2) }} </template>
         </el-table-column>
-        <el-table-column prop="stock" label="库存" width="100" />
-
+        <el-table-column prop="stock" label="库存" width="90" />
+        <el-table-column prop="publisher" label="出版社" width="100" />
         <el-table-column prop="mulu" label="目录" width="150">
           <template #default="scope">
             <div class="mulu-ellipsis">
@@ -87,6 +87,22 @@
             placeholder="请输入图书简介"
           />
         </el-form-item>
+          <el-form-item label="出版社" prop="publisher">
+          <el-select v-model="bookForm.publisher" placeholder="请选择出版社">
+            <el-option label="机械工业出版社" value="机械工业出版社" />
+            <el-option label="航天科技出版社" value="航天科技出版社" />
+            <el-option label="科幻文学出版社" value="科幻文学出版社" />
+            <el-option label="庆华大学出版社" value="庆华大学出版社" />
+            <el-option label="港澳译学出版社" value="港澳译学出版社" />
+            <el-option label="东方星月文艺出版社" value="东方星月文艺出版社" />
+            <el-option label="欧美科幻出版社" value="欧美科幻出版社" />
+
+            <el-option label="京都文学出版社" value="京都文学出版社" />
+            <el-option label="现代文艺出版社" value="现代文艺出版社" />
+            <el-option label="深度求索科技出版社" value="深度求索科技出版社" />
+          
+          </el-select>
+        </el-form-item>
         <el-form-item label="目录" prop="mulu">
           <el-input v-model="bookForm.mulu" type="textarea" placeholder="请输入图书目录" />
         </el-form-item>
@@ -127,6 +143,7 @@ const bookForm = reactive<Book>({
   mulu: '',
   author_into: '',
   status: 1, // 默认上架
+   publisher:''
 })
 
 // 校验规则
@@ -138,6 +155,7 @@ const bookRules = reactive({
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
   mulu: [{ required: true, message: '请输入图书目录', trigger: 'blur' }],
   author_into: [{ required: true, message: '请输入作者简介', trigger: 'blur' }],
+  publisher: [{ required: true, message: '请选择出版社', trigger: 'change' }],
 })
 
 // 获取列表
@@ -177,6 +195,7 @@ const handleAdd = () => {
     mulu: '',
     author_into: '',
     status: 1,
+     publisher:''
   })
   isEdit.value = false
   dialogVisible.value = true

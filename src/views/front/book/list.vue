@@ -13,6 +13,7 @@
         <div class="syws">
           <el-button link class="syses" @click="$router.push('/huodong')">活动资讯</el-button>
         </div>
+         
       </div>
     </div>
     <div class="nav-right1">
@@ -137,6 +138,26 @@
     </div>
 
     <div class="filter-bottom">
+     <el-select
+  style="font-weight: 600;"
+  v-model="selectedPublisher"
+  placeholder="请选择出版社"
+  class="filter-control"
+  @change="doFilterAndShuffle"
+  popper-append-to-body
+>
+  <el-option style="font-weight: 600;" label="全部出版社" value="全部" />
+  <el-option style="font-weight: 600;" label="机械工业出版社" value="机械工业出版社" />
+  <el-option style="font-weight: 600;" label="航天科技出版社" value="航天科技出版社" />
+  <el-option style="font-weight: 600;" label="科幻文学出版社" value="科幻文学出版社" />
+  <el-option style="font-weight: 600;" label="庆华大学出版社" value="庆华大学出版社" />
+  <el-option style="font-weight: 600;" label="港澳译学出版社" value="港澳译学出版社" />
+  <el-option style="font-weight: 600;" label="东方星月文艺出版社" value="东方星月文艺出版社" />
+  <el-option style="font-weight: 600;" label="欧美科幻出版社" value="欧美科幻出版社" />
+  <el-option style="font-weight: 600;" label="京都文学出版社" value="京都文学出版社" />
+  <el-option style="font-weight: 600;" label="现代文艺出版社" value="现代文艺出版社" />
+  <el-option style="font-weight: 600;" label="深度求索科技出版社" value="深度求索科技出版社" />
+</el-select>
       <div class="price-refresh">
         <div class="price-filter">
           <el-input
@@ -230,6 +251,9 @@
       <!-- 左侧图书列表 -->
       <div class="left-content">
         <div class="book-card-list">
+            <div class="syws1">
+          <el-button link class="syses1" @click="$router.push('/books1')">优惠专区</el-button>
+        </div>
           <el-card v-for="book in showBooks" :key="book.id" class="book-card">
             <div class="book-card-content">
              <!--@vue-ignore--> <img
@@ -244,9 +268,21 @@
                 <h3 class="book-name">{{ book.name || '未知图书' }}</h3>
                 <p class="book-author">作者：{{ book.author || '未知作者' }}</p>
                 <p class="book-category">分类：{{ book.category || '未知分类' }}</p>
-                <p class="book-price">¥{{ formatPrice(book.price) }}</p>
+                
+                <!-- 价格显示与折扣动态匹配 -->
+                <template v-if="hasDiscount(book)">
+                  <p class="book-price" style="text-decoration: line-through; color: #999; margin: 0;">
+                    原价：¥{{ formatPrice(book.price) }}
+                  </p>
+                  <p class="book-price" style="color: #f56c6c; font-size: 16px; font-weight: bold; margin: 5px 0 0 0;">
+                    优惠价：¥{{ formatPrice(getDiscountPrice(book)) }}
+                    <el-tag type="danger" size="small">{{ getDynamicDiscountRate(book) }}</el-tag>
+                  </p>
+                </template>
+                <p v-else class="book-price">¥{{ formatPrice(book.price) }}</p>
+                
                 <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
-               <li style="list-style:none"><el-button
+              <p class="book-detail-chuban">出版社：{{ book.publisher}}</p> <li style="list-style:none"><el-button
                   type="primary"
                   size="large"
                   class="add-cart-btn"
@@ -265,7 +301,7 @@
         </el-button></li> 
               </div>
             </div>
-            <!--  v-if 防止列表渲染时星星闪烁 -->
+            <!--  v-if 防止星星闪烁 -->
             <div style="position: absolute;  top: 10px; width: 86%;left: 560px;">
                <p class="xlwy">销量：{{ Number(book.sales_count) || 0 }}件</p><bookping v-if="book.id != null" :book-id="book.id" :source="showType"/>
             </div>
@@ -332,7 +368,8 @@
       <p class="legal-text">互联网违法和不良信息举报中心:0571-81683755 blxx@list.alixingxin-inc.com</p>
     </div>
   </div></div></template>
-  <script setup lang="ts">
+
+<script setup lang="ts">
   //@ts-ignore
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -351,16 +388,22 @@ const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const bookStore1 = useBookStore1()
+const selectedPublisher = ref('全部')
 
-// 图书点击 —— 极速跳转
+// 价格/折扣计算函数
+const getDiscountPrice = (book: any) => Number(book.discount_price ?? book.price) || 0
+const hasDiscount = (book: any) => !!book.discount_price && book.discount_price < book.price
+// 动态计算折扣率：(优惠价/原价)*10，保留1位小数
+const getDynamicDiscountRate = (book: any) => {
+  if (!hasDiscount(book)) return ''
+  const rate = (Number(book.discount_price) / Number(book.price)) * 10
+  return rate.toFixed(1) + '折'
+}
+
+// 图书点击
 const handleBookClick = (book: Book) => {
   const path = `/book/${book.id}?source=${showType.value}`
-  if (router.currentRoute.value.path.startsWith('/book/')) {
-    router.replace(path)
-    location.reload()
-  } else {
-    router.push(path)
-  }
+  router.push(path)
 }
 function go(path: string) {
   router.push(path)
@@ -368,6 +411,7 @@ function go(path: string) {
 
 // 加载状态
 const loading = ref(true)
+const isRefreshing = ref(false)
 
 const paixu = ref('')
 const sortBy = ref<'price' | 'rating' | 'sales' | ''>('')
@@ -376,223 +420,118 @@ const selectedAAuthor = ref('全部')
 const authorSearch = ref('')
 const selectedTags = ref<string[]>([])
 const availableTags = ref<string[]>([
-  '太空歌剧',
-  '赛博朋克',
-  '时间旅行',
-  '智能纪元',
-  '外星文明',
-  '自然谜团',
+  '太空歌剧','赛博朋克','时间旅行','智能纪元','外星文明','自然谜团',
 ])
 const minPrice = ref<number | null>(null)
 const maxPrice = ref<number | null>(null)
 const selectedCategory = ref('全部')
 const searchKeyword = ref('')
+
+// 合并普通/新书/优惠图书
 const allBooks = ref<Book[]>([])
 const newBookList = ref<Book[]>([])
+const discountBooks = ref<Book[]>([])
 const filteredBooks = ref<Book[]>([])
 const showBooks = ref<Book[]>([])
+
 const currentPage = ref(1)
 const pageSize = ref(6)
 const total = ref(0)
 const showType = ref('normal')
 const shouldShufflePage = ref(false)
-const hasRandomizedInitialPage = ref(false)//@ts-ignore
-const addToShoucang = async (book) => {
-  // 用当前点击的 book
+const hasRandomizedInitialPage = ref(false)
+
+// 收藏功能（使用实际优惠价）
+const addToShoucang = async (book: any) => {
   if (!userStore.token) {
-    ElMessage.warning({ 
-      message: '请先登录后再收藏', 
-      offset: 160 
-    })
+    ElMessage.warning({ message: '请先登录后再收藏', offset: 160 })
     return
   }
-
   try {
-    // 直接用当前点击的图书信息
     const res = await request.post('/api/shoucang/add', {
-      goodsId: book.id,
-      num: 1,                  // 收藏默认 1
-      spec: '平装版',
-      source: 'normal',        // 固定普通来源
-      bookName: book.name,
-      bookCover: book.cover,
-      bookPrice: book.price 
+      goodsId: book.id, num:1, spec:'平装版', source:'normal',
+      bookName: book.name, bookCover: book.cover, bookPrice: getDiscountPrice(book)
     })
-//@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success({ 
-        message: '收藏成功', 
-        offset: 160 
-      })
-    } else {
-      // 显示后端返回的：该图书已在收藏夹中
-      //@ts-ignore
-      ElMessage.error({ //@ts-ignore
-        message: res.msg, 
-        offset: 160 
-      })
-    }
-
+    //@ts-ignore
+    if(res.code === 200) ElMessage.success({ message:'收藏成功', offset:160 })
+    //@ts-ignore
+    else ElMessage.error({ message:res.msg, offset:160 })
   } catch (err) {
-    ElMessage.error({ //@ts-ignore
-      message: err?.response?.data?.msg || '收藏失败，请稍后重试', 
-      offset: 160 
-    })
+    //@ts-ignore
+    ElMessage.error({ message:err?.response?.data?.msg || '收藏失败', offset:160 })
   }
 }
-const defaultListSnapshot = ref<{
-  filteredBooks: Book[]
-  showBooks: Book[]
-  currentPage: number
-} | null>(null)
 
+// 价格格式化
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
 
 const normalizePrice = (value: any): number | null => {
-  if (value === '' || value === null || value === undefined) return null
+  if (value === '' || value === null) return null
   const num = Number(value)
   return Number.isFinite(num) ? num : null
 }
 
-const getBookAvgScore = (book: Book) =>
-  Number((book as any).avg_score ?? (book as any).avgScore ?? 0)
-
+const getBookAvgScore = (book: Book) => Number((book as any).avg_score ?? 0)
 const getBookSales = (book: Book) => Number(book.sales_count ?? 0)
 
-const restoreDefaultSnapshot = (): boolean => {
-  if (!defaultListSnapshot.value) return false
-  filteredBooks.value = [...defaultListSnapshot.value.filteredBooks]
-  showBooks.value = [...defaultListSnapshot.value.showBooks]
-  currentPage.value = defaultListSnapshot.value.currentPage
-  total.value = filteredBooks.value.length
-  shouldShufflePage.value = false
-  return true
-}
-
-const isDefaultFilterState = () => {
-  const keyword = searchKeyword.value.trim()
-  const sanitizedMinPrice = normalizePrice(minPrice.value)
-  const sanitizedMaxPrice = normalizePrice(maxPrice.value)
-  return (
-    selectedCategory.value === '全部' &&
-    selectedAAuthor.value === '全部' &&
-    !authorSearch.value &&
-    !keyword &&
-    selectedTags.value.length === 0 &&
-    sanitizedMinPrice === null &&
-    sanitizedMaxPrice === null &&
-    !sortBy.value
-  )
-}
-
+// 价格清空
 const handlePriceClear = () => {
-  if (!Number.isFinite(minPrice.value as number)) {
-    minPrice.value = null
-  }
-  if (!Number.isFinite(maxPrice.value as number)) {
-    maxPrice.value = null
-  }
+  minPrice.value = null
+  maxPrice.value = null
   currentPage.value = 1
-  if (isDefaultFilterState() && restoreDefaultSnapshot()) {
-    return
-  }
   doFilterAndShuffle()
 }
 
-// 排序切换
+// 价格排序（按实际优惠价排序）
 const handleSort = (type: 'asc' | 'desc') => {
-  if (sortBy.value === 'price' && currentSortDirection.value === type) {
-    sortBy.value = ''
-    paixu.value = ''
-    shouldShufflePage.value = true
-  } else {
-    sortBy.value = 'price'
-    currentSortDirection.value = type
-    paixu.value = type
-  }
+  sortBy.value = 'price'
+  currentSortDirection.value = type
   currentPage.value = 1
   doFilterAndShuffle()
 }
 
-// 评分排序
+// 评分/销量排序
 const handleRatingSort = () => {
-  if (sortBy.value === 'rating') {
-    sortBy.value = ''
-    shouldShufflePage.value = true
-  } else {
-    sortBy.value = 'rating'
-    shouldShufflePage.value = false   
-  }
+  sortBy.value = sortBy.value === 'rating' ? '' : 'rating'
   currentPage.value = 1
   doFilterAndShuffle()
 }
-
-// 销量排序（整表排序后分页切片，不打乱筛选结果）
 const handleSalesSort = () => {
-  if (sortBy.value === 'sales') {
-    sortBy.value = ''
-    shouldShufflePage.value = true
-  } else {
-    sortBy.value = 'sales'
-    shouldShufflePage.value = false
-  }
+  sortBy.value = sortBy.value === 'sales' ? '' : 'sales'
   currentPage.value = 1
   doFilterAndShuffle()
 }
 
-// 切换默认图书
-const showNormalBooks = () => {
-  showType.value = 'normal'
-  paixu.value = ''
-  if (!sortBy.value) {
-    shouldShufflePage.value = true
-  }
-  doFilterAndShuffle()
-}
+// 切换图书类型
+const showNormalBooks = () => { showType.value = 'normal'; doFilterAndShuffle() }
+const showNewBooks = () => { showType.value = 'new'; doFilterAndShuffle() }
 
-// 切换新书速览
-const showNewBooks = () => {
-  showType.value = 'new'
-  paixu.value = ''
-  if (!sortBy.value) {
-    shouldShufflePage.value = true
-  }
-  doFilterAndShuffle()
-}
-
-const isRefreshing = ref(false)
-
+// 刷新数据
 const refreshAllData = async () => {
-  if (isRefreshing.value) return
   isRefreshing.value = true
-
   try {
     currentPage.value = 1
-    defaultListSnapshot.value = null
     shouldShufflePage.value = true
-
-    await Promise.all([loadBookList(false), loadNewBookList()])
+    await Promise.all([loadBookList(), loadNewBookList(), loadDiscountBooks()])
     doFilterAndShuffle()
-    ElMessage.success({ message: '刷新成功！', offset: 80 })
-  } catch (err) {
-    ElMessage.error({ message: '刷新失败', offset: 80 })
+    ElMessage.success('刷新成功！')
+  } catch (e) {
+    ElMessage.error('刷新失败！')
   } finally {
     isRefreshing.value = false
   }
 }
 
 // 加载普通图书
-//@ts-ignore
-const loadBookList = async (showMask = true) => {
+const loadBookList = async () => {
   try {
-    const res = await getBookListApi('全部')//@ts-ignore
+    const res = await getBookListApi('全部')
+    //@ts-ignore
     allBooks.value = res.code === 200 ? res.data || [] : []
-  } catch (error) {
-    allBooks.value = []
-  }
+  } catch (e) { allBooks.value = [] }
 }
 
 // 加载新书
@@ -600,159 +539,122 @@ const loadNewBookList = async () => {
   try {
     await bookStore1.fetchBookList()
     newBookList.value = bookStore1.bookList1 || []
-  } catch (error) {
-    newBookList.value = []
-  }
+  } catch (e) { newBookList.value = [] }
 }
 
-const doFilterAndShuffle = () => {
-  const sourceList = showType.value === 'new' ? [...newBookList.value] : [...allBooks.value]
-  const keyword = searchKeyword.value.trim().toLowerCase()
+// 加载优惠图书
+const loadDiscountBooks = async () => {
+  try {
+    const res = await request.get('/api/front/discount/book/list')
+    discountBooks.value = res.data || []
+  } catch (e) { discountBooks.value = [] }
+}
 
-  // 1. 筛选
-  const filtered = sourceList.filter((book) => {
-    const matchName = keyword ? book.name?.toLowerCase().includes(keyword) : true
-    const matchCategory = selectedCategory.value === '全部' || book.category === selectedCategory.value
-    const matchAAuthor = selectedAAuthor.value === '全部' || book.author === selectedAAuthor.value
-    const matchAuthorSearch = authorSearch.value
-      ? book.author?.toLowerCase().includes(authorSearch.value.trim().toLowerCase())
-      : true
-    const matchTags = selectedTags.value.length === 0 || selectedTags.value.includes(book.category || '')
-    const bookPrice = Number(book.price) || 0
-    const sanitizedMinPrice = normalizePrice(minPrice.value)
-    const sanitizedMaxPrice = normalizePrice(maxPrice.value)
-    const matchMinPrice = sanitizedMinPrice === null || bookPrice >= sanitizedMinPrice
-    const matchMaxPrice = sanitizedMaxPrice === null || bookPrice <= sanitizedMaxPrice
-    return (
-      matchName &&
-      matchCategory &&
-      matchAAuthor &&
-      matchAuthorSearch &&
-      matchTags &&
-      matchMinPrice &&
-      matchMaxPrice
-    )
+// 筛选逻辑（按优惠价筛选）
+const doFilterAndShuffle = () => {
+  // 合并普通/新书 + 优惠图书数据
+  let sourceList: any[] = showType.value === 'new' ? [...newBookList.value] : [...allBooks.value]
+  
+  // 为普通图书注入优惠价数据
+  discountBooks.value.forEach(discount => {
+    const target = sourceList.find(item => item.id === discount.book_id || item.id === discount.id)
+    if (target) {
+      target.discount_price = discount.discount_price
+      // 不直接用后端的discount_rate，而是动态计算
+    }
   })
 
-  // 2. 随机打乱，排序在分页后对当前页执行
-  let processedList = [...filtered]
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  const sanitizedMin = normalizePrice(minPrice.value)
+  const sanitizedMax = normalizePrice(maxPrice.value)
+
+  // 筛选：价格判断全部基于getDiscountPrice
+  let filtered = sourceList.filter(book => {
+    const currentPrice = getDiscountPrice(book)
+    const matchName = !keyword || book.name?.toLowerCase().includes(keyword)
+    const matchCategory = selectedCategory.value === '全部' || book.category === selectedCategory.value
+    const matchAAuthor = selectedAAuthor.value === '全部' || book.author === selectedAAuthor.value
+    const matchPublisher = selectedPublisher.value === '全部' || book.publisher === selectedPublisher.value
+    const matchAuthor = !authorSearch.value || book.author?.toLowerCase().includes(authorSearch.value.trim().toLowerCase())
+    const matchTag = selectedTags.value.length === 0 || selectedTags.value.includes(book.category || '')
+    const matchMin = sanitizedMin === null || currentPrice >= sanitizedMin
+    const matchMax = sanitizedMax === null || currentPrice <= sanitizedMax
+
+    return matchName && matchCategory && matchAAuthor && matchPublisher && matchAuthor && matchTag && matchMin && matchMax
+  })
+
+  // 随机打乱
   if (shouldShufflePage.value) {
-    processedList.sort(() => Math.random() - 0.5)
+    filtered.sort(() => Math.random() - 0.5)
   }
 
-  filteredBooks.value = processedList
-  total.value = filteredBooks.value.length
+  filteredBooks.value = filtered
+  total.value = filtered.length
   currentPage.value = 1
   doPaginationSlice()
   shouldShufflePage.value = false
 }
-// 分页切片
+
+// 分页排序（按优惠价排序）
 const doPaginationSlice = () => {
   const start = (currentPage.value - 1) * pageSize.value
-  // 切片后对当前页图书排序
   let pageBooks = [...filteredBooks.value.slice(start, start + pageSize.value)]
 
-  if (sortBy.value === 'rating') {
-    pageBooks.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
-  } else if (sortBy.value === 'sales') {
-    pageBooks.sort((a, b) => getBookSales(b) - getBookSales(a))
-  } else if (sortBy.value === 'price') {
-    if (currentSortDirection.value === 'asc') {
-      pageBooks.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0))
-    } else {
-      pageBooks.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0))
-    }
+  if (sortBy.value === 'price') {
+    pageBooks.sort((a, b) => {
+      const pa = getDiscountPrice(a)
+      const pb = getDiscountPrice(b)
+      return currentSortDirection.value === 'asc' ? pa - pb : pb - pa
+    })
   }
+  if (sortBy.value === 'rating') pageBooks.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
+  if (sortBy.value === 'sales') pageBooks.sort((a, b) => getBookSales(b) - getBookSales(a))
 
   showBooks.value = pageBooks
-
-  if (isDefaultFilterState()) {
-    defaultListSnapshot.value = {
-      filteredBooks: [...filteredBooks.value],
-      showBooks: [...showBooks.value],
-      currentPage: currentPage.value,
-    }
-  }
-}
-const handleSearch = () => {
-  currentPage.value = 1
-  if (!sortBy.value && !isDefaultFilterState()) {
-    shouldShufflePage.value = true
-  }
-  doFilterAndShuffle()
 }
 
+// 搜索/分页
+const handleSearch = () => { currentPage.value = 1; doFilterAndShuffle() }
 const handlePageChange = () => doPaginationSlice()
+const handleClearSearch = () => { searchKeyword.value = ''; currentPage.value = 1; doFilterAndShuffle() }
 
-const handleClearSearch = () => {
-  searchKeyword.value = ''
-  currentPage.value = 1
-  if (isDefaultFilterState() && restoreDefaultSnapshot()) return
-  doFilterAndShuffle()
-}
-
+// 退出登录
 const handleLogout = () => {
   userStore.logout()
   ElMessage.success('退出成功')
   router.push('/login')
 }
 
-// 初始化加载
+// 初始化
 onMounted(async () => {
   loading.value = true
+  await Promise.all([loadBookList(), loadNewBookList(), loadDiscountBooks()])
 
-  await Promise.all([loadBookList(), loadNewBookList()])
+  const { category, keyword, aauthor } = route.query
+  if (category) selectedCategory.value = category as string
+  if (keyword) searchKeyword.value = keyword as string
+  if (aauthor) selectedAAuthor.value = aauthor as string
 
-  const cat = route.query.category as string
-  const keyword = route.query.keyword as string
-  const aauthor = route.query.aauthor as string
-
-  if (cat) selectedCategory.value = cat
-  if (keyword) searchKeyword.value = keyword
-  if (aauthor) selectedAAuthor.value = aauthor
-
-  if (!hasRandomizedInitialPage.value) {
-    shouldShufflePage.value = true
-    hasRandomizedInitialPage.value = true
-  }
-
+  shouldShufflePage.value = true
+  hasRandomizedInitialPage.value = true
   doFilterAndShuffle()
-
   loading.value = false
 })
 
-// 监听路由
-watch(
-  () => route.query,
-  (newQuery) => {
-    selectedCategory.value = (newQuery.category as string) || '全部'
-    selectedAAuthor.value = (newQuery.aauthor as string) || '全部'
-    searchKeyword.value = (newQuery.keyword as string) || ''
-    doFilterAndShuffle()
-  },
-  { deep: true },
-)
+// 监听路由/筛选
+watch(() => route.query, (newQuery) => {
+  selectedCategory.value = (newQuery.category as string) || '全部'
+  selectedAAuthor.value = (newQuery.aauthor as string) || '全部'
+  searchKeyword.value = (newQuery.keyword as string) || ''
+  doFilterAndShuffle()
+}, { deep: true })
 
-// 监听筛选
-watch(
-  [
-    selectedCategory,
-    selectedAAuthor,
-    authorSearch,
-    searchKeyword,
-    selectedTags,
-    minPrice,
-    maxPrice,
-  ],
-  () => {
-    if (!sortBy.value && !isDefaultFilterState()) {
-      shouldShufflePage.value = true
-    }
-    doFilterAndShuffle()
-  },
-)
+watch([
+  selectedCategory, selectedAAuthor, authorSearch, searchKeyword,
+  selectedTags, minPrice, maxPrice, selectedPublisher
+], () => doFilterAndShuffle())
 
-// 预加载保留
+// 预加载
 const chuyu = ref(false)
 onMounted(() => {
   if (!chuyu.value) {
@@ -760,15 +662,17 @@ onMounted(() => {
       import('@/views/front/book/detail.vue')
       import('@/views/front/user/index.vue')
       import('@/views/front/cart/index.vue')
-      console.log('图书商城页预加载成功')
     })
     chuyu.value = true
   }
 })
 </script>
-
-
 <style scoped>
+.book-detail-chuban{
+  margin-bottom: 10px;
+  color: #626161;
+  font-weight: 500;
+}
 .xlwy {
   position: absolute;
   bottom: 10px;
@@ -1016,18 +920,43 @@ transition: all 0.25s ease;
   align-items: center;
   justify-content: center;
 }
-
+.syws1 {
+  display: flex;
+   position: absolute;
+   left: 862px;
+   top: -58px;
+   background: #ff4d00;
+  border: 1px solid rgba(255, 137, 64, 0.3);
+  transition: all 0.3s ease;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  align-items: center;
+  width: 130px;
+  justify-content: center;
+}
 .syses {
   color: rgb(0, 0, 0);
   font-size: clamp(1rem, 2vw, 1.125rem);
   text-decoration: none;
   line-height: 1.2;
+  
 }
 .syses:hover {
   color: #ec8f33;
   text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
 }
-
+.syses1 {
+ 
+  color: rgb(231, 230, 230);
+  font-size: clamp(0.9rem, 2vw, 1.025rem);
+  text-decoration: none;
+ 
+  line-height: 1.2;
+}
+.syses1:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
+}
 /* 筛选栏 */
 .filter-bar {
  
@@ -1292,8 +1221,8 @@ top: -65px;
 }
 
 .book-name {
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  font-weight: bold;
+  font-size: clamp(1.1rem, 2vw, 1.325rem);
+  font-weight: bolder;
   color: #333;
 
   margin-bottom: 0.5rem;
@@ -1305,7 +1234,8 @@ top: -65px;
   user-select: none !important;
   -webkit-user-select: none !important;
   font-size: clamp(0.875rem, 1.5vw, 1rem);
-  color: #666;
+  color: #6b6a6a;
+  font-weight: 550;
   margin-bottom: 0.25rem;
   white-space: nowrop;
   width: 215px;
@@ -1437,8 +1367,8 @@ top: -65px;
 </style>
 <style scoped>
 .add-cart-btn2 {
- width: 130px;
- 
+ width: auto;
+ min-width: 130px;
   font-size: clamp(1rem, 2vw, 1.125rem);
   background-color: #e6a23c !important;
   border: none !important;

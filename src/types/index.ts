@@ -5,26 +5,32 @@ export interface Book {
   name: string // 书名
   author: string // 作者
   category: string // 科幻分类（硬科幻/软科幻/科幻小说等）
-  price: number // 价格
+ price: number | string  // 价格
   cover: string // 封面图
   desc: string // 简介
   stock: number // 库存
   sales_count?: number // 累计销量
   mulu: string //目录展示
   author_into: string //作者简介
+  publisher: string
+   discount_price?: number | null
+  discount_rate?: string | null
 }
 export interface newBook {
   id: number
   name: string // 书名
   author: string // 作者
   category: string // 科幻分类（硬科幻/软科幻/科幻小说等）
-  price: number // 价格
+ price: number | string  // 价格
   cover: string // 封面图
   desc: string // 简介
   stock: number // 库存
   sales_count?: number // 累计销量
   mulu: string //目录展示
   author_into: string //作者简介
+  publisher: string
+   discount_price?: number | null
+  discount_rate?: string | null
 }
 
 // 用户信息
@@ -57,6 +63,14 @@ export interface Order {
   createTime: string
   book_name: string
   book_cover: string
+  publisher: string
+  province?: string
+  city?: string
+  district?: string
+  detailAddress?: string
+  fullAddress?: string
+   discount_price?: number | null
+  discount_rate?: string | null
 }
 export interface ShoucangItem extends Book {
   count: number // 购买数量

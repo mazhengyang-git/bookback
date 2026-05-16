@@ -32,9 +32,28 @@
         />
         <div class="item-info">
           <h3 class="item-name">{{ item.name || '未知图书' }}</h3>
-          <p class="item-price">
-            ¥{{ (Number(item.price || 0) * Number(item.count || 1)).toFixed(2) }}
-          </p>
+          
+          <!-- 优惠价格展示（划线原价+红色优惠价+小计） -->
+          <div class="price-group">
+            <template v-if="hasDiscount(item)">
+              <span class="original-price">
+                原价¥{{ formatPrice(item.price) }}
+              </span>
+              <span class="discount-price">
+                优惠价¥{{ formatPrice(getDiscountPrice(item)) }}
+              </span>
+              <el-tag type="danger" size="small" class="discount-tag">
+                {{ getDynamicDiscountRate(item) }}
+              </el-tag>
+            </template>
+            <span v-else class="normal-price">
+              ¥{{ formatPrice(item.price) }}
+            </span>
+            <!-- 小计 -->
+            <p class="item-subtotal">
+              小计：¥{{ (getDiscountPrice(item) * Number(item.count || 1)).toFixed(2) }}
+            </p>
+          </div>
         </div>
 
         <div class="item-count">
@@ -78,23 +97,49 @@ import { useUserStore } from '@/store/user'
 import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/front/cart'
 import { getBookDetailApi } from '@/api/front/book'
 import { useBookStore1 } from '@/store/newbook'
+import request from '@/utils/request'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const router = useRouter()
 const bookStore1 = useBookStore1()
 
-//用和商城一致的 loading
+// 加载状态
 const loading = ref(true)
-
 const checkedIds = ref<number[]>([])
 const isAllChecked = ref(false)
+// 优惠图书数据
+const discountBooks = ref<any[]>([])
 
+// 价格工具函数
+const formatPrice = (price: any): string => {
+  const num = Number(price) || 0
+  return num.toFixed(2)
+}
+const getDiscountPrice = (item: any) => Number(item.discount_price ?? item.price) || 0
+const hasDiscount = (item: any) => !!item.discount_price && item.discount_price < item.price
+const getDynamicDiscountRate = (item: any) => {
+  if (!hasDiscount(item)) return ''
+  const rate = (Number(item.discount_price) / Number(item.price)) * 10
+  return rate.toFixed(1) + '折'
+}
+
+// 总价按优惠价计算
 const selectedTotal = computed(() => {
   return cartStore.currentCart
     .filter((item) => checkedIds.value.includes(item.cartId))
-    .reduce((sum, item) => sum + item.price * item.count, 0)
+    .reduce((sum, item) => sum + getDiscountPrice(item) * item.count, 0)
 })
+
+// 加载优惠图书列表
+const loadDiscountBooks = async () => {
+  try {
+    const res = await request.get('/api/front/discount/book/list')
+    discountBooks.value = res.data || []
+  } catch (e) {
+    discountBooks.value = []
+  }
+}
 
 const handleUpdateCount = async (cartId: number, count: number) => {
   try {
@@ -155,7 +200,10 @@ const loadCartData = async () => {
   }
 
   try {
-    const [_bookReady, cartRes] = await Promise.all([bookStore1.fetchBookList(), getCartList()])
+    // 并行加载：新书 + 优惠图书
+    await Promise.all([bookStore1.fetchBookList(), loadDiscountBooks()])
+    const cartRes = await getCartList()
+
 //@ts-ignore
     if (cartRes.code === 200 && cartRes.data) {
       cartStore.clearCart()
@@ -170,12 +218,19 @@ const loadCartData = async () => {
           const res = await getBookDetailApi(item.goodsId)
           realBookData = res.data
         }
+
+        // ✅ 注入优惠价数据
+        let discount_price = 0
+        const discountItem = discountBooks.value.find(d => d.book_id === item.goodsId || d.id === item.goodsId)
+        if (discountItem) discount_price = discountItem.discount_price
+
 //@ts-ignore
         cartStore.addToCart({
           cartId: item.id,
           id: item.goodsId,//@ts-ignore
           name: realBookData?.name || item.bookName || '未知图书',//@ts-ignore
           price: Number(realBookData?.price || item.bookPrice || 0),
+          discount_price: Number(discount_price) || 0, // 优惠价
           count: item.quantity || item.count,//@ts-ignore
           cover: realBookData?.cover || item.bookCover || '/default-book.png',
           spec: item.spec || '平装版',//@ts-ignore
@@ -276,6 +331,38 @@ const handlePay = () => {
 }
 </script>
 
+<!-- 价格样式 -->
+<style scoped>
+.price-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 12px;
+}
+.discount-price {
+  color: #f56c6c;
+  font-weight: bold;
+  font-size: 14px;
+}
+.discount-tag {
+  margin-left: 5px;
+  transform: scale(0.9);
+}
+.normal-price {
+  font-size: 14px;
+  font-weight: 500;
+}
+.item-subtotal {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+</style>
 <style>
 .loading-tip {
   padding: 60px 0;

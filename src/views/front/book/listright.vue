@@ -104,7 +104,7 @@
 <style scoped>
 .listright-container {
   width: 490px;
- 
+ background-color: white;
   border-radius: 8px;
   padding: 20px;
 

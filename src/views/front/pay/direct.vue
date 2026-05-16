@@ -22,7 +22,13 @@
         <div class="goods-info">
           <h3 style="color: black">{{ payGoods.book_name || payGoods.name || '未知图书' }}</h3>
           <p style="color: gray">规格：{{ payGoods.spec || '平装版' }}</p>
-          <p style="color: gray">单价：¥{{ toFixedNumber(payGoods.price, 2) }}</p>
+          <!-- 🔥 修复：优先显示优惠价，无优惠时显示原价 -->
+          <p style="color: gray">
+            单价：¥{{ toFixedNumber(payGoods.discount_price || payGoods.price, 2) }}
+            <span v-if="payGoods.discount_price && payGoods.discount_price !== payGoods.price" style="color: #999; text-decoration: line-through; margin-left: 8px; font-size: 12px;">
+              ¥{{ toFixedNumber(payGoods.price, 2) }}
+            </span>
+          </p>
           <p style="color: gray">数量：{{ payGoods.count || 1 }}</p>
         </div>
       </div>
@@ -81,43 +87,65 @@
 
     <!-- ================== 支付安全验证弹窗（手机号+验证码） ================== -->
     <el-dialog
-      v-model="showPayVerifyDialog"
-      title="支付安全验证"
-      width="420px"
-      :close-on-click-modal="false"
-    >
-      <el-form
-        ref="payVerifyFormRef"
-        :model="payVerifyForm"
-        label-width="100px"
-        class="verify-form"
-      >
-        <el-form-item label="绑定手机号" prop="phone">
-          <el-input
-            v-model="payVerifyForm.phone"
-            placeholder="请输入已绑定手机号"
-            maxlength="11"
-            :disabled="!!userStore.user?.phone"
-          />
-        </el-form-item>
+  v-model="showPayVerifyDialog"
+  title="支付安全验证"
+  width="480px"
+  :close-on-click-modal="false"
+>
+  <el-form
+    ref="payVerifyFormRef"
+    :model="payVerifyForm"
+    label-width="110px"
+    class="verify-form"
+  >
+    <!-- 验证方式选择 -->
+    <el-form-item label="验证方式">
+      <el-radio-group v-model="verifyType">
+        <el-radio label="sms" border>短信验证码</el-radio>
+        <el-radio label="password" border>账号密码验证</el-radio>
+      </el-radio-group>
+    </el-form-item>
 
-        <el-form-item label="验证码" prop="code">
-          <div class="code-box">
-            <el-input v-model="payVerifyForm.code" placeholder="请输入验证码" maxlength="6" />
-            <el-button type="primary" @click="handleSendPayCode" :disabled="countdown > 0">
-              {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
-            </el-button>
-          </div>
-        </el-form-item>
-      </el-form>
+    <!-- 短信验证 -->
+    <template v-if="verifyType === 'sms'">
+      <el-form-item label="绑定手机号">
+        <el-input
+          v-model="payVerifyForm.phone"
+          placeholder="已绑定手机号"
+          maxlength="11"
+          disabled
+        />
+      </el-form-item>
 
-      <template #footer>
-        <el-button @click="closePayVerify">取消</el-button>
-        <el-button type="primary" :loading="verifying" @click="confirmPayVerify">
-          确认验证并支付
-        </el-button>
-      </template>
-    </el-dialog>
+      <el-form-item label="验证码" prop="code">
+        <div class="code-box">
+          <el-input v-model="payVerifyForm.code" placeholder="请输入6位验证码" maxlength="6" />
+          <el-button type="primary" @click="handleSendPayCode" :disabled="countdown > 0">
+            {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
+          </el-button>
+        </div>
+      </el-form-item>
+    </template>
+
+    <!-- 密码验证 → 你要的新功能 -->
+    <template v-else>
+      <el-form-item label="当前登录密码" prop="password">
+        <el-input
+          v-model="payVerifyForm.password"
+          type="password"
+          show-password
+          placeholder="请输入您的登录密码"
+        />
+      </el-form-item>
+    </template>
+  </el-form>
+  <template #footer>
+    <el-button @click="closePayVerify">取消</el-button>
+    <el-button type="primary" :loading="verifying" @click="confirmPayVerify">
+      确认验证并支付
+    </el-button>
+  </template>
+</el-dialog>
   </div>
 </template>
 
@@ -128,7 +156,7 @@ import { ElMessage, FormInstance } from 'element-plus'
 import { getDirectPayGoodsInfo, submitDirectPay } from '@/api/front/pay'
 import { useUserStore } from '@/store/modules/user'
 import { sendSmsCode, loginByCode } from '@/api/front/user'
-
+import { verifyPayPwd } from '@/api/front/user'
 // 路由/仓库
 const route = useRoute()
 const router = useRouter()
@@ -138,7 +166,7 @@ const userStore = useUserStore()
 const loading = ref(true)
 const submitting = ref(false)
 const payGoods = ref<any>(null)
-
+const verifyType = ref<'sms' | 'password'>('sms')
 // 地址相关逻辑
 const addressFormRef = ref<FormInstance>()
 const addressForm = reactive({
@@ -456,20 +484,21 @@ const toFixedNumber = (num: any, digits: number) => {
   return number.toFixed(digits)
 }
 
-// 计算金额
+//优先使用优惠价计算总金额
 const totalAmount = computed(() => {
   if (!payGoods.value) return 0
-  const price = Number(payGoods.value.price) || 0
+  const price = Number(payGoods.value.discount_price || payGoods.value.price) || 0
   const count = Number(payGoods.value.count) || 1
   return price * count
 })
 
 //支付验证码弹窗逻辑
-const showPayVerifyDialog = ref(false) //@ts-ignore
+const showPayVerifyDialog = ref(false)
 const payVerifyFormRef = ref<FormInstance>()
 const payVerifyForm = ref({
   phone: userStore.user?.phone || '',
   code: '',
+  password: ''
 })
 
 const countdown = ref(0)
@@ -485,7 +514,7 @@ const handleSendPayCode = async () => {
   }
 
   try {
-    const res = await sendSmsCode({ phone }) //@ts-ignore
+    const res = await sendSmsCode({ phone })
     if (res.code === 200) {
       ElMessage.success('验证码已发送：' + res.data.code)
       countdown.value = 60
@@ -493,7 +522,7 @@ const handleSendPayCode = async () => {
         countdown.value--
         if (countdown.value <= 0) clearInterval(timer)
       }, 1000)
-    } else { //@ts-ignore
+    } else {
       ElMessage.error(res.msg || '发送失败')
     }
   } catch (err) {
@@ -505,34 +534,51 @@ const handleSendPayCode = async () => {
 const closePayVerify = () => {
   showPayVerifyDialog.value = false
   payVerifyForm.value.code = ''
+  payVerifyForm.value.password = ''
   clearInterval(timer)
   countdown.value = 0
 }
 
+
 // 确认验证 + 支付
 const confirmPayVerify = async () => {
-  if (!payVerifyForm.value.phone || !payVerifyForm.value.code) {
-    ElMessage.warning('请完善手机号和验证码')
+  if (verifyType.value === 'sms' && !payVerifyForm.value.code) {
+    ElMessage.warning('请输入验证码')
+    return
+  } 
+  if (verifyType.value === 'password' && !payVerifyForm.value.password) {
+    ElMessage.warning('请输入登录密码')
     return
   }
 
   verifying.value = true
   try {
-    const res = await loginByCode({
-      phone: payVerifyForm.value.phone,
-      code: payVerifyForm.value.code,
-      role: 'buyer',
-    })
- //@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success('验证成功，正在支付...')
-      closePayVerify()
-      await doRealPay()
-    } else { //@ts-ignore
-      ElMessage.error(res.msg || '验证码错误')
+    if (verifyType.value === 'sms') {
+      const res = await loginByCode({
+        phone: payVerifyForm.value.phone,
+        code: payVerifyForm.value.code,
+        role: 'buyer',
+      })
+      if (res.code !== 200) {
+        ElMessage.error(res.msg || '验证码错误')
+        return
+      }
+    } else {
+      const res = await verifyPayPwd({
+        password: payVerifyForm.value.password
+      })
+      if (res.code !== 200) {
+        verifying.value = false;
+        return
+      }
     }
+
+    ElMessage.success('验证成功，正在支付...')
+    closePayVerify()
+    await doRealPay()
+
   } catch (error) {
-    ElMessage.error('验证码错误或已过期')
+    ElMessage.warning('验证失败，请重试')
   } finally {
     verifying.value = false
   }
@@ -553,8 +599,7 @@ const loadDirectPayGoodsInfo = async () => {
     }
 
     // 传 source 给后端
-     //@ts-ignore
-    const res = await getDirectPayGoodsInfo(bookId, buyCount, source) //@ts-ignore
+    const res = await getDirectPayGoodsInfo(bookId, buyCount, source)
     if (res.code === 200 && res.data) {
       payGoods.value = { ...res.data }
     }
@@ -571,19 +616,21 @@ const doRealPay = async () => {
   try {
     const bookId = Number(route.query.bookId) || 0
     const buyCount = Number(route.query.buyCount) || 0
+    const source = route.query.source || 'normal'
 
-    if (!bookId || !buyCount) {
-      ElMessage.warning('参数异常')
-      return
+    const addressPayload = {
+      province: addressForm.region[0],
+      city: addressForm.region[1],
+      district: addressForm.region[2],
+      detail: addressForm.detail,
     }
 
-    // 传 source 给支付接口
-     //@ts-ignore
-    const res = await submitDirectPay(bookId, buyCount, source) //@ts-ignore
-    if (res?.code === 200) {
+    // 传给 submitDirectPay 接口
+    const res = await submitDirectPay(bookId, buyCount, source, addressPayload)
+    if (res.code === 200) {
       ElMessage.success('支付成功！')
       router.push('/user')
-    } else { //@ts-ignore
+    } else {
       ElMessage.error(res?.msg || '支付失败')
     }
   } catch (error) {

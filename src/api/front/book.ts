@@ -14,9 +14,9 @@ export const getBookListApi = (category?: string) => {
   })
 }
 
-export const getBookDetailApi = (id: number) => {
+export const getBookDetailApi = (id: number, params?: any) => {
   return request.get<ApiResponse<Book | null>>('/api/book/front/book/detail', {
-    params: { id },
+    params: { id, ...params },
   })
 }
 

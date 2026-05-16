@@ -51,3 +51,10 @@ export function addComment(data: { bookId: number; score: number; content: strin
 export function getRandomComments(bookId: number, source: string) {
   return getCommentList(bookId, source)
 }
+export function deleteCommentApi(data: { commentId: number; bookId: number; source: string }) {
+  return request({
+    url: '/api/comment/delete',
+    method: 'post',
+    data,
+  })
+}

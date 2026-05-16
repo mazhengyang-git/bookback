@@ -336,9 +336,9 @@
             </el-table-column>
             <el-table-column prop="bookName" label="图书名称" min-width="200" />
             <el-table-column prop="count" label="购买数量" width="100" />
-            <el-table-column prop="totalPrice" label="订单总价" width="120">
-              <template #default="scope">¥{{ toFixedNumber(scope.row.totalPrice, 2) }}</template>
-            </el-table-column>
+           <el-table-column prop="totalPrice" label="订单总价" width="120">
+  <template #default="scope">¥{{ Number(scope.row.totalPrice).toFixed(2) }}</template>
+</el-table-column>
             <el-table-column label="支付时间" width="200">
               <template #default="scope">{{ formatTime(scope.row.createTime) }}</template>
             </el-table-column>

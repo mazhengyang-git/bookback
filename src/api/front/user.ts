@@ -119,3 +119,6 @@ export const getUserPublicInfo = (username: string) => {
     params: { username }
   })
 }
+export const verifyPayPwd = (data) => {
+  return request.post('/api/pay/verifyPwd', data)
+}

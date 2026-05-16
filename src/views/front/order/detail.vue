@@ -1,8 +1,7 @@
 <template>
   <div class="order-container"    v-cloak>
-    <router-link style="background-color: black;color: white;font-size: 20px;" to="/userinfo">返回个人中心</router-link>
     <div class="action-row">
-      <h2 class="page-title">我的订单</h2>
+      <h2 style="user-select: none;" class="page-title">我的订单</h2>
       <div class="button-group">
         <el-button type="primary" @click="$router.push('/user')">返回个人中心</el-button>
         <el-button type="primary" @click="$router.push('/home')">返回首页</el-button>
@@ -11,14 +10,17 @@
     <div class="order-list">
       <div v-for="order in orderList" :key="order.id" class="order-card">
         <div class="order-header">订单号：{{ order.orderNo }}</div>
-        <div class="order-note">备注：发生交易争议时,商品封面可作为判断依据</div>
+        <div style="user-select: none;" class="order-note">备注：发生交易争议时,商品封面可作为判断依据</div>
         <div class="order-body">
           <!--@vue-ignore--><img :src="order.bookCover || '/public/default-book.png'" class="cover" />
           <div class="info">
             <p class="name"><!--@vue-ignore-->{{ order.bookName }}</p>
-            <p class="info-text">数量：{{ order.count }}</p>
-            <p class="info-text">总价：¥{{ order.totalPrice }}</p>
-            <p class="info-text">
+            <p style="user-select: none;" class="info-text">数量：{{ order.count }}</p>
+            <!-- 显示优惠价总价，格式化2位小数 -->
+            <p style="user-select: none;" class="info-text">
+              总价：¥{{ Number(order.totalPrice).toFixed(2) }}
+            </p>
+            <p style="user-select: none;" class="info-text">
               状态：<el-tag type="success">{{ order.status }}</el-tag>
             </p>
            <!--@vue-ignore--> <p
@@ -29,11 +31,18 @@
             </p>
           </div>
         </div>
-        <div class="order-time">{{ formatTime(order.createTime) }}</div>
+
+        <!-- 收货地址展示区域 -->
+        <div class="address-section" v-if="order.fullAddress">
+          <p style="user-select: none;" class="address-title">收货地址：</p>
+          <p class="address-text">{{ order.fullAddress }}</p>
+        </div>
+
+        <div style="user-select: none;" class="order-time">{{ formatTime(order.createTime) }}</div>
         <div class="divider"></div>
       </div>
     </div>
-    <div v-if="!orderList.length" class="empty"><!--暂无订单--></div>
+    <div v-if="!orderList.length" class="empty"></div>
   </div>
 </template>
 
@@ -49,13 +58,13 @@ import { RouteLocationAsRelativeGeneric, RouteLocationAsPathGeneric } from 'vue-
 const orderList = ref<Order[]>([])
 
 const go = (path: string) => {
-  // 不管当前在哪，跳图书详情都强制刷新页面
   if (path.startsWith('/book') || path.startsWith('/book1')) {
     window.location.href = path
     return
   }
   router.push(path)
 }
+
 const getMyOrder = async () => {
   const res = await getUserOrderList()
   orderList.value = res.data
@@ -63,10 +72,10 @@ const getMyOrder = async () => {
 
 const formatTime = (t: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : '暂无')
 const chuyu = ref(false)
+
 onMounted(() => {
   if (!chuyu.value) {
     requestIdleCallback(() => {
-      //预加载页面
       import('@/views/front/book/detail.vue')
       import('@/views/front/book/list.vue')
       import('@/views/front/user/index.vue')
@@ -236,4 +245,24 @@ onMounted(() => {
     font-size: 24px;
   }
 }
+</style>
+<style scoped>
+/* 地址相关样式 */
+.address-section {
+  margin-top: 12px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+.address-title {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #666;
+}
+.address-text {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
 </style>
