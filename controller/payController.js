@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const { adjustBookSalesDelta } = require('../utils/bookSales');
-
+const bcrypt = require('bcrypt'); 
 // 统一订单号生成逻辑
 const createOrderNo = (userId) => {
   const timestamp = Date.now().toString(); 
@@ -9,7 +9,7 @@ const createOrderNo = (userId) => {
   return 'OD' + timestamp + random + userIdSuffix;
 };
 
-// 1. 购物车支付-获取支付信息（新书+普通书 都查库存）
+// 1. 购物车支付-获取支付信息（新书+普通书 都查库存 + 优惠价）
 const getPayInfo = async (req, res) => {
   try {
     let { cartIds } = req.body;
@@ -33,18 +33,28 @@ const getPayInfo = async (req, res) => {
 
     const [cartItems] = await pool.execute(sql, params);
 
-    // 核心：根据source查询对应表，补全信息+库存
+    // 核心：根据source查询对应表，补全信息+库存+优惠价
     const payList = [];
     for (let item of cartItems) {
       let realGoods = null;
-      // 新书：查 newbook 表 + 库存
+      // 新书：查 newbook 表 + 库存 + 🔥 优惠表
       if (item.source === 'new') {
-        const [newBook] = await pool.execute('SELECT book_name, price, cover, stock FROM newbook WHERE id = ?', [item.goods_id]);
+        const [newBook] = await pool.execute(`
+          SELECT nb.book_name, nb.price, nb.cover, nb.stock, bd.discount_price
+          FROM newbook nb
+          LEFT JOIN book_discount bd ON nb.id = bd.book_id AND bd.book_type = 1
+          WHERE nb.id = ?
+        `, [item.goods_id]);
         realGoods = newBook[0] || {};
       } 
-      // 普通书：查 book 表 + 库存
+      // 普通书：查 book 表 + 库存 + 🔥 优惠表
       else {
-        const [book] = await pool.execute('SELECT book_name, price, cover, stock FROM book WHERE id = ?', [item.goods_id]);
+        const [book] = await pool.execute(`
+          SELECT b.book_name, b.price, b.cover, b.stock, bd.discount_price
+          FROM book b
+          LEFT JOIN book_discount bd ON b.id = bd.book_id AND bd.book_type = 0
+          WHERE b.id = ?
+        `, [item.goods_id]);
         realGoods = book[0] || {};
       }
 
@@ -52,8 +62,9 @@ const getPayInfo = async (req, res) => {
         ...item,
         book_name: realGoods.book_name || '未知图书',
         book_price: realGoods.price || 0,
+        discount_price: realGoods.discount_price || null, // 🔥 返回优惠价
         book_cover: realGoods.cover || '/default-book.png',
-        stock: realGoods.stock || 0 // 返回库存给前端
+        stock: realGoods.stock || 0
       });
     }
 
@@ -64,11 +75,11 @@ const getPayInfo = async (req, res) => {
   }
 };
 
-// 2. 购物车支付-提交支付（新书+普通书 统一库存校验+扣减）
+// 2. 购物车支付-提交支付（新书+普通书 统一库存校验+扣减 
 const submitPay = async (req, res) => {
   let connection;
   try {
-    let { cartIds } = req.body;
+    let { cartIds, address } = req.body;
     const userId = req.user.id;
 
     if (typeof cartIds === 'string') {
@@ -81,6 +92,9 @@ const submitPay = async (req, res) => {
 
     if (cartIds.length === 0) {
       return res.status(400).json({ code: 400, msg: '无待支付商品', data: {} });
+    }
+    if (!address || !address.province || !address.city || !address.detail) {
+      return res.status(400).json({ code: 400, msg: '请完善收货地址', data: {} });
     }
 
     connection = await pool.getConnection();
@@ -102,16 +116,17 @@ const submitPay = async (req, res) => {
       lastOrderNo = orderNo;
       const bookPrice = item.book_price ? Number(item.book_price) : 0;
       const quantity = Number(item.quantity) || 1;
-      const totalPrice = (bookPrice * quantity).toFixed(2);
+
+      // 优惠价支付
+      const discountPrice = item.discount_price ? Number(item.discount_price) : bookPrice;
+      const totalPrice = (discountPrice * quantity).toFixed(2);
+     
+
       const bookId = item.goods_id;
       const source = item.source || 'normal';
 
       let stock = 0;
-      // ==============================================
-      // 统一库存校验（新书/普通书逻辑完全一致）
-      // ==============================================
       if (source === 'new') {
-        // 1. 新书：查 newbook 表库存（加行锁防超卖）
         const [newBookInfo] = await connection.execute(
           'SELECT stock FROM newbook WHERE id = ? FOR UPDATE',
           [bookId]
@@ -122,20 +137,17 @@ const submitPay = async (req, res) => {
         }
         stock = newBookInfo[0].stock;
       } else {
-        // 2. 普通书：查 book 表库存（加行锁防超卖）
         const [bookInfo] = await connection.execute(
           'SELECT stock FROM book WHERE id = ? FOR UPDATE',
           [bookId]
         );
         if (!bookInfo.length) {
           await connection.rollback();
-          
           return res.status(400).json({ code: 400, msg: '图书不存在，支付失败', data: {} });
         }
         stock = bookInfo[0].stock;
       }
 
-      // 统一库存不足判断
       if (stock < quantity) {
         await connection.rollback();
         return res.status(400).json({ 
@@ -145,32 +157,25 @@ const submitPay = async (req, res) => {
         });
       }
 
-      // ==============================================
-      // 统一库存扣减
-      // ==============================================
       if (source === 'new') {
-        // 新书扣减 newbook 表库存
         await connection.execute(
           'UPDATE newbook SET stock = stock - ? WHERE id = ?',
           [quantity, bookId]
         );
       } else {
-        // 普通书扣减 book 表库存
         await connection.execute(
           'UPDATE book SET stock = stock - ? WHERE id = ?',
           [quantity, bookId]
         );
       }
 
-      // 统一插入订单
-     await connection.execute(
-  `INSERT INTO \`order\` (order_no, user_id, book_id, count, total_price, status, source) 
-   VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  [orderNo, userId, bookId, quantity, totalPrice, '已付款', source] // 🔥 加上source参数
-);
+      await connection.execute(
+        `INSERT INTO \`order\` (order_no, user_id, book_id, count, total_price, status, source,province, city, district, detail_address) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [orderNo, userId, bookId, quantity, totalPrice, '已付款', source,address.province, address.city, address.district, address.detail]
+      );
     }
 
-    // 删除购物车
     const deleteSql = `DELETE FROM cart WHERE id IN (${placeholders}) AND user_id = ?`;
     await connection.execute(deleteSql, [...cartIds, userId]);
 
@@ -184,7 +189,7 @@ const submitPay = async (req, res) => {
     if (connection) connection.release();
   }
 };
-// 3. 直付-获取商品信息（支持新书+普通书）
+// 3. 直付-获取商品信息（支持新书+普通书 + 返回优惠价discount_price）
 const getDirectPayGoodsInfo = async (req, res) => {
   try {
     const { bookId, buyCount, source } = req.body;
@@ -200,12 +205,24 @@ const getDirectPayGoodsInfo = async (req, res) => {
     }
 
     let book = null;
-    // 2. 根据source查询对应表
+    // 2. 🔥 根据source查询对应表 + 左联优惠表，获取discount_price
     if (source === 'new') {
-      const [newBook] = await pool.execute('SELECT id, book_name, price, cover, stock FROM newbook WHERE id = ?', [bookId]);
+      // 新书：book_type=1
+      const [newBook] = await pool.execute(`
+        SELECT nb.id, nb.book_name, nb.price, nb.cover, nb.stock, bd.discount_price
+        FROM newbook nb
+        LEFT JOIN book_discount bd ON nb.id = bd.book_id AND bd.book_type = 1
+        WHERE nb.id = ?
+      `, [bookId]);
       book = newBook[0];
     } else {
-      const [normalBook] = await pool.execute('SELECT id, book_name, price, cover, stock FROM book WHERE id = ?', [bookId]);
+      // 普通书：book_type=0
+      const [normalBook] = await pool.execute(`
+        SELECT b.id, b.book_name, b.price, b.cover, b.stock, bd.discount_price
+        FROM book b
+        LEFT JOIN book_discount bd ON b.id = bd.book_id AND bd.book_type = 0
+        WHERE b.id = ?
+      `, [bookId]);
       book = normalBook[0];
     }
 
@@ -227,7 +244,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
       });
     }
 
-    // 5. 返回统一格式
+    // 5. 🔥 返回统一格式（新增discount_price）
     res.status(200).json({
       code: 200,
       msg: '获取直付信息成功',
@@ -237,7 +254,8 @@ const getDirectPayGoodsInfo = async (req, res) => {
         cover: book.cover || '',
         spec: '平装版',
         count: buyCount,
-        price: book.price
+        price: book.price,
+        discount_price: book.discount_price || null // 🔥 关键：返回优惠价
       }
     });
   } catch (error) {
@@ -254,10 +272,9 @@ const getDirectPayGoodsInfo = async (req, res) => {
 const submitDirectPay = async (req, res) => {
   let connection;
   try {
-    const { bookId, buyCount, source } = req.body;
+    const { bookId, buyCount, source, address } = req.body;
     const userId = req.user.id;
 
-    // 1. 基础参数校验
     if (!bookId || !buyCount || buyCount < 1) {
       return res.status(400).json({ 
         code: 400, 
@@ -266,21 +283,28 @@ const submitDirectPay = async (req, res) => {
       });
     }
 
-    // 2. 获取数据库连接并开启事务
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
     let book = null;
-    // 3.  根据source加行锁查询库存（防超卖）
     if (source === 'new') {
-      const [newBook] = await connection.execute('SELECT id, book_name, price, stock FROM newbook WHERE id = ? FOR UPDATE', [bookId]);
+      const [newBook] = await connection.execute(`
+        SELECT id, book_name, price, stock, bd.discount_price
+        FROM newbook nb
+        LEFT JOIN book_discount bd ON nb.id = bd.book_id AND bd.book_type = 1
+        WHERE nb.id = ? FOR UPDATE
+      `, [bookId]);
       book = newBook[0];
     } else {
-      const [normalBook] = await connection.execute('SELECT id, book_name, price, stock FROM book WHERE id = ? FOR UPDATE', [bookId]);
+      const [normalBook] = await connection.execute(`
+        SELECT b.id, b.book_name, b.price, b.stock, bd.discount_price
+        FROM book b
+        LEFT JOIN book_discount bd ON b.id = bd.book_id AND bd.book_type = 0
+        WHERE b.id = ? FOR UPDATE
+      `, [bookId]);
       book = normalBook[0];
     }
 
-    // 图书不存在
     if (!book) {
       await connection.rollback();
       return res.status(400).json({ 
@@ -290,7 +314,6 @@ const submitDirectPay = async (req, res) => {
       });
     }
 
-    // 库存不足
     if (buyCount > book.stock) {
       await connection.rollback();
       return res.status(400).json({ 
@@ -300,28 +323,33 @@ const submitDirectPay = async (req, res) => {
       });
     }
 
-    // 4. 生成订单号
     const orderNo = createOrderNo(userId);
-    const totalAmount = (book.price * buyCount).toFixed(2);
 
-    // 5.  插入订单（携带source）
+    // 优惠价支付
+    const discountPrice = book.discount_price ? Number(book.discount_price) : Number(book.price);
+    const totalAmount = (discountPrice * buyCount).toFixed(2);
+    // =======================================================
+
     await connection.execute(
-      'INSERT INTO `order` (order_no, user_id, book_id, count, total_price, status, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [orderNo, userId, bookId, buyCount, totalAmount, '已付款', source]
+      `INSERT INTO \`order\` (
+        order_no, user_id, book_id, count, total_price, status, source,
+        province, city, district, detail_address
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderNo, userId, bookId, buyCount, totalAmount, '已付款', source,
+        address.province, address.city, address.district, address.detail
+      ]
     );
 
-    // 6.  根据source扣减库存
     if (source === 'new') {
       await connection.execute('UPDATE newbook SET stock = stock - ? WHERE id = ?', [buyCount, bookId]);
     } else {
       await connection.execute('UPDATE book SET stock = stock - ? WHERE id = ?', [buyCount, bookId]);
     }
 
-    // 7. 提交事务
     await connection.commit();
     console.log('[直付成功] 订单号:', orderNo);
 
-    // 8. 返回结果
     res.status(200).json({
       code: 200,
       msg: '支付成功',
@@ -339,19 +367,16 @@ const submitDirectPay = async (req, res) => {
     if (connection) connection.release();
   }
 };
+
 // ==========================================================
 // 删除订单 + 自动回加图书库存
-// 按orderNo删除订单 + 自动恢复库存（前端0修改）
-// 支持：已付款 / 待发货 / 已完成 所有支付成功状态
 // ==========================================================
 const deleteOrder = async (req, res) => {
   let connection;
   try {
-    // 前端传 orderNo
     const { orderNo } = req.body;
     const userId = req.user.id;
 
-    // 非空校验
     if (!orderNo) {
       return res.json({ code: 400, msg: "订单编号不能为空" });
     }
@@ -359,7 +384,6 @@ const deleteOrder = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. 根据【订单号+用户ID】查询订单（精准匹配，防止越权）
    const [orders] = await connection.execute(
       `SELECT id, book_id, \`count\`, status, source, COALESCE(sales_recorded,0) AS sales_recorded FROM \`order\` WHERE order_no = ? AND user_id = ?`,
       [orderNo, userId]
@@ -373,7 +397,6 @@ const deleteOrder = async (req, res) => {
     if (Number(order.sales_recorded) === 1) {
       await adjustBookSalesDelta(connection, order, -Math.abs(Number(order.count) || 0));
     }
-    // 2. 支付后的订单，删除就恢复库存
     const paidStatus = ["已付款", "待发货", "已完成", "已发货", "已收货"];
     if (paidStatus.includes(order.status)) {
       if (order.source === 'new') {
@@ -382,7 +405,6 @@ const deleteOrder = async (req, res) => {
         await connection.execute('UPDATE book SET stock = stock + ? WHERE id = ?', [order.count, order.book_id]);
       }
     }
-    // 3. 根据订单号删除订单
     await connection.execute(
       `DELETE FROM \`order\` WHERE order_no = ? AND user_id = ?`,
       [orderNo, userId]
@@ -392,12 +414,43 @@ const deleteOrder = async (req, res) => {
     return res.json({ code: 200, msg: "订单删除成功，库存已自动恢复" });
 
   } catch (error) {
-    // 事务回滚
     if (connection) await connection.rollback();
     console.error("删除订单报错：", error);
     return res.json({ code: 500, msg: "删除失败，服务异常" });
   } finally {
     if (connection) connection.release();
+  }
+};
+
+const verifyUserPwd = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.id;
+
+    if (!password) {
+      return res.status(200).json({ code: 400, msg: "请输入密码" });
+    }
+
+    const [user] = await pool.execute(
+      "SELECT password FROM user WHERE id = ?",
+      [userId]
+    );
+
+    if (!user.length) {
+      return res.status(200).json({ code: 400, msg: "用户不存在" });
+    }
+
+    const hashedPwd = user[0].password;
+    const isMatch = await bcrypt.compare(password, hashedPwd);
+
+    if (!isMatch) {
+      return res.status(200).json({ code: 400, msg: "输入的密码有误，无法支付" });
+    }
+
+    return res.status(200).json({ code: 200, msg: "密码正确" });
+  } catch (error) {
+    console.error("[verifyUserPwd] 错误:", error);
+    return res.status(500).json({ code: 500, msg: "校验失败，请稍后重试" });
   }
 };
 // 导出所有方法
@@ -406,5 +459,6 @@ module.exports = {
   submitPay,
   getDirectPayGoodsInfo,
   submitDirectPay,
-  deleteOrder 
+  deleteOrder,
+  verifyUserPwd 
 };

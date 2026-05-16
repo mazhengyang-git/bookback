@@ -150,10 +150,61 @@ const addComment = async (req, res) => {
     res.status(500).json({ code: 500, msg: '评价提交失败', data: null });
   }
 };
+// 5. 删除评价（只能删除自己的）
+const deleteComment = async (req, res) => {
+  try {
+    const userId = req.user.id; // 当前登录用户ID
+    const { commentId, bookId, source } = req.body;
 
+    if (!commentId || !bookId || !source) {
+      return res.json({ code: 400, msg: '参数不能为空' });
+    }
+
+    // 1. 校验：评价必须是当前用户的
+    const [checkOwn] = await pool.execute(
+      `SELECT user_id FROM book_comment WHERE id = ? AND book_id = ? AND source = ?`,
+      [commentId, bookId, source]
+    );
+
+    if (checkOwn.length === 0) {
+      return res.json({ code: 404, msg: '评价不存在' });
+    }
+
+    if (checkOwn[0].user_id !== userId) {
+      return res.json({ code: 403, msg: '无权删除他人评价' });
+    }
+
+    // 2. 删除评价
+    await pool.execute(
+      `DELETE FROM book_comment WHERE id = ? AND book_id = ? AND source = ?`,
+      [commentId, bookId, source]
+    );
+
+    // 3. 重新计算当前图书/来源的评分和评论数
+    const [avgData] = await pool.execute(
+      `SELECT IFNULL(AVG(score), 0.0) AS avg, COUNT(id) AS count FROM book_comment WHERE book_id = ? AND source = ?`,
+      [bookId, source]
+    );
+    const avgScore = Number(avgData[0].avg) || 0;
+    const commentCount = Number(avgData[0].count) || 0;
+
+    // 4. 更新对应表的评分
+    if (source === 'normal') {
+      await pool.execute(`UPDATE book SET avg_score = ?, comment_count = ? WHERE id = ?`, [avgScore, commentCount, bookId]);
+    } else if (source === 'new') {
+      await pool.execute(`UPDATE newbook SET avg_score = ?, comment_count = ? WHERE id = ?`, [avgScore, commentCount, bookId]);
+    }
+
+    res.json({ code: 200, msg: '删除成功' });
+  } catch (error) {
+    console.error('删除评价接口报错', error);
+    res.status(500).json({ code: 500, msg: '删除失败' });
+  }
+};
 module.exports = {
   checkCommentAuth,
   getBookAvgScore,
   getCommentList,
-  addComment
+  addComment,
+  deleteComment
 };

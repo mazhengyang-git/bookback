@@ -41,6 +41,8 @@ const newbookguan = require('./router/newbookguanli');
 const bookcom = require('./router/bookComrute');
 const shoucang = require('./router/shoucangroute');
 const bookpaihang = require('./router/systembookpaihang');
+const bookDiscountRouter = require('./router/bookdiscount');
+app.use('/api', bookDiscountRouter);
 app.use('/api/user', userRouter);
 app.use('/api', orderRouter);
 app.use('/api/cart', cartRouter);
@@ -61,6 +63,14 @@ app.use('/api', orderadmin);
 app.use('/api', bookpaihang);
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 //启动服务器
+const schedule = require('node-schedule');
+const generateDailyDiscount = require('./controller/discountJob');
+
+// 每天 00:00 自动生成优惠
+schedule.scheduleJob('0 0 0 * * ?', generateDailyDiscount);
+
+// 启动项目时立刻生成一次（测试用）
+generateDailyDiscount();
 app.listen(3002, () => {
   console.log(`后端服务器运行在：http://localhost:3002 ✅`);
 });

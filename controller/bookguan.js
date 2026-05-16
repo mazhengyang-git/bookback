@@ -28,16 +28,17 @@ exports.addBook = async (req, res) => {
       desc,
       mulu,
       status,
-      author_into
+      author_into,
+      publisher
     } = req.body;
 
     // 数据库字段顺序
     // book_name, author, category, author_into, price, stock, cover, `desc`, mulu, status
     await pool.execute(
-      `INSERT INTO book (book_name, author, category,author_into, price, stock, cover, \`desc\`, mulu, status) 
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      `INSERT INTO book (book_name, author, category,author_into, price, stock, cover, \`desc\`, mulu, status,publisher) 
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
       
-      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status]
+      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status,publisher]
     );
 
     res.json({ code: 200, msg: '图书新增成功' });
@@ -65,14 +66,15 @@ exports.updateBook = async (req, res) => {
       desc,
       mulu,
       status,
-      author_into
+      author_into,
+      publisher
     } = req.body;
 
     await pool.execute(
       `UPDATE book 
-       SET book_name=?, author=?, category=?,author_into=?, price=?, stock=?, cover=?, \`desc\`=?, mulu=?, status=? 
+       SET book_name=?, author=?, category=?,author_into=?, price=?, stock=?, cover=?, \`desc\`=?, mulu=?, status=?,publisher=? 
        WHERE id=?`,
-      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status, id]
+      [book_name, author, category, author_into, price, stock, cover, desc, mulu, status,publisher, id]
     );
 
     res.json({ code: 200, msg: '图书修改成功' });
