@@ -233,6 +233,11 @@
       >
     </div>
   </div>
+    <el-button
+         link class="syses1 ziwy1" @click="$router.push('/books1')"
+         
+         
+          ><span >优惠专区</span></el-button>
   <el-button
          class="ziwy" style="position: absolute;  font-size: 17px; margin-left: 250px; top: 19px;z-index:10 "
           link
@@ -243,6 +248,12 @@
             src="/public/img/收藏夹.png"
           /><span style="color:red">收藏夹</span></el-button
         >
+
+         <el-button
+         link class="ziwy2" @click="dingbu"
+         
+         
+          ><span >↑</span></el-button>
   <!-- 图书列表区域 -->
   <div v-if="!loading" class="book-list-container"    v-cloak>
     
@@ -556,7 +567,9 @@ const doFilterAndShuffle = () => {
   let sourceList: any[] = showType.value === 'new' ? [...newBookList.value] : [...allBooks.value]
   
   // 为普通图书注入优惠价数据
+  //@ts-ignore
   discountBooks.value.forEach(discount => {
+    //@ts-ignore
     const target = sourceList.find(item => item.id === discount.book_id || item.id === discount.id)
     if (target) {
       target.discount_price = discount.discount_price
@@ -624,7 +637,9 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   router.push('/login')
 }
-
+const dingbu=()=>{
+  window.scrollTo(0,0)
+}
 // 初始化
 onMounted(async () => {
   loading.value = true
@@ -702,6 +717,57 @@ transition: all 0.25s ease;
   
   
 }
+.ziwy1{
+   position: fixed !important;
+  top: 42.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  width: auto; 
+  height: auto;
+  background-color: #0000001e ;
+ 
+  transform: translateX(49.8%);
+  padding-top: 7px;
+  padding-bottom: 7px;
+  padding-left: 9px;
+  padding-right: 9px;
+transition: all 0.25s ease;
+}
+.ziwy1:hover{
+  
+  transform: translateX(0px);
+  
+  
+}
+
+.ziwy2{
+   position: fixed !important;
+  top: 69.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+ 
+  height: auto;
+  background-color: #79787881 !important ;
+ font-size: 32px !important;
+ font-weight: 900 !important;
+ padding-left: 9px;
+ padding-right: 9px;
+  transform: translateX(0px);
+  padding-top: 7px;
+  padding-bottom: 7px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  width: 50px;
+  color: #ffffff;
+transition: all 0.25s ease;
+}
+.ziwy2:hover{
+  
+  transform: translateX(0px);
+  color: #ff0000;
+  
+}
+
 .gwdh1 {
  
   animation: gwdh1 2s infinite;
@@ -947,15 +1013,17 @@ transition: all 0.25s ease;
 }
 .syses1 {
  
-  color: rgb(231, 230, 230);
-  font-size: clamp(0.9rem, 2vw, 1.025rem);
-  text-decoration: none;
- 
-  line-height: 1.2;
+  color: rgb(231, 230, 230) !important;
+  font-size: clamp(0.9rem, 2vw, 1.025rem) !important;
+  text-decoration: none !important;
+   background: #ff4d00 !important;
+  border: 1px solid rgba(255, 137, 64, 0.3) !important;
+  line-height: 1.2 !important;
+  border-radius: 0.375rem !important;
 }
 .syses1:hover {
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
+  color: #ffffff !important;
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5) !important;
 }
 /* 筛选栏 */
 .filter-bar {

@@ -22,7 +22,9 @@ const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
-
+const dingbu=()=>{
+  window.scrollTo(0,0)
+}
 // 导航悬浮逻辑
 let timeleave: NodeJS.Timeout | null = null
 const showhover = ref(false)
@@ -169,9 +171,10 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-// 🔥 核心：获取路由参数（适配你的路由 /book/:id）
+// 核心：获取路由参数
 const bookId = computed(() => Number(route.params.id))
 const bookType = computed(() => route.query.book_type || 0) // 0=普通 1=新书
+//@ts-ignore
 const source = computed(() => bookType.value == 1 ? 'new' : 'normal')
 
 // 状态
@@ -195,7 +198,7 @@ const muluRef = ref<HTMLElement | null>(null)
 const muluRef1 = ref<HTMLElement | null>(null)
 const commentVisible = ref(false)
 
-// 🔥 终极修复：调用你封装的API，传递 id + book_type（适配真实接口）
+// 调用封装API，传递 id + book_type
 const loadBookDetail = async () => {
   const currentBookId = bookId.value
   const currentBookType = bookType.value
@@ -205,7 +208,9 @@ const loadBookDetail = async () => {
     loading.value = true
     // 调用封装好的API，自动匹配 /api/book/front/book/detail
     const res = await getBookDetailApi(currentBookId, { book_type: currentBookType })
+    //@ts-ignore
     if (res.code === 200 && res.data) {
+      //@ts-ignore
       book.value = res.data
     } else {
       ElMessage.error('未找到该图书数据')
@@ -251,6 +256,7 @@ const addToCart = async () => {
       cover: book.value.cover || '/img/default-book.jpg',
       cartId: 0,
       spec: '',
+      //@ts-ignore
       source: source.value,
     })
     ElMessage.success({ message: '加入购物车成功', offset: 80 })
@@ -280,7 +286,7 @@ const addToShoucang = async () => {
       bookName: book.value.name,
       bookCover: book.value.cover,
       bookPrice: book.value.discount_price || book.value.price
-    })
+    })//@ts-ignore
     if (res.code === 200) {
       shoucangStore.addToShoucang({
         id: book.value.id,
@@ -293,6 +299,7 @@ const addToShoucang = async () => {
       })
       ElMessage.success({ message: '收藏成功', offset: 160 })
     } else {
+      //@ts-ignore
       ElMessage.error({ message: res.msg, offset: 160 })
     }
   } catch (err) {
@@ -344,8 +351,11 @@ watch(
     if (!newBookId) return
     await loadBookDetail()
     nextTick(() => {
+      //@ts-ignore
       showDescExpand.value = descRef.value?.scrollHeight > descRef.value?.clientHeight
+      //@ts-ignore
       showMuluExpand.value = muluRef.value?.scrollHeight > muluRef.value?.clientHeight
+      //@ts-ignore
       showMuluExpand1.value = muluRef1.value?.scrollHeight > muluRef1.value?.clientHeight
       fetchScoreAndRandomComments(newBookId, source.value)
     })
@@ -410,7 +420,13 @@ watch(
       <el-button class="ziwy" style="position: absolute; font-size: 17px; margin-left: 250px; top: 19px;z-index:10 " link @click="go('/shoucang')">
         <img class="gwdh1" style="width: 32px; height: auto; margin-right: 3px;" src="/img/收藏夹.png" /><span style="color:red">收藏夹</span>
       </el-button>
+       <el-button
+         link class="ziwy2" @click="dingbu"
+         
+         
+          ><span >↑</span></el-button>
       <div class="book-detail-cover" ref="coverRef">
+        <!--@vue-ignore-->
         <el-image
           :src="book.cover || '/img/default-book.jpg'"
           referrerpolicy="no-referrer"
@@ -513,6 +529,34 @@ watch(
 </template>
 
 <style scoped>
+.ziwy2{
+   position: fixed !important;
+  top: 69.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+ 
+  height: auto;
+  background-color: #79787881 !important ;
+ font-size: 32px !important;
+ font-weight: 900 !important;
+ padding-left: 9px;
+ padding-right: 9px;
+  transform: translateX(0px);
+  padding-top: 7px;
+  padding-bottom: 7px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  width: 50px;
+  color: #ffffff;
+transition: all 0.25s ease;
+}
+.ziwy2:hover{
+  
+  transform: translateX(0px);
+  color: #ff0000;
+  
+}
+
 .ziwy{
    position: fixed !important;
   top: 49.5vh !important;

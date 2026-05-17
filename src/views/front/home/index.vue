@@ -22,7 +22,11 @@
   </div>
 
   <HomeTopNav @refresh="shoubookshuaxin" />
- 
+    <el-button
+         link class="ziwy2" @click="dingbu"
+         
+         
+          ><span >↑</span></el-button>
   <div class="home-container">
     <div class="home-banner" v-if="slidesLoaded">
       <div class="banner-content" style="position: relative; z-index: 100">
@@ -299,7 +303,9 @@ const handleLinkClick1 = (e: Event) => {
 const notandmouse = () => {
   if (!hasDragged1.value) showNotice.value = !showNotice.value
 }
-
+const dingbu=()=>{
+  window.scrollTo(0,0)
+}
 // 初始化
 onMounted(async () => {
   getNotice()
@@ -1391,6 +1397,33 @@ button {
 </style>
 
 <style scoped>
+.ziwy2{
+   position: fixed !important;
+  top: 69.5vh !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+ 
+  height: 36px;
+  background-color: #79787881 !important ;
+ font-size: 39px !important;
+ font-weight: 900 !important;
+ padding-left: 9px;
+ padding-right: 9px;
+  transform: translateX(-12.8px) scale(1.5);
+  padding-top: 7px;
+  padding-bottom: 7px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  width: 37px;
+  color: #ffffff;
+transition: all 0.25s ease;
+}
+.ziwy2:hover{
+  
+  transform: translateX(-12.8px) scale(1.5);
+  color: #ff0000;
+  
+}
 .pjwy{
   position: absolute;
   margin-top: -31px;
@@ -1599,4 +1632,5 @@ margin-top: 2px;
   background: #0071e3;
   border-radius: 2px;
 }
+
 </style>

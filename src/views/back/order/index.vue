@@ -72,15 +72,33 @@
       <el-table style="color: #000;"  v-loading="loading" :data="orderList" border  :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
 > stripe fit>
         <el-table-column prop="orderNo" label="订单编号" min-width="136" />
-        <el-table-column prop="username" label="下单用户" min-width="90" />
-        <el-table-column prop="bookName" label="图书名称" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="username" label="下单用户" min-width="83" />
+        <el-table-column prop="bookName" label="图书名称" min-width="110" show-overflow-tooltip />
         <el-table-column prop="count" label="数量" min-width="60" />
-        <el-table-column prop="totalPrice" label="总价（元）" min-width="90">
-          <template #default="scope">
-            ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" min-width="90">
+     <!-- 原价 -->
+<el-table-column prop="originalPrice" label="原价" min-width="80">
+  <template #default="scope">
+    ¥{{ scope.row.originalPrice }}
+  </template>
+</el-table-column>
+
+<!-- 优惠单价
+<el-table-column prop="realUnitPrice" label="优惠单价" min-width="100">
+  <template #default="scope">
+    <span style="color:red; font-weight:bold">
+      ¥{{ scope.row.realUnitPrice }}
+    </span>
+  </template>
+</el-table-column>
+ -->
+<!-- 实付总价 -->
+<el-table-column  prop="totalPrice" label="实付总价" min-width="95">
+  <template  #default="scope">
+    <span style="color:red; font-weight:bold">
+    ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}</span>
+  </template>
+</el-table-column>
+        <el-table-column prop="status" label="状态" min-width="84">
           <template #default="scope">
             <el-tag :type="getStatusTagType(scope.row.status)">
               {{ scope.row.status }}
