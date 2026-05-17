@@ -19,7 +19,9 @@ exports.adminGetAllOrders = async (req, res) => {
         o.source,
         u.username,
         b.book_name AS bookName,
-        n.book_name AS newBookName
+        b.price AS originalPrice,
+        n.book_name AS newBookName,
+        n.price AS newOriginalPrice
       FROM \`order\` o
       LEFT JOIN \`user\` u ON o.user_id = u.id
       LEFT JOIN \`book\` b ON o.book_id = b.id AND o.source = 'normal'
@@ -35,10 +37,24 @@ exports.adminGetAllOrders = async (req, res) => {
     sql += ` ORDER BY o.create_time DESC`;
     const [rows] = await pool.execute(sql, params);
 
-    const data = rows.map(item => ({
-      ...item,
-      bookName: item.source === 'new' ? item.newBookName : item.bookName || '未知图书'
-    }))
+    const data = rows.map(item => {
+      // 图书原价
+      const originalPrice = item.source === 'new' 
+        ? Number(item.newOriginalPrice || 0) 
+        : Number(item.originalPrice || 0);
+
+      // 实付单价（优惠价）
+      const realUnitPrice = item.count > 0 
+        ? (Number(item.totalPrice) / item.count).toFixed(2) 
+        : 0;
+
+      return {
+        ...item,
+        bookName: item.source === 'new' ? item.newBookName : item.bookName || '未知图书',
+        originalPrice: originalPrice.toFixed(2),
+        realUnitPrice: realUnitPrice,
+      };
+    });
 
     res.json({ code: 200, msg: '获取成功', data });
   } catch (err) {
@@ -46,7 +62,6 @@ exports.adminGetAllOrders = async (req, res) => {
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
-
 // 管理员修改订单状态
 exports.adminUpdateOrderStatus = async (req, res) => {
   let connection;

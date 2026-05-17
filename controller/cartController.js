@@ -60,7 +60,7 @@ const [existCart] = await pool.execute(
       }
     }
 
-    //5.有则更新，无则插入（存入真实的商品信息）
+    //5.有则更新，无则插入（存入商品信息）
     if (existCart.length > 0) {
       await pool.execute(
         'UPDATE cart SET quantity = quantity + ? WHERE id = ?',

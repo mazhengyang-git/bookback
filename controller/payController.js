@@ -9,7 +9,7 @@ const createOrderNo = (userId) => {
   return 'OD' + timestamp + random + userIdSuffix;
 };
 
-// 1. 购物车支付-获取支付信息（新书+普通书 都查库存 + 优惠价）
+// 1. 购物车支付-获取支付信息（新书+普通书库存 + 优惠价）
 const getPayInfo = async (req, res) => {
   try {
     let { cartIds } = req.body;
@@ -37,7 +37,7 @@ const getPayInfo = async (req, res) => {
     const payList = [];
     for (let item of cartItems) {
       let realGoods = null;
-      // 新书：查 newbook 表 + 库存 + 🔥 优惠表
+      // 新书：查 newbook 表 + 库存 + 优惠表
       if (item.source === 'new') {
         const [newBook] = await pool.execute(`
           SELECT nb.book_name, nb.price, nb.cover, nb.stock, bd.discount_price
@@ -47,7 +47,7 @@ const getPayInfo = async (req, res) => {
         `, [item.goods_id]);
         realGoods = newBook[0] || {};
       } 
-      // 普通书：查 book 表 + 库存 + 🔥 优惠表
+      // 普通书：查 book 表 + 库存 + 优惠表
       else {
         const [book] = await pool.execute(`
           SELECT b.book_name, b.price, b.cover, b.stock, bd.discount_price
@@ -62,7 +62,7 @@ const getPayInfo = async (req, res) => {
         ...item,
         book_name: realGoods.book_name || '未知图书',
         book_price: realGoods.price || 0,
-        discount_price: realGoods.discount_price || null, // 🔥 返回优惠价
+        discount_price: realGoods.discount_price || null, // 返回优惠价
         book_cover: realGoods.cover || '/default-book.png',
         stock: realGoods.stock || 0
       });
@@ -75,7 +75,7 @@ const getPayInfo = async (req, res) => {
   }
 };
 
-// 2. 购物车支付-提交支付（新书+普通书 统一库存校验+扣减 
+// 2. 购物车支付-提交支付新书+普通书库存校验+扣减 
 const submitPay = async (req, res) => {
   let connection;
   try {
@@ -205,7 +205,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
     }
 
     let book = null;
-    // 2. 🔥 根据source查询对应表 + 左联优惠表，获取discount_price
+    // 2. 根据source查询对应表 + 左联优惠表，获取discount_price
     if (source === 'new') {
       // 新书：book_type=1
       const [newBook] = await pool.execute(`
@@ -244,7 +244,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
       });
     }
 
-    // 5. 🔥 返回统一格式（新增discount_price）
+    // 5. 返回统一格式
     res.status(200).json({
       code: 200,
       msg: '获取直付信息成功',
@@ -255,7 +255,7 @@ const getDirectPayGoodsInfo = async (req, res) => {
         spec: '平装版',
         count: buyCount,
         price: book.price,
-        discount_price: book.discount_price || null // 🔥 关键：返回优惠价
+        discount_price: book.discount_price || null // 返回优惠价
       }
     });
   } catch (error) {

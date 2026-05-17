@@ -69,7 +69,7 @@ const generateDailyDiscount = require('./controller/discountJob');
 // 每天 00:00 自动生成优惠
 schedule.scheduleJob('0 0 0 * * ?', generateDailyDiscount);
 
-// 启动项目时立刻生成一次（测试用）
+// 启动项目时立刻生成一次优惠
 generateDailyDiscount();
 app.listen(3002, () => {
   console.log(`后端服务器运行在：http://localhost:3002 ✅`);

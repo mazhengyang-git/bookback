@@ -48,7 +48,7 @@ exports.addBook = async (req, res) => {
   }
 };
 
-//3.管理员修改图书内容（同步参数顺序）
+//3.管理员修改图书内容
 exports.updateBook = async (req, res) => {
   try {
     if (!req.user || req.user.role !== 'admin') {

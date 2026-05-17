@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
-// 1. 获取【优惠专区图书列表】（左联优惠表，不影响原book.js）
+// 1. 获取【优惠专区图书列表】（左联优惠表）
 router.get('/front/discount/book/list', async (req, res) => {
   try {
     // 修正：将name改为book_name，和表结构保持一致
