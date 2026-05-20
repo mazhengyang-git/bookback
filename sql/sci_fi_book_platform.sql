@@ -129,7 +129,7 @@ CREATE TABLE `book_discount` (
   `book_type` tinyint DEFAULT '0' COMMENT '0-普通图书 1-新书',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_book_type_id` (`book_id`,`book_type`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -385,7 +385,7 @@ CREATE TABLE `seller_bookapply` (
   PRIMARY KEY (`id`),
   KEY `idx_apply_seller` (`seller_id`),
   KEY `idx_apply_audit` (`audit_status`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家图书上架申请表';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家图书上架申请表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -451,7 +451,7 @@ CREATE TABLE `system_config` (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_config_key` (`config_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -471,6 +471,7 @@ CREATE TABLE `user` (
   `phone` varchar(11) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '用户绑定手机号',
   `sign` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '个人签名',
   `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `is_seller_banned` tinyint(1) NOT NULL DEFAULT '0' COMMENT '卖家是否被限制发起图书申请 0=正常 1=被限制',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
@@ -547,4 +548,4 @@ CREATE TABLE `zixun` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-20 14:28:36
+-- Dump completed on 2026-05-20 19:29:16

@@ -11,7 +11,7 @@ exports.getuserment = async (req, res) => {
 
     //2.查询用户列表
     const [list] = await pool.execute(
-      'SELECT id, username, create_time,phone, update_time, role FROM user ORDER BY id DESC'
+      'SELECT id, username, create_time, phone, update_time, role, is_seller_banned FROM user ORDER BY id DESC'
     );
 
     //3.统计买家数量（role = 'buyer'）
@@ -51,5 +51,33 @@ exports.getuserment = async (req, res) => {
   } catch (err) {
     console.error('获取用户列表失败：', err);
     res.status(500).json({ code: 500, msg: '服务器错误，获取用户数据失败' });
+  }
+};
+
+exports.toggleSellerBanStatus = async (req, res) => {
+  try {
+    // 1. 管理员权限校验
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ code: 403, msg: '无管理员权限' });
+    }
+
+    const { userId, isBanned } = req.body;
+
+    // 2. 只允许修改卖家账户
+    await pool.execute(
+      `UPDATE user
+       SET is_seller_banned = ?
+       WHERE id = ? AND role = 'seller'`,
+      [isBanned, userId]
+    );
+
+    res.json({
+      code: 200,
+      msg: isBanned ? '已限制该卖家发起图书申请' : '已解除该卖家限制'
+    });
+
+  } catch (err) {
+    console.error('切换卖家限制状态失败：', err);
+    res.status(500).json({ code: 500, msg: '操作失败' });
   }
 };

@@ -6,6 +6,18 @@ exports.submitApply = async (req, res) => {
     if (!req.user || req.user.role !== 'seller') {
       return res.json({ code: 403, msg: '无卖家权限' });
     }
+
+    // ==============================================
+    // 判断卖家是否被限制
+    // ==============================================
+    const [userRows] = await pool.execute(
+      'SELECT is_seller_banned FROM user WHERE id = ?',
+      [req.user.id]
+    );
+    if (userRows[0].is_seller_banned === 1) {
+      return res.json({ code: 403, msg: '您的账户已被限制，无法发起图书申请' });
+    }
+
     const seller = await getOrCreateSeller(req.user.id);
     const data = pickBookBody(req.body);
     const errMsg = validateBookBody(data);
@@ -51,6 +63,18 @@ exports.updateApply = async (req, res) => {
     if (!req.user || req.user.role !== 'seller') {
       return res.json({ code: 403, msg: '无卖家权限' });
     }
+
+    // ==============================================
+    // 判断卖家是否被限制
+    // ==============================================
+    const [userRows] = await pool.execute(
+      'SELECT is_seller_banned FROM user WHERE id = ?',
+      [req.user.id]
+    );
+    if (userRows[0].is_seller_banned === 1) {
+      return res.json({ code: 403, msg: '您的账户已被限制，无法修改图书申请' });
+    }
+
     const { id } = req.params;
     if (!id) return res.json({ code: 400, msg: '申请ID不能为空' });
 

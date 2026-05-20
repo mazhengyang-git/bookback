@@ -189,8 +189,9 @@ exports.loginBySmsCode = async (req, res) => {
       return res.json({ code: 400, msg: '验证码错误或已过期' });
     }
 
+    // 查询
     const [rows] = await pool.execute(
-      'SELECT * FROM user WHERE phone = ? AND role = ?',
+      'SELECT id, username, phone, role, avatar, sign, is_seller_banned FROM user WHERE phone = ? AND role = ?',
       [phone, role]
     );
 
@@ -208,7 +209,6 @@ exports.loginBySmsCode = async (req, res) => {
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
-
 // ===================== 验证码核验 =====================
 exports.verifyCode = async (req, res) => {
   try {
@@ -356,15 +356,16 @@ exports.getRandomComments = async (req, res) => {
     res.json({ code: 500, msg: '获取评论失败' });
   }
 };
- exports.userinfo = async (req, res) => {
+exports.userinfo = async (req, res) => {
   try {
     const { username } = req.query;
     if (!username) {
       return res.json({ code: 400, msg: "用户名不能为空" });
     }
 
+    //  is_seller_banned
     const [rows] = await pool.execute(
-      "SELECT username, role, avatar, sign FROM user WHERE username = ?",
+      "SELECT username, role, avatar, sign, is_seller_banned FROM user WHERE username = ?",
       [username]
     );
 
