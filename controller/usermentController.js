@@ -1,10 +1,10 @@
 //数据库连接池
 const pool = require('../config/db');
 
-//管理员获取所有用户信息（含买家/卖家数量统计）
+//管理员获取所有用户信息（含买家/卖家/管理员数量统计）
 exports.getuserment = async (req, res) => {
   try {
-    //1.管理员权限校验（失败直接return）
+    //1.管理员权限校验
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({ code: 403, msg: '无管理员权限，禁止访问' });
     }

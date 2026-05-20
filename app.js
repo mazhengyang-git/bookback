@@ -42,9 +42,14 @@ const bookcom = require('./router/bookComrute');
 const shoucang = require('./router/shoucangroute');
 const bookpaihang = require('./router/systembookpaihang');
 const bookDiscountRouter = require('./router/bookdiscount');
+const sellerorder = require('./sellerroute/sellerorder');
+const sellerRouter = require('./sellerroute/sellerRoute');
+
 app.use('/api', bookDiscountRouter);
+app.use('/api/seller', sellerRouter);
 app.use('/api/user', userRouter);
 app.use('/api', orderRouter);
+app.use('/api', sellerorder);
 app.use('/api/cart', cartRouter);
 app.use('/api/book', bookRouter);
 app.use('/api', newbookRouter);
@@ -61,6 +66,7 @@ app.use('/api/shoucang', shoucang);
 // 订单后台路由
 app.use('/api', orderadmin);
 app.use('/api', bookpaihang);
+
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 //启动服务器
 const schedule = require('node-schedule');

@@ -299,8 +299,110 @@ const regionOptions = [
       },
     ],
   },
+  // ===================== 新增：山东省（山河四省）=====================
+  {
+    value: '370000',
+    label: '山东省',
+    children: [
+      { value: '370100', label: '济南市', children: [
+        { value: '370102', label: '历下区' },{ value: '370103', label: '市中区' },
+        { value: '370104', label: '槐荫区' },{ value: '370105', label: '天桥区' },
+        { value: '370112', label: '历城区' },{ value: '370113', label: '长清区' },
+        { value: '370114', label: '章丘区' },{ value: '370115', label: '济阳区' },
+        { value: '370116', label: '莱芜区' },{ value: '370117', label: '钢城区' },
+      ]},
+      { value: '370200', label: '青岛市', children: [
+        { value: '370202', label: '市南区' },{ value: '370203', label: '市北区' },
+        { value: '370211', label: '李沧区' },{ value: '370212', label: '黄岛区' },
+        { value: '370213', label: '崂山区' },{ value: '370214', label: '城阳区' },
+        { value: '370215', label: '即墨区' },
+      ]},
+      { value: '370300', label: '淄博市', children: [
+        { value: '370302', label: '淄川区' },{ value: '370303', label: '张店区' },
+        { value: '370304', label: '博山区' },{ value: '370305', label: '临淄区' },
+        { value: '370306', label: '周村区' },{ value: '370321', label: '桓台县' },
+      ]},
+      { value: '370400', label: '枣庄市', children: [
+        { value: '370402', label: '市中区' },{ value: '370403', label: '薛城区' },
+        { value: '370404', label: '峄城区' },{ value: '370405', label: '台儿庄区' },
+        { value: '370406', label: '山亭区' },
+      ]},
+      { value: '370500', label: '东营市', children: [{ value: '370502', label: '东营区' },{ value: '370503', label: '河口区' }]},
+      { value: '370600', label: '烟台市', children: [{ value: '370602', label: '芝罘区' },{ value: '370611', label: '福山区' },{ value: '370612', label: '莱山区' },{ value: '370613', label: '牟平区' }]},
+      { value: '370700', label: '潍坊市', children: [{ value: '370702', label: '潍城区' },{ value: '370703', label: '寒亭区' },{ value: '370704', label: '坊子区' },{ value: '370705', label: '奎文区' }]},
+      { value: '370800', label: '济宁市', children: [{ value: '370802', label: '任城区' },{ value: '370811', label: '兖州区' }]},
+      { value: '370900', label: '泰安市', children: [{ value: '370902', label: '泰山区' },{ value: '370911', label: '岱岳区' }]},
+      { value: '371000', label: '威海市', children: [{ value: '371002', label: '环翠区' },{ value: '371071', label: '文登区' }]},
+      { value: '371100', label: '日照市', children: [{ value: '371102', label: '东港区' },{ value: '371103', label: '岚山区' }]},
+      { value: '371200', label: '临沂市', children: [{ value: '371302', label: '兰山区' },{ value: '371311', label: '罗庄区' },{ value: '371312', label: '河东区' }]},
+      { value: '371300', label: '德州市', children: [{ value: '371402', label: '德城区' },{ value: '371403', label: '陵城区' }]},
+      { value: '371400', label: '聊城市', children: [{ value: '371502', label: '东昌府区' }]},
+      { value: '371500', label: '滨州市', children: [{ value: '371602', label: '滨城区' },{ value: '371603', label: '沾化区' }]},
+      { value: '371600', label: '菏泽市', children: [{ value: '371702', label: '牡丹区' },{ value: '371703', label: '定陶区' }]},
+    ]
+  },
+  // ===================== 新增：河南省（山河四省）=====================
+  {
+    value: '410000',
+    label: '河南省',
+    children: [
+      { value: '410100', label: '郑州市', children: [
+        { value: '410102', label: '中原区' },{ value: '410103', label: '二七区' },
+        { value: '410104', label: '管城回族区' },{ value: '410105', label: '金水区' },
+        { value: '410106', label: '上街区' },{ value: '410108', label: '惠济区' },
+      ]},
+      { value: '410200', label: '开封市', children: [
+        { value: '410202', label: '龙亭区' },{ value: '410203', label: '顺河回族区' },
+        { value: '410204', label: '鼓楼区' },{ value: '410205', label: '禹王台区' },
+        { value: '410211', label: '祥符区' },
+      ]},
+      { value: '410300', label: '洛阳市', children: [
+        { value: '410302', label: '老城区' },{ value: '410303', label: '西工区' },
+        { value: '410304', label: '瀍河回族区' },{ value: '410305', label: '涧西区' },
+        { value: '410311', label: '洛龙区' },{ value: '410312', label: '吉利区' },
+      ]},
+      { value: '410400', label: '平顶山市', children: [{ value: '410402', label: '新华区' },{ value: '410403', label: '卫东区' },{ value: '410404', label: '石龙区' },{ value: '410411', label: '湛河区' }]},
+      { value: '410500', label: '安阳市', children: [{ value: '410502', label: '文峰区' },{ value: '410503', label: '北关区' },{ value: '410505', label: '殷都区' },{ value: '410506', label: '龙安区' }]},
+      { value: '410600', label: '鹤壁市', children: [{ value: '410602', label: '鹤山区' },{ value: '410603', label: '山城区' },{ value: '410611', label: '淇滨区' }]},
+      { value: '410700', label: '新乡市', children: [{ value: '410702', label: '红旗区' },{ value: '410703', label: '卫滨区' },{ value: '410704', label: '凤泉区' },{ value: '410711', label: '牧野区' }]},
+      { value: '410800', label: '焦作市', children: [{ value: '410802', label: '解放区' },{ value: '410803', label: '中站区' },{ value: '410804', label: '马村区' },{ value: '410811', label: '山阳区' }]},
+      { value: '410900', label: '濮阳市', children: [{ value: '410902', label: '华龙区' }]},
+      { value: '411000', label: '许昌市', children: [{ value: '411002', label: '魏都区' },{ value: '411003', label: '建安区' }]},
+      { value: '411100', label: '漯河市', children: [{ value: '411102', label: '源汇区' },{ value: '411103', label: '郾城区' },{ value: '411104', label: '召陵区' }]},
+      { value: '411200', label: '三门峡市', children: [{ value: '411202', label: '湖滨区' },{ value: '411203', label: '陕州区' }]},
+      { value: '411300', label: '南阳市', children: [{ value: '411302', label: '宛城区' },{ value: '411303', label: '卧龙区' }]},
+      { value: '411400', label: '商丘市', children: [{ value: '411402', label: '梁园区' },{ value: '411403', label: '睢阳区' }]},
+      { value: '411500', label: '信阳市', children: [{ value: '411502', label: '浉河区' },{ value: '411503', label: '平桥区' }]},
+      { value: '411600', label: '周口市', children: [{ value: '411602', label: '川汇区' },{ value: '411603', label: '淮阳区' }]},
+      { value: '411700', label: '驻马店市', children: [{ value: '411702', label: '驿城区' }]},
+    ]
+  },
+  // ===================== 新增：山西省（山河四省）=====================
+  {
+    value: '140000',
+    label: '山西省',
+    children: [
+      { value: '140100', label: '太原市', children: [
+        { value: '140105', label: '小店区' },{ value: '140106', label: '迎泽区' },
+        { value: '140107', label: '杏花岭区' },{ value: '140108', label: '尖草坪区' },
+        { value: '140109', label: '万柏林区' },{ value: '140110', label: '晋源区' },
+      ]},
+      { value: '140200', label: '大同市', children: [
+        { value: '140212', label: '平城区' },{ value: '140213', label: '云冈区' },
+        { value: '140214', label: '新荣区' },{ value: '140215', label: '云州区' },
+      ]},
+      { value: '140300', label: '阳泉市', children: [{ value: '140302', label: '城区' },{ value: '140303', label: '矿区' },{ value: '140311', label: '郊区' }]},
+      { value: '140400', label: '长治市', children: [{ value: '140402', label: '潞州区' },{ value: '140403', label: '上党区' },{ value: '140404', label: '屯留区' },{ value: '140405', label: '潞城区' }]},
+      { value: '140500', label: '晋城市', children: [{ value: '140502', label: '城区' }]},
+      { value: '140600', label: '朔州市', children: [{ value: '140602', label: '朔城区' },{ value: '140603', label: '平鲁区' }]},
+      { value: '140700', label: '晋中市', children: [{ value: '140702', label: '榆次区' },{ value: '140721', label: '太谷区' }]},
+      { value: '140800', label: '运城市', children: [{ value: '140802', label: '盐湖区' }]},
+      { value: '140900', label: '忻州市', children: [{ value: '140902', label: '忻府区' }]},
+      { value: '141000', label: '临汾市', children: [{ value: '141002', label: '尧都区' }]},
+      { value: '141100', label: '吕梁市', children: [{ value: '141102', label: '离石区' }]},
+    ]
+  },
 ];
-
 // 递归构建编码 → 名称映射
 function buildRegionMap(options) {
   options.forEach(option => {
@@ -317,21 +419,31 @@ const getUserOrders = async (req, res) => {
   try {
     const userId = req.user.id;
     
+    // 关联 seller 店铺表，查询店铺信息
     const [orders] = await pool.execute(`
       SELECT 
         o.*, 
         b.book_name, 
         b.cover AS book_cover,
         n.book_name AS new_book_name,
-        n.cover AS new_book_cover
+        n.cover AS new_book_cover,
+        s.book_name AS seller_book_name,
+        s.cover AS seller_book_cover,
+        -- 店铺字段（匹配你的 seller 表）
+        se.id AS shop_id,
+        se.shop_name,
+        se.avatar AS seller_avatar
       FROM \`order\` o
       LEFT JOIN book b ON o.book_id = b.id AND o.source = 'normal'
       LEFT JOIN newbook n ON o.book_id = n.id AND o.source = 'new'
+      LEFT JOIN seller_book s ON o.book_id = s.id AND o.source = 'seller'
+      -- 关联店铺表（核心！）
+      LEFT JOIN seller se ON s.seller_id = se.id
       WHERE o.user_id = ?
       ORDER BY o.create_time DESC
     `, [userId]);
 
-    // 编码转中文
+    // 编码转中文 + 注入店铺数据
     const formatOrders = orders.map(item => {
       const provinceName = regionMap[item.province] || item.province || '';
       const cityName = regionMap[item.city] || item.city || '';
@@ -340,21 +452,27 @@ const getUserOrders = async (req, res) => {
       return {
         id: item.id,
         orderNo: item.order_no,
-        bookName: item.source === 'new' ? item.new_book_name : item.book_name || '未知图书',
+        bookName: item.source === 'new' 
+          ? item.new_book_name 
+          : (item.source === 'seller' ? item.seller_book_name : item.book_name) || '未知图书',
         count: item.count,
         totalPrice: Number(item.total_price) || 0,
         status: item.status || '已付款',
-        bookCover: item.source === 'new' ? (item.new_book_cover || '/default-book.png') : (item.book_cover || '/default-book.png'),
+        bookCover: item.source === 'new' 
+          ? (item.new_book_cover || '/default-book.png') 
+          : (item.source === 'seller' ? (item.seller_book_cover || '/default-book.png') : (item.book_cover || '/default-book.png')),
         createTime: item.create_time || '',
         bookId: item.book_id,
         source: item.source,
-        // 地址已转成中文
         province: provinceName,
         city: cityName,
         district: districtName,
         detailAddress: item.detail_address,
-        // 拼接完整地址
-        fullAddress: `${provinceName} ${cityName} ${districtName} ${item.detail_address || ''}`.trim()
+        fullAddress: `${provinceName} ${cityName} ${districtName} ${item.detail_address || ''}`.trim(),
+        // 店铺信息
+        shopId: item.shop_id || null,
+        shopName: item.shop_name || '官方店铺',
+        sellerAvatar: item.seller_avatar || '/default-avatar.png'
       };
     });
 
@@ -396,10 +514,16 @@ const deleteOrders=async(req,res)=>{
       await adjustBookSalesDelta(connection, order, -Math.abs(Number(order.count) || 0));
     }
     
+    // 库存回滚
     if (paidStatus.includes(order.status)) {
       if (order.source === 'new') {
         await connection.execute(
           `UPDATE newbook SET stock = stock + ? WHERE id = ?`,
+          [order.count, order.book_id]
+        );
+      } else if (order.source === 'seller') {
+        await connection.execute(
+          `UPDATE seller_book SET stock = stock + ? WHERE id = ?`,
           [order.count, order.book_id]
         );
       } else {

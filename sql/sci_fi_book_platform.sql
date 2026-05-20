@@ -89,7 +89,28 @@ CREATE TABLE `book_comment` (
   KEY `idx_order_id` (`order_id`),
   CONSTRAINT `fk_comment_order` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='图书用户评价表';
+) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='图书用户评价表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `book_comment_reply`
+--
+
+DROP TABLE IF EXISTS `book_comment_reply`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `book_comment_reply` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '追评ID',
+  `comment_id` int NOT NULL COMMENT '主评论ID',
+  `user_id` int NOT NULL COMMENT '追评用户ID',
+  `content` text NOT NULL COMMENT '追评内容',
+  `source` varchar(20) NOT NULL COMMENT '数据来源：normal/new/seller',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_comment_id` (`comment_id`),
+  KEY `idx_user_id` (`user_id`),
+  CONSTRAINT `book_comment_reply_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `book_comment` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='图书评价追评表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -134,7 +155,7 @@ CREATE TABLE `cart` (
   KEY `goods_id` (`goods_id`),
   CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`goods_id`) REFERENCES `book` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=207 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车表';
+) ENGINE=InnoDB AUTO_INCREMENT=244 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -277,7 +298,94 @@ CREATE TABLE `order` (
   KEY `book_id` (`book_id`),
   CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   CONSTRAINT `order_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `seller`
+--
+
+DROP TABLE IF EXISTS `seller`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `seller` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '卖家店铺ID',
+  `user_id` int NOT NULL COMMENT '关联用户表 user.id',
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '店铺头像URL',
+  `shop_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '店铺名称',
+  `intro` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '店铺简介',
+  `contact` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '联系方式',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_seller_user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家店铺表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `seller_book`
+--
+
+DROP TABLE IF EXISTS `seller_book`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `seller_book` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '卖家图书ID',
+  `seller_id` int NOT NULL COMMENT '卖家店铺ID',
+  `book_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '图书名称',
+  `author` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '作者',
+  `author_into` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '作者简介',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图书分类',
+  `price` decimal(10,2) NOT NULL COMMENT '图书单价',
+  `stock` int NOT NULL DEFAULT '0' COMMENT '库存',
+  `sales_count` int NOT NULL DEFAULT '0' COMMENT '累计销量',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '封面URL',
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书简介',
+  `mulu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书目录',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '上下架 1上架 0下架',
+  `publisher` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '出版社',
+  `avg_score` decimal(2,1) NOT NULL DEFAULT '0.0' COMMENT '平均分',
+  `comment_count` int NOT NULL DEFAULT '0' COMMENT '评价数',
+  `audit_status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '审核状态 1已通过',
+  `audit_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '审核备注',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上架时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_seller_book_seller` (`seller_id`),
+  KEY `idx_seller_book_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家正式图书表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `seller_bookapply`
+--
+
+DROP TABLE IF EXISTS `seller_bookapply`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `seller_bookapply` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '申请ID',
+  `seller_id` int NOT NULL COMMENT '卖家店铺ID seller.id',
+  `book_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '图书名称',
+  `author` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '作者',
+  `author_into` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '作者简介',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图书分类',
+  `price` decimal(10,2) NOT NULL COMMENT '图书单价',
+  `stock` int NOT NULL DEFAULT '0' COMMENT '库存',
+  `sales_count` int NOT NULL DEFAULT '0' COMMENT '累计销量',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '封面URL',
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书简介',
+  `mulu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书目录',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '上下架 1上架 0下架',
+  `publisher` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '出版社',
+  `avg_score` decimal(2,1) NOT NULL DEFAULT '0.0' COMMENT '平均分',
+  `comment_count` int NOT NULL DEFAULT '0' COMMENT '评价数',
+  `audit_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '审核状态 0待审核 1通过 2驳回',
+  `audit_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '驳回原因',
+  `source_book_id` int DEFAULT NULL COMMENT '关联已上架图书ID',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_apply_seller` (`seller_id`),
+  KEY `idx_apply_audit` (`audit_status`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家图书上架申请表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -299,11 +407,11 @@ CREATE TABLE `shoucang` (
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `source` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'normal' COMMENT '图书来源：normal-普通书 new-新书',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `user_goods_spec` (`user_id`,`goods_id`,`spec`),
+  UNIQUE KEY `user_goods_spec_source` (`user_id`,`goods_id`,`spec`,`source`),
   KEY `goods_id` (`goods_id`),
-  CONSTRAINT `shoucang_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `shoucang_ibfk_2` FOREIGN KEY (`goods_id`) REFERENCES `book` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=185 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏夹表';
+  KEY `idx_user_id` (`user_id`),
+  CONSTRAINT `shoucang_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=235 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏夹表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -365,7 +473,7 @@ CREATE TABLE `user` (
   `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -439,4 +547,4 @@ CREATE TABLE `zixun` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-16 14:41:19
+-- Dump completed on 2026-05-20 14:28:36

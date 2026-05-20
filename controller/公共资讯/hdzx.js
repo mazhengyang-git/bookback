@@ -1,7 +1,7 @@
 const pool = require('../../config/db');
 
 
-// ================== 活动列表（只查主表）==================
+// ================== 活动列表==================
 exports.gethuodongApiList = async (req, res) => {
   try {
     const [list] = await pool.execute(`
@@ -86,7 +86,7 @@ exports.addhuodong = async (req, res) => {
       desc,
       image,
       url,
-      status,       // 前端传字符串 '未开始'
+      status,     
       content,
       time,
       create_time,
@@ -247,7 +247,7 @@ exports.addzixun = async (req, res) => {
       desc,
       image,
       url,
-      status,      // 前端传的是字符串 '未发布'
+      status,      
       content,
       time,
       create_time,

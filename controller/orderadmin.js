@@ -4,7 +4,7 @@ const {
   adjustBookSalesDelta,
 } = require('../utils/bookSales');
 
-// 管理员获取所有订单（新书+普通书）
+// 管理员获取所有订单（普通书+新书+商家书）
 exports.adminGetAllOrders = async (req, res) => {
   try {
     const { status } = req.query;
@@ -18,14 +18,20 @@ exports.adminGetAllOrders = async (req, res) => {
         o.create_time AS createTime,
         o.source,
         u.username,
+        -- 普通书
         b.book_name AS bookName,
         b.price AS originalPrice,
+        -- 新书
         n.book_name AS newBookName,
-        n.price AS newOriginalPrice
+        n.price AS newOriginalPrice,
+        -- 商家书
+        s.book_name AS sellerBookName,
+        s.price AS sellerOriginalPrice
       FROM \`order\` o
       LEFT JOIN \`user\` u ON o.user_id = u.id
       LEFT JOIN \`book\` b ON o.book_id = b.id AND o.source = 'normal'
       LEFT JOIN \`newbook\` n ON o.book_id = n.id AND o.source = 'new'
+      LEFT JOIN \`seller_book\` s ON o.book_id = s.id AND o.source = 'seller'
     `;
     let params = [];
 
@@ -38,10 +44,20 @@ exports.adminGetAllOrders = async (req, res) => {
     const [rows] = await pool.execute(sql, params);
 
     const data = rows.map(item => {
-      // 图书原价
-      const originalPrice = item.source === 'new' 
-        ? Number(item.newOriginalPrice || 0) 
-        : Number(item.originalPrice || 0);
+      // 根据source区分不同图书类型的原价
+      let originalPrice = 0;
+      let bookName = '未知图书';
+      
+      if (item.source === 'new') {
+        originalPrice = Number(item.newOriginalPrice || 0);
+        bookName = item.newBookName || '未知新书';
+      } else if (item.source === 'seller') {
+        originalPrice = Number(item.sellerOriginalPrice || 0);
+        bookName = item.sellerBookName || '未知商家书';
+      } else {
+        originalPrice = Number(item.originalPrice || 0);
+        bookName = item.bookName || '未知普通书';
+      }
 
       // 实付单价（优惠价）
       const realUnitPrice = item.count > 0 
@@ -50,7 +66,7 @@ exports.adminGetAllOrders = async (req, res) => {
 
       return {
         ...item,
-        bookName: item.source === 'new' ? item.newBookName : item.bookName || '未知图书',
+        bookName,
         originalPrice: originalPrice.toFixed(2),
         realUnitPrice: realUnitPrice,
       };
@@ -58,10 +74,11 @@ exports.adminGetAllOrders = async (req, res) => {
 
     res.json({ code: 200, msg: '获取成功', data });
   } catch (err) {
-    console.error(err);
+    console.error('获取订单列表错误：', err);
     res.json({ code: 500, msg: '服务器错误' });
   }
 };
+
 // 管理员修改订单状态
 exports.adminUpdateOrderStatus = async (req, res) => {
   let connection;
@@ -103,8 +120,7 @@ exports.adminUpdateOrderStatus = async (req, res) => {
     console.log('是否已记录销量:', recorded);
     console.log('========================');
 
-    // ==============================================
-    // 核心逻辑（锁死，绝对不会出错）
+
     // 1. 非计数状态 → 计数状态：加销量 + 标记1
     if (newCounted && !oldCounted && !recorded) {
       console.log('✅ 执行：增加销量');

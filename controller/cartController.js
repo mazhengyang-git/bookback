@@ -5,10 +5,7 @@ const pool = require('../config/db')
 //1.加入购物车 
 exports.addCart = async (req, res) => {
   try {
-    console.log('前端传入的参数：', req.body);
-    // 接收前端传递的 新书名称/价格/封面
-    const { goodsId, num, spec, source, bookName, bookPrice, bookCover } = req.body;
-    console.log('当前登录用户ID：', req.user?.id);
+    const { goodsId, num, spec, source } = req.body;
     const userId = req.user.id;
 
     //1.参数校验
@@ -20,47 +17,51 @@ exports.addCart = async (req, res) => {
     }
 
     let bookInfo = null;
-    // 新书 不查book表，直接用前端传的信息
+    // 所有类型图书都从数据库获取最新信息，不依赖前端传参
     if (source === 'new') {
-      bookInfo = {
-        book_name: bookName || '新书',
-        price: bookPrice || 0,
-        cover: bookCover || '/default-book.png'
-      };
+      const [newRows] = await pool.execute('SELECT book_name, price, cover FROM newbook WHERE id = ?', [goodsId]);
+      if (!newRows.length) return res.json({ code: 400, msg: '新书不存在' });
+      bookInfo = newRows[0];
+    } else if (source === 'seller') {
+      const [sellerRows] = await pool.execute('SELECT book_name, price, cover FROM seller_book WHERE id = ?', [goodsId]);
+      if (!sellerRows.length) return res.json({ code: 400, msg: '商家图书不存在' });
+      bookInfo = sellerRows[0];
     } else {
-      // 普通书：正常查book表
-      const [bookRows] = await pool.execute(
-        'SELECT stock, book_name, price, cover FROM book WHERE id = ?',
-        [goodsId]
-      );
-      if (!bookRows.length) {
-        return res.json({ code: 400, msg: '图书不存在' });
-      }
+      const [bookRows] = await pool.execute('SELECT book_name, price, cover FROM book WHERE id = ?', [goodsId]);
+      if (!bookRows.length) return res.json({ code: 400, msg: '普通图书不存在' });
       bookInfo = bookRows[0];
     }
 
-    
-   //3.查询当前购物车已有的数量（根据source区分新书/普通书）
-const [existCart] = await pool.execute(
-  'SELECT id, quantity FROM cart WHERE user_id = ? AND goods_id = ? AND spec = ? AND source = ?',
-  [userId, goodsId, spec, source || 'normal']
-);
+    //3.查询当前购物车已有的数量
+    const [existCart] = await pool.execute(
+      'SELECT id, quantity FROM cart WHERE user_id = ? AND goods_id = ? AND spec = ? AND source = ?',
+      [userId, goodsId, spec, source || 'normal']
+    );
 
     const alreadyInCart = existCart.length > 0 ? existCart[0].quantity : 0;
     const totalWillBe = alreadyInCart + num;
 
-    // 普通书校验库存，新书不校验
-    if (source !== 'new') {
-      const stock = bookInfo.stock;
-      if (totalWillBe > stock) {
-        return res.json({
-          code: 400,
-          msg: `库存不足！购物车已有 ${alreadyInCart} 本，最多还能加 ${stock - alreadyInCart} 本`
-        });
-      }
+    // 库存校验
+    let stock = 0;
+    if (source === 'new') {
+      const [newBookInfo] = await pool.execute('SELECT stock FROM newbook WHERE id = ?', [goodsId]);
+      stock = newBookInfo[0]?.stock || 999;
+    } else if (source === 'seller') {
+      const [sellerBookInfo] = await pool.execute('SELECT stock FROM seller_book WHERE id = ?', [goodsId]);
+      stock = sellerBookInfo[0]?.stock || 999;
+    } else {
+      const [bookInfo] = await pool.execute('SELECT stock FROM book WHERE id = ?', [goodsId]);
+      stock = bookInfo[0]?.stock || 999;
     }
 
-    //5.有则更新，无则插入（存入商品信息）
+    if (totalWillBe > stock) {
+      return res.json({
+        code: 400,
+        msg: `库存不足！购物车已有 ${alreadyInCart} 本，最多还能加 ${stock - alreadyInCart} 本`
+      });
+    }
+
+    //5.有则更新，无则插入
     if (existCart.length > 0) {
       await pool.execute(
         'UPDATE cart SET quantity = quantity + ? WHERE id = ?',
@@ -150,12 +151,17 @@ exports.updateCart = async (req, res) => {
       return res.json({ code: 200, msg: '数量更新成功' });
     }
 
-    //普通书校验库存
-    const [bookRows] = await pool.execute('SELECT stock FROM book WHERE id = ?', [goodsId]);
-    if (!bookRows.length) {
-      return res.json({ code: 400, msg: '图书不存在' });
+    // 普通书/卖家书校验库存
+    let stock = 0;
+    if (source === 'seller') {
+      const [sellerRows] = await pool.execute('SELECT stock FROM seller_book WHERE id = ?', [goodsId]);
+      if (!sellerRows.length) return res.json({ code: 400, msg: '图书不存在' });
+      stock = sellerRows[0].stock;
+    } else {
+      const [bookRows] = await pool.execute('SELECT stock FROM book WHERE id = ?', [goodsId]);
+      if (!bookRows.length) return res.json({ code: 400, msg: '图书不存在' });
+      stock = bookRows[0].stock;
     }
-    const stock = bookRows[0].stock;
     if (quantity > stock) {
       return res.json({ code: 400, msg: `库存不足，最多只能设置为 ${stock} 本` });
     }

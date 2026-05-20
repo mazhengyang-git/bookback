@@ -3,7 +3,7 @@ const router = express.Router();
 const cartController = require('../controller/cartController');
 const auth = require('../middleware/auth'); //复用鉴权中间件
 
-//所有cart接口都鉴权
+//cart接口鉴权
 router.post('/add', auth, cartController.addCart); //加入购物车
 router.get('/list', auth, cartController.getCartList); //获取购物车列表
 router.post('/update', auth, cartController.updateCart); //更新数量

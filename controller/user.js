@@ -28,14 +28,38 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 },
+  // 支持 WebP
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png'];
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/x-webp'];
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('仅支持 JPG/PNG'));
+      cb(new Error('仅支持 JPG/PNG/WEBP'));
     }
   }
+});
+const imageUploadDir = path.join(__dirname, '../public/uploads/images');
+if (!fs.existsSync(imageUploadDir)) {
+  fs.mkdirSync(imageUploadDir, { recursive: true });
+}
+
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, imageUploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'img-' + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const imageUpload = multer({
+  storage: imageStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  // 支持 WebP
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/x-webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('仅支持 JPG/PNG/WEBP'));
+  },
 });
 
 // ===================== 注册 =====================
@@ -270,6 +294,24 @@ exports.updateAvatar = async (req, res) => {
 
     await pool.execute('UPDATE user SET avatar = ? WHERE id = ?', [avatar || '', decoded.id]);
     res.json({ code: 200, msg: '头像更新成功' });
+  } catch (err) {
+    res.json({ code: 500, msg: '服务器错误' });
+  }
+};
+
+// ===================== 通用图片上传（不写入用户表）=====================
+exports.uploadImage = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json({ code: 401, msg: '请先登录' });
+    jwt.verify(token, 'abc123def456');
+
+    imageUpload.single('file')(req, res, (err) => {
+      if (err) return res.json({ code: 400, msg: '上传失败：' + err.message });
+      if (!req.file) return res.json({ code: 400, msg: '请选择图片' });
+      const imageUrl = `http://localhost:3002/uploads/images/${req.file.filename}`;
+      res.json({ code: 200, msg: '上传成功', data: { url: imageUrl } });
+    });
   } catch (err) {
     res.json({ code: 500, msg: '服务器错误' });
   }

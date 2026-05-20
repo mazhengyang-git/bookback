@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
-// 1. 获取【优惠专区图书列表】（左联优惠表）
+// 1. 获取优惠专区图书列表（左联优惠表）
 router.get('/front/discount/book/list', async (req, res) => {
   try {
-    // 修正：将name改为book_name，和表结构保持一致
+   
     const [discountBooks] = await pool.execute(`
       -- 普通图书优惠
       SELECT 
@@ -51,7 +51,7 @@ router.get('/front/discount/book/list', async (req, res) => {
     });
   }
 });
-// 2. 获取【优惠图书详情】
+// 2. 获取优惠图书详情
 router.get('/front/discount/book/detail', async (req, res) => {
   try {
     const { id } = req.query;
