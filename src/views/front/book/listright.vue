@@ -541,7 +541,7 @@ const loadHotBooks = async () => {
     const res = await getBookListApi('全部')
     const data = (res as any).data || []
     if (Array.isArray(data)) {
-      // 取前5本作为热门图书（实际项目中可以根据评分、销量等排序）
+      // 取随机图书作为热门图书
       hotBooks.value = getRandomList(data, 5)
     }
   } catch (error) {
@@ -555,7 +555,7 @@ const loadNewBooks = async () => {
     const res = await getBookListApi('全部')
     const data = (res as any).data || []
     if (Array.isArray(data)) {
-      // 取后3本作为新书推荐（实际项目中应该有专门的新书接口）
+      // 取后3本作为新书推荐
       newBooks.value = data.slice(-3)
     }
   } catch (error) {
@@ -563,7 +563,7 @@ const loadNewBooks = async () => {
   }
 }
 
-// 从父组件接收数据的方法（可选）
+// 从父组件接收数据的方法
 const updateData = (data: any) => {
   if (data.hotBooks) hotBooks.value = data.hotBooks
   if (data.newBooks) newBooks.value = data.newBooks

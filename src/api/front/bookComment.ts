@@ -58,3 +58,16 @@ export function deleteCommentApi(data: { commentId: number; bookId: number; sour
     data,
   })
 }
+
+// 1. 编辑评论
+export const editCommentApi = (data: any) => {
+  return request.post('/api/comment/edit', data)
+}
+// 2. 发表追评
+export const addReplyApi = (data: any) => {
+  return request.post('/api/comment/reply/add', data)
+}
+// 3. 获取追评列表
+export const getReplyListApi = (commentId: number, source: string) => {
+  return request.get('/api/comment/reply/list', { params: { commentId, source } })
+}

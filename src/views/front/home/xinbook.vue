@@ -16,7 +16,7 @@
           v-for="book in currentPageBooks"
           :key="book.id"
           class="new-book-item"
-          @click="go(`/book/${book.id}?source=new`)"
+          @click="go(`/book1/${book.id}?source=new`)"
         >
           <!--@vue-ignore--><img
             :src="book.cover || '/img/default-book.jpg'"
@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <!-- 分页：<上一页 1 2 3 下一页> 样式 -->
+        <!-- 分页样式 -->
         <div class="pagination-box">
           <button @click="prevPage" :disabled="currentPage === 1" class="page-btn text-btn">
             上一页
@@ -215,8 +215,9 @@ onMounted(() => {
 }
 
 .new-book-cover {
-  width: 180px;
-  height: 240px;
+  width: auto;
+  height: auto;
+  max-height: 240px;
   object-fit: cover;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);

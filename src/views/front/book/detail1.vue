@@ -2,8 +2,9 @@
 import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
-// 🔥 引入你封装好的API（适配真实路径）
+// 引入封装API
 import { getBookDetailApi } from '@/api/front/book'
+import { getSellerBookDetailApi } from '@/api/seller/front'
 import type { Book } from '@/types/index'
 import { useCartStore } from '@/store/modules/cart'
 import { useShoucangStore } from '@/store/shoucang'
@@ -44,6 +45,28 @@ function go(path: string) {
   router.push(path)
 }
 
+const goSellerShop = () => {
+  if (sellerShop.value?.shop_id) {
+    router.push(`/shop/${sellerShop.value.shop_id}`)
+  }
+}
+
+
+
+const handleShare = () => {
+  // 使用当前图书数据
+  const bookTitle = book.value?.name || '星途科幻图书'
+  if (navigator.share) {
+    navigator.share({ 
+      title: bookTitle, 
+      url: window.location.href 
+    }).catch(() => {})
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => alert('链接已复制到剪贴板'))
+      .catch(() => {})
+  }
+}
 // 评分/评论
 const localAvgScore = ref<number | null>(null)
 const commentTotalCount = ref<number>(0)
@@ -170,13 +193,19 @@ const handleLogout = () => {
   ElMessage.success('退出成功')
   router.push('/login')
 }
-
-// 核心：获取路由参数
 const bookId = computed(() => Number(route.params.id))
-const bookType = computed(() => route.query.book_type || 0) // 0=普通 1=新书
-//@ts-ignore
-const source = computed(() => bookType.value == 1 ? 'new' : 'normal')
-
+// 从路由 query 中获取 source
+const sourceFromRoute = computed(() => route.query.source as string || 'normal')
+// 映射 source 为 book_type：normal=0，new=1，seller=2
+const bookType = computed(() => {
+  if (sourceFromRoute.value === 'new') return 1
+  if (sourceFromRoute.value === 'seller') return 2
+  return 0
+})
+const isSellerBook = computed(() => bookType.value === 2)
+// 用路由source
+const source = computed(() => sourceFromRoute.value)
+const sellerShop = ref<{ shop_id?: number; shop_name?: string; seller_avatar?: string } | null>(null)
 // 状态
 const cartStore = useCartStore()
 const shoucangStore = useShoucangStore()
@@ -206,12 +235,23 @@ const loadBookDetail = async () => {
 
   try {
     loading.value = true
-    // 调用封装好的API，自动匹配 /api/book/front/book/detail
-    const res = await getBookDetailApi(currentBookId, { book_type: currentBookType })
+    // 调用封装API
+    const res = isSellerBook.value
+      ? await getSellerBookDetailApi(currentBookId)
+      : await getBookDetailApi(currentBookId, { book_type: currentBookType })
     //@ts-ignore
     if (res.code === 200 && res.data) {
       //@ts-ignore
       book.value = res.data
+      if (isSellerBook.value) {
+        sellerShop.value = {
+          shop_id: res.data.shop_id,
+          shop_name: res.data.shop_name,
+          seller_avatar: res.data.seller_avatar,
+        }
+      } else {
+        sellerShop.value = null
+      }
     } else {
       ElMessage.error('未找到该图书数据')
     }
@@ -366,6 +406,7 @@ watch(
 
 <template>
   <div class="home-top-nav">
+    
     <div class="nav-left">
       <h2 class="logo1 sci-fi-title1">星途科幻图书</h2>
     </div>
@@ -414,19 +455,21 @@ watch(
       </div>
     </div>
   </div>
-
+  
   <div v-if="book" class="book-detail-container" v-cloak>
+    
     <div class="book-detail-content">
+     
       <el-button class="ziwy" style="position: absolute; font-size: 17px; margin-left: 250px; top: 19px;z-index:10 " link @click="go('/shoucang')">
         <img class="gwdh1" style="width: 32px; height: auto; margin-right: 3px;" src="/img/收藏夹.png" /><span style="color:red">收藏夹</span>
       </el-button>
        <el-button
          link class="ziwy2" @click="dingbu"
-         
-         
           ><span >↑</span></el-button>
+      <!-- 左侧：图书封面 -->
       <div class="book-detail-cover" ref="coverRef">
         <!--@vue-ignore-->
+        
         <el-image
           :src="book.cover || '/img/default-book.jpg'"
           referrerpolicy="no-referrer"
@@ -438,42 +481,66 @@ watch(
         />
       </div>
 
+      <!-- 右侧：图书信息区 -->
       <div class="book-detail-info">
-        <h1 class="book-detail-name">{{ book.name || '未知图书' }}</h1>
-        <p class="book-detail-author">作者：{{ book.author || '未知作者' }}</p>
-        <p class="book-detail-category">分类：{{ book.category || '未知分类' }}</p>
         
-        <!-- 优惠价格展示（自动识别普通/新书） -->
-        <div class="price-group" style="margin: 10px 0;">
-          <template v-if="book.discount_price">
-            <span style="text-decoration: line-through; color: #999; font-size: 16px;">¥{{ formatPrice(book.price) }}</span>
-            <span style="color: #f56c6c; font-size: 24px; font-weight: bold; margin: 0 10px;">¥{{ formatPrice(book.discount_price) }}</span>
-            <el-tag type="danger">{{ book.discount_rate }}折</el-tag>
-          </template>
-          <span style="font-size: 24px; font-weight: bold;color: orange;" v-else>¥{{ formatPrice(book.price) }}</span>
-        </div>
+        <div class="info-main">
+          
+       <h1 class="book-detail-name">{{ book.name || '未知图书' }}</h1> <button style="white-space: nowrop !important;"
+       class="btn-share"
+        @click="handleShare">
+        分享→
+      </button>
+          <el-tag v-if="isSellerBook" type="warning" class="seller-tag">商家自营</el-tag>
+          <p class="book-detail-author">作者：{{ book.author || '未知作者' }}</p>
+          <p class="book-detail-category">分类：{{ book.category || '未知分类' }}</p>
+          
+          <!-- 优惠价格展示 -->
+          <div class="price-group" style="margin: 10px 0;">
+            <template v-if="book.discount_price">
+              <span style="text-decoration: line-through; color: #999; font-size: 16px;">¥{{ formatPrice(book.price) }}</span>
+              <span style="color: #f56c6c; font-size: 24px; font-weight: bold; margin: 0 10px;">¥{{ formatPrice(book.discount_price) }}</span>
+              <el-tag type="danger">{{ book.discount_rate }}折</el-tag>
+            </template>
+            <span style="font-size: 24px; font-weight: bold;color: orange;" v-else>¥{{ formatPrice(book.price) }}</span>
+          </div>
 
-        <p class="book-detail-stock">库存：{{ book.stock || 0 }}本</p>
-        <p class="book-detail-stock book-detail-sales">销量：{{ Number(book.sales_count) || 0 }}件</p>
-        <p class="book-detail-stock">出版社：{{ book.publisher}}</p>
+          <p class="book-detail-stock">库存：{{ book.stock || 0 }}本</p>
+          <p class="book-detail-stock book-detail-sales">销量：{{ Number(book.sales_count) || 0 }}件</p>
+          <p class="book-detail-stock">出版社：{{ book.publisher}}</p>
+
+          <!-- 商家店铺模块 -->
+          <div v-if="isSellerBook && sellerShop" class="seller-shop-block" @click="goSellerShop">
+            <el-avatar :size="48" :src="sellerShop.seller_avatar || '/img/default-avatar.png'" />
+            <div class="seller-shop-text">
+              <span class="seller-shop-label">商家店铺</span>
+              <span class="seller-shop-name">{{ sellerShop.shop_name }}</span>
+            </div>
+          </div>
+          
+          <div class="book-detail-count">
+            <el-input-number v-model="buyCount" :min="1" :max="book.stock || 1" label="购买数量" />
+          </div>
+
+        <div class="anniuwy">
+          <el-button type="primary" size="large" class="add-cart-btn" @click="addToCart" :disabled="!userStore.token">
+            {{ userStore.token ? '加入购物车' : '加入购物车? 请先登录' }}
+          </el-button>
+          <el-button type="primary" size="large" class="add-cart-btn2" @click="addToShoucang" :disabled="!userStore.token">
+            {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
+          </el-button>
+          <el-button type="primary" size="large" class="add-cart-btn1" @click="handlePay">去支付</el-button>
+        </div> </div>
+
+        <!-- 右侧评论框 -->
         
-        <div class="book-detail-count">
-          <el-input-number v-model="buyCount" :min="1" :max="book.stock || 1" label="购买数量" />
-        </div>
-
-        <el-button type="primary" size="large" class="add-cart-btn" @click="addToCart" :disabled="!userStore.token">
-          {{ userStore.token ? '加入购物车' : '加入购物车? 请先登录' }}
-        </el-button>
-        <el-button type="primary" size="large" class="add-cart-btn2" @click="addToShoucang" :disabled="!userStore.token">
-          {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
-        </el-button>
-        <el-button type="primary" style="margin-top: 13px" class="add-cart-btn1" size="large" @click="handlePay">去支付</el-button>
-
-        <div class="comment-preview-box">
+      </div>
+    </div>
+    <div class="comment-preview-box">
           <h4>图书综合评分</h4>
           <div class="score-display">
             <el-rate v-if="localAvgScore !== null" v-model="localAvgScore" disabled :max="5" show-score text-color="#ff7d00" :score-format="(value) => value.toFixed(1)" />
-            <span class="score-text">{{ localAvgScore?.toFixed(1) }}</span>
+          
             <span class="comment-count">共 {{ commentTotalCount }} 人评价</span>
           </div>
 
@@ -484,11 +551,8 @@ watch(
             </div>
           </div>
 
-          <el-button type="success" class="add-cart-btn1" style="margin-top: 15px; width: 100%" size="large" @click="commentVisible = true">查看图书评价</el-button>
+          <el-button type="success" class="add-cart-btn11" style="margin-top: 15px; width: 100%" size="large" @click="commentVisible = true">查看图书评价</el-button>
         </div>
-      </div>
-    </div>
-
     <div class="book-detail-desc">
       <h3>图书简介</h3>
       <p ref="descRef" class="desc-content" :class="{ expanded: isDescExpanded }" style="text-indent: 2em; white-space: pre-wrap">
@@ -529,98 +593,34 @@ watch(
 </template>
 
 <style scoped>
-.ziwy2{
-   position: fixed !important;
-  top: 69.5vh !important;
-  right: 0 !important;
-  z-index: 9999 !important;
- 
-  height: auto;
-  background-color: #79787881 !important ;
- font-size: 32px !important;
- font-weight: 900 !important;
- padding-left: 9px;
- padding-right: 9px;
-  transform: translateX(0px);
-  padding-top: 7px;
-  padding-bottom: 7px !important;
-  padding-left: 9px !important;
-  padding-right: 9px !important;
-  width: 50px;
-  color: #ffffff;
-transition: all 0.25s ease;
+.anniuwy{
+  margin-top: -28px;
+  width: fit-content !important;
+display: flex !important;
+flex-direction: column;
 }
-.ziwy2:hover{
-  
-  transform: translateX(0px);
-  color: #ff0000;
-  
-}
-
-.ziwy{
-   position: fixed !important;
-  top: 49.5vh !important;
-  right: 0 !important;
-  z-index: 9999 !important;
+        .btn-share {
+        
+          position: absolute;
+        right: 20px;
+        margin-top: -85px;
+  flex: 1;
+  padding: 9px;
+  border: 1px solid rgba(139,92,246,0.4);
+  border-radius: 8px;
+  font-size: 16px;
   width: auto;
-  height: auto;
-  background-color: #0000001e !important;
-  border-radius: 12px 0 0 12px;
-  transform: translateX(55px);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 7px;
-transition: all 0.3s ease;
-}
-.ziwy:hover{
-  
-  transform: translateX(0px);
-  
-  
-}
-.gwdh1 {
- 
-  animation: gwdh1 2s infinite;
-}
-@keyframes gwdh1 {
-  0%,
-  100% {
-    transform: scale(1) rotate3d(0, 0, 0, 0deg);
-  }
-  25% {
-    transform: scale(1.1) ;
-  }
-  50% {
-    transform: scale(1.15);
-  }
-  75% {
-    transform: scale(1.1) ;
-  }
+  font-weight: 600;
+  cursor: pointer;
+  color: #961c00;
+  background: transparent;
+  transition: all 0.2s;
 }
 
-.twy{
-  bottom: 0;
-}
-.gwdh {
-  animation: gwdh 2s infinite;
-}
-@keyframes gwdh {
-  0%,
-  100% {
-    transform: scale(1) rotate3d(0, 0, 0, 0deg);
-  }
-  25% {
-    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
-  }
-  50% {
-    transform: scale(1.1) rotate3d(0, 1, 1, 12deg);
-  }
-  75% {
-    transform: scale(1.1) rotate3d(0, 1, 0, 10deg);
-  }
-}
-</style>
-<style scoped>
+.btn-share:hover { background: rgba(139,92,246,0.15); }
+            .price-group{
+
+            }
 /* 基础响应式配置 */
 :root {
   font-size: 16px;
@@ -646,10 +646,7 @@ transition: all 0.3s ease;
   width: 100%;
   height: 3.75rem;
   opacity: 0.9;
-  background: linear-gradient(
-    180deg,
-    
-  );
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1));
   border-bottom: 1px solid rgba(5, 44, 84, 0.3);
   box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -679,43 +676,34 @@ transition: all 0.3s ease;
 .acwy {
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* 所有子按钮强制等宽 */
-  /* 核心居中 和父按钮严格水平居中，零偏移 */
+  align-items: stretch;
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
-  margin-top: 2px; /* 和父按钮轻微间距，不遮挡 */
+  margin-top: 2px;
 }
 
-/* 所有按钮基础样式完全统一 */
-.ac1,
-.ac2 {
-  /* 统一固定宽度 */
+.ac1, .ac2 {
   width: clamp(101px, 10vw, 117.7px) !important;
   padding: 7px 20px !important;
   height: auto !important;
   text-align: center;
   box-sizing: border-box;
-  margin: 0 !important; /* 清除所有自带外边距 */
-  border: 1px soild black !important;
+  margin: 0 !important;
+  border: 1px solid black !important;
 }
-
-/* 奇数按钮：仅顶部圆角，底部直角无缝衔接下一个按钮 */
 .ac1 {
   border-radius: 4px 4px 0 0 !important;
-  
   left: unset !important;
 }
-
-/* 偶数按钮：仅底部圆角，顶部直角无缝衔接上一个按钮 */
 .ac2 {
   border-radius: 0 0 4px 4px !important;
-  margin-top: -1px; /* 上下完美拼接 */
-
+  margin-top: -1px !important;
   left: unset !important;
 }
+
 /* 图书详情容器 */
 .book-detail-container {
   width: 100%;
@@ -723,7 +711,6 @@ transition: all 0.3s ease;
   margin: 0 auto;
   padding: 1.25rem;
   background-color: #f9f7f7ac;
-  color: #fff;
   min-height: 101vh;
   position: relative;
   overflow: visible;
@@ -745,6 +732,7 @@ transition: all 0.3s ease;
   border-radius: 0.5rem;
   box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  align-items: flex-start; /* 顶部对齐，避免高度错位 */
 }
 @media (max-width: 768px) {
   .book-detail-content {
@@ -754,25 +742,19 @@ transition: all 0.3s ease;
   }
 }
 
-/* 图书封面 */
+/* 图书封面*/
 .book-detail-cover {
-  width: 23rem;
- margin-top: 2.5px;
-  aspect-ratio: 3.66/5;
+  width: 22rem;
+  height: auto;
+  max-height: 33rem;
+ 
   border-radius: 0.5rem;
   border: 0.0625rem solid #34495e;
   overflow: hidden;
   flex-shrink: 0;
   cursor: pointer;
-  height: auto;
 }
-@media (max-width: 768px) {
-  .book-detail-cover {
-    width: 100%;
-    max-width: 12rem;
-    margin: 0 auto;
-  }
-}
+
 .book-detail-cover :deep(.el-image) {
   width: 100%;
   height: 100%;
@@ -785,13 +767,40 @@ transition: all 0.3s ease;
   border-radius: 0.5rem;
 }
 
-/* 图书信息主体 */
+/* 图书信息主体：flex布局，桌面端左右排列 */
 .book-detail-info {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  gap: 2rem;
+  justify-content: flex-start;
   padding: 0.625rem 0;
+  flex-wrap: wrap;
+  align-items: flex-start; /* 和封面顶部对齐 */
+}
+.info-main {
+  flex: 1;
+  min-width: 280px;
+}
+
+.info-main > * {
+  margin-bottom: 0.75rem;
+}
+.seller-tag {
+  color: rgb(105, 0, 0) !important;
+  background-color: #e09a75d8;
+  font-weight: 550;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  width: 110px;
+  margin-top: -10px;
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  font-size: 16px !important;
 }
 .book-detail-name {
   font-size: clamp(1.5rem, 3vw, 1.875rem);
@@ -799,19 +808,12 @@ transition: all 0.3s ease;
   margin-bottom: 0.9375rem;
   color: #000000;
 }
-@media (max-width: 768px) {
-  .book-detail-name {
-    font-size: clamp(1.25rem, 4vw, 1.5rem);
-    text-align: center;
-  }
-}
 .book-detail-author {
   font-size: clamp(1rem, 2vw, 1.125rem);
   color: #1e1e1e;
   font-weight: 600;
   margin-bottom: 0.625rem;
 }
-
 .book-detail-category,
 .book-detail-stock,
 .book-detail-sales {
@@ -821,192 +823,75 @@ transition: all 0.3s ease;
   margin-bottom: 0.625rem;
   user-select: none !important;
 }
-@media (max-width: 768px) {
-  .book-detail-author,
-  .book-detail-category,
-  .book-detail-stock,
-  .book-detail-sales {
-    text-align: center;
-  }
-}
-
-.book-detail-price {
-  font-size: clamp(1.75rem, 4vw, 2rem);
-  color: #e6a23c;
-  font-weight: bold;
-  margin: 0.9375rem 0;
-  user-select: none !important;
-}
-@media (max-width: 768px) {
-  .book-detail-price {
-    text-align: center;
-    font-size: clamp(1.5rem, 5vw, 1.75rem);
-  }
-}
-
-.book-detail-count {
-  margin: 1.25rem 0;
-  width: clamp(9.375rem, 15vw, 10rem);
-  user-select: none !important;
-}
-@media (max-width: 768px) {
-  .book-detail-count {
-    margin: 1.25rem auto;
-  }
-}
 
 /* 按钮样式 */
-.add-cart-btn {
+.add-cart-btn, .add-cart-btn2, .add-cart-btn1 {
   width: clamp(12.5rem, 20vw, 13.75rem);
   height: clamp(2.5rem, 5vw, 2.75rem);
   font-size: clamp(1rem, 2vw, 1.125rem);
   background-color: #e6a23c !important;
   border: none !important;
+  margin-left: 0;
+  transition: all -1s ease;
+  position: relative !important;
+  margin-top: 1rem;
 }
-@media (max-width: 768px) {
-  .add-cart-btn {
-    margin: 0 auto;
-   
-    max-width: 12.5rem;
-  }
-}
-.add-cart-btn:disabled {
+.add-cart-btn:disabled, .add-cart-btn2:disabled {
   background-color: #95a5a6 !important;
   cursor: not-allowed;
 }
 
-.add-cart-btn1 {
-  width: clamp(12.5rem, 20vw, 13.75rem);
-  height: clamp(2.5rem, 5vw, 2.75rem);
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  background-color: #e6a23c !important;
-  border: none !important;
-  margin-left: 0px;
-  position: relative;
- top: 20px;
+/* 商家店铺模块 */
+.seller-shop-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 200px;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #fff8e6;
+  border: 1px solid #f5d78e;
+  border-radius: 8px;
+  cursor: pointer;
 }
-.add-cart-btn2 {
-  width: clamp(12.5rem, 20vw, 13.75rem);
-  height: clamp(2.5rem, 5vw, 2.75rem);
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  background-color: #e6a23c !important;
-  border: none !important;
-  margin-left: 0px;
-  position: relative;
- top: 18px;
+.seller-shop-block:hover {
+  background: #fff3d0;
 }
-.add-cart-btn2:disabled {
-  background-color: #95a5a6 !important;
-  cursor: not-allowed;
+.seller-shop-text {
+  display: flex;
+  flex-direction: column;
 }
-@media (max-width: 768px) {
-  .add-cart-btn2 {
-    margin: 0 auto;
-   
-    max-width: 12.5rem;
-  }
+.seller-shop-label {
+  font-size: 12px;
+  color: #909399;
 }
-@media (max-width: 768px) {
-  .add-cart-btn1 {
-    margin: 0 auto;
-    
-    max-width: 12.5rem;
-  }
+.seller-shop-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e6a23c;
 }
 
-/*右侧评分评论盒子样式  */
+/* 图书数量输入框 */
+.book-detail-count {
+ 
+  margin: 1.25rem 0;
+  width: clamp(9.375rem, 15vw, 10rem);
+  margin-top: -3px;
+  user-select: none !important;
+}
+
+/* 右侧评论框 */
 .comment-preview-box {
-  margin-top: 20px;
-  top: 20px;
-  position: absolute;
-  right: 100px;
+  margin-top: 0;
   display: block;
   padding: 15px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   border: 1px solid #eeeeee;
-  width: clamp(322px, 10vw, 386px);
+  width: 80%px;
   height: clamp(290px, 13vw, 395px);
   transition: all 0.9s ease;
-}
-@media (max-width: 1200px) {
-  .comment-preview-box {
-    right: 50px;
-  }
-}
-@media (max-width: 1100px) {
-  .comment-preview-box {
-    right: 57px;
-  }
-}
-@media (max-width: 1050px) {
-  .comment-preview-box {
-    right: 10px;
-  }
-}
-@media (max-width: 1020px) {
-  .comment-preview-box {
-    right: -6px;
-  }
-}
-@media (max-width: 990px) {
-  .comment-preview-box {
-    right: -36px;
-  }
-}
-@media (max-width: 975px) {
-  .comment-preview-box {
-    right: -57px;
-  }
-}
-@media (max-width: 960px) {
-  .comment-preview-box {
-    right: -95px;
-  }
-}
-@media (max-width: 920px) {
-  .comment-preview-box {
-    right: -113px;
-  }
-}
-@media (max-width: 900px) {
-  .comment-preview-box {
-    right: -129px;
-  }
-}
-@media (max-width: 875px) {
-  .comment-preview-box {
-    right: -149px;
-  }
-}
-@media (max-width: 850px) {
-  .comment-preview-box {
-    right: -170px;
-   
-  }
-}
-
-@media (max-width: 825px) {
-  .comment-preview-box {
-    right: -189px;
-  }
-}
-
-@media (max-width: 810px) {
-  .comment-preview-box {
-    right: -198px;
-  }
-}
-@media (max-width: 790px) {
-  .comment-preview-box {
-    right: -210px;
-  }
-}
-@media (max-width: 768px) {
-  .comment-preview-box {
-    right: -380px;
-    display: none;
-  }
+  flex-shrink: 0; /* 不压缩宽度 */
 }
 
 .comment-preview-box h4 {
@@ -1052,15 +937,9 @@ transition: all 0.3s ease;
   line-height: 1.5;
   word-break: break-all;
 }
-.empty-tip {
-  font-size: 13px;
-  color: #999;
-  text-align: center;
-  padding: 10px 0;
-}
 
 /* 简介/目录/作者模块样式*/
-.book-detail-desc {
+.book-detail-desc, .book-detail-desc1, .book-detail-desc2 {
   padding: 1.25rem;
   background: linear-gradient(
     -90deg,
@@ -1076,43 +955,16 @@ transition: all 0.3s ease;
   margin-top: 10px;
 }
 @media (max-width: 768px) {
-  .book-detail-desc {
+  .book-detail-desc, .book-detail-desc1, .book-detail-desc2 {
     padding: 0.9375rem;
   }
 }
-
 .book-detail-desc1 {
   margin-top: 0.625rem;
-  padding: 1.25rem;
-  background: linear-gradient(
-    -90deg,
-    #e0dfdf 0%,
-    #f0f2f5 25%,
-    #ffffff 50%,
-    #f0f2f5c1 75%,
-    #dddddb 100%
-  );
-  background-attachment: fixed;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.1);
 }
-
 .book-detail-desc2 {
   margin-top: 0.625rem;
-  padding: 1.25rem;
-   background: linear-gradient(
-    -90deg,
-    #e0dfdf 0%,
-    #f0f2f5 25%,
-    #ffffff 50%,
-    #f0f2f5c1 75%,
-    #dddddb 100%
-  );
-  background-attachment: fixed;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.1);
 }
-
 .book-detail-desc1 h3,
 .book-detail-desc h3,
 .book-detail-desc2 h3 {
@@ -1130,7 +982,8 @@ transition: all 0.3s ease;
   color: #000000;
 }
 
-/* 导航剩余样式 */
+
+/* 导航样式 */
 .nav-left {
   width: 13.75rem;
   flex-shrink: 0;
@@ -1143,14 +996,12 @@ transition: all 0.3s ease;
     margin-bottom: 0.625rem;
   }
 }
-
 .logo1 {
   color: #409eff;
   font-size: clamp(1.25rem, 3vw, 1.5rem);
   white-space: nowrap;
   line-height: 3.75rem;
 }
-
 .nav-center1 {
   display: flex;
   gap: 1.5625rem;
@@ -1159,10 +1010,9 @@ transition: all 0.3s ease;
   flex: 1;
   min-width: fit-content;
   position: relative;
- margin-left: -40px;
- margin-right: 36px;
+  margin-left: -40px;
+  margin-right: 36px;
 }
-
 .nav-right1 {
   width: 23.75rem;
   flex-shrink: 0;
@@ -1173,13 +1023,12 @@ transition: all 0.3s ease;
   gap: 0.75rem;
   white-space: nowrap;
 }
-
 .login-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   position: relative;
- left: clamp(20px, 1vw, 0px);
+  left: clamp(20px, 1vw, 0px);
   white-space: nowrap;
 }
 .login-bar span {
@@ -1190,10 +1039,9 @@ transition: all 0.3s ease;
   -webkit-background-clip: text;
   color: transparent !important;
 }
-
 .syws {
   display: flex;
-  background: #e5e3e1;
+  background: rgba(22,93,255,0.08) !important;
   border: 1px solid rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
   border-radius: 0.375rem;
@@ -1205,7 +1053,6 @@ transition: all 0.3s ease;
   color: rgb(0, 0, 0);
   font-size: clamp(1rem, 2vw, 1.125rem);
   text-decoration: none;
-  
 }
 .syses:hover {
   color: #ec8f33;
@@ -1240,12 +1087,12 @@ transition: all 0.3s ease;
   cursor: grabbing;
 }
 :deep(.el-image-viewer__close) {
- top: 5px;
+  top: 5px;
   width: 3.125rem !important;
   height: 3.125rem !important;
   position: relative;
   left: 446px;
-font-weight: 700 !important;
+  font-weight: 700 !important;
   border-radius: 50% !important;
   background: rgba(255, 255, 255, 0.7);
   color: #ff0000 !important;
@@ -1273,7 +1120,6 @@ font-weight: 700 !important;
     left: 120px;
   }
 }
-
 @media (max-width: 768px) {
   :deep(.el-image-viewer__close) {
     left: 40px;
@@ -1284,7 +1130,6 @@ font-weight: 700 !important;
     left: 0px;
   }
 }
-
 :deep(.el-image-viewer__mask) {
   background: rgba(0, 0, 0, 0.92);
 }
@@ -1302,7 +1147,6 @@ font-weight: 700 !important;
   -webkit-line-clamp: unset;
   overflow: visible;
 }
-
 .mulu-content {
   display: -webkit-box;
   -webkit-line-clamp: 6;
@@ -1324,13 +1168,7 @@ font-weight: 700 !important;
   -webkit-line-clamp: unset;
   overflow: visible;
 }
-
-.expand-btn {
-  color: #409eff !important;
-  margin-top: 0.5rem;
-  padding: 0;
-}
-.expand-btn1 {
+.expand-btn, .expand-btn1 {
   color: #409eff !important;
   margin-top: 0.5rem;
   padding: 0;
@@ -1341,6 +1179,71 @@ font-weight: 700 !important;
   font-size: clamp(1.25rem, 3vw, 1.5rem);
   color: #999;
   margin-top: 6.25rem;
+}
+
+/* 固定按钮样式 */
+.ziwy2{
+  position: fixed !important;
+  top: 69.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  height: auto;
+  background-color: #79787881 !important ;
+  font-size: 32px !important;
+  font-weight: 900 !important;
+  padding-left: 9px;
+  padding-right: 9px;
+  transform: translateX(0px);
+  padding-top: 7px;
+  padding-bottom: 7px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  width: 50px;
+  color: #ffffff;
+  transition: all 0.25s ease;
+}
+.ziwy2:hover{
+  transform: translateX(0px);
+  color: #ff0000;
+}
+.ziwy{
+  position: fixed !important;
+  top: 49.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  width: auto;
+  height: auto;
+  background-color: #0000001e !important;
+  border-radius: 12px 0 0 12px;
+  transform: translateX(55px);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 7px;
+  transition: all 0.3s ease;
+}
+.ziwy:hover{
+  transform: translateX(0px);
+}
+.gwdh1 {
+  animation: gwdh1 2s infinite;
+}
+@keyframes gwdh1 {
+  0%, 100% { transform: scale(1) rotate3d(0, 0, 0, 0deg); }
+  25% { transform: scale(1.1) ; }
+  50% { transform: scale(1.15); }
+  75% { transform: scale(1.1) ; }
+}
+.twy{
+  bottom: 0;
+}
+.gwdh {
+  animation: gwdh 2s infinite;
+}
+@keyframes gwdh {
+  0%, 100% { transform: scale(1) rotate3d(0, 0, 0, 0deg); }
+  25% { transform: scale(1.1) rotate3d(0, 1, 0, 10deg); }
+  50% { transform: scale(1.1) rotate3d(0, 1, 1, 12deg); }
+  75% { transform: scale(1.1) rotate3d(0, 1, 0, 10deg); }
 }
 
 /* 底部波浪背景 */
@@ -1354,27 +1257,130 @@ font-weight: 700 !important;
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%233aa8ec' fill-opacity='0.12' d='M0,192L48,208C96,224,192,256,288,245.3C384,235,480,181,576,160C672,139,768,149,864,160C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%236288a5' fill-opacity='0.09' d='M0,128L48,144C96,160,192,192,288,181.3C384,171,480,117,576,112C672,107,768,149,864,170.7C960,192,1056,192,1152,170.7C1248,149,1344,107,1392,85.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E");
-  background-size:
-    1440px 320px,
-    1440px 320px;
-  background-position:
-    0 0,
-    0 120px;
+  background-size: 1440px 320px, 1440px 320px;
+  background-position: 0 0, 0 120px;
   background-repeat: repeat-x;
   animation: waveMove 18s linear infinite;
   z-index: -1;
   pointer-events: none;
 }
 @keyframes waveMove {
-  0% {
-    background-position:
-      0 0,
-      0 120px;
+  0% { background-position: 0 0, 0 120px; }
+  100% { background-position: 1440px 0, -1440px 120px; }
+}
+
+@media (max-width: 768px) {
+  /* 清除所有导致错位的样式 */
+  .add-cart-btn, .add-cart-btn2, .add-cart-btn1,
+  .book-detail-name, .book-detail-author, 
+  .book-detail-category, .book-detail-stock,
+  .seller-tag, .price-group, .seller-shop-block,
+  .book-detail-count {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    transform: none !important;
   }
-  100% {
-    background-position:
-      1440px 0,
-      -1440px 120px;
+
+  /* 图书详情主容器：垂直布局，子元素全部居中 */
+  .book-detail-content {
+    flex-direction: column !important;
+    align-items: center !important; /* 所有子元素在交叉轴居中 */
+    justify-content: flex-start !important;
+    padding: 1rem !important;
   }
+
+  /* 图书封面 */
+  .book-detail-cover {
+    width: 100% !important;
+    max-width: 12rem !important;
+    height: auto !important;
+    margin: 0 auto 1.5rem !important;
+  }
+
+  /* 信息容器：宽度100%，内容居中 */
+  .book-detail-info {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* 信息主体：宽度限制，内容块居中 */
+  .info-main {
+    width: 100% !important;
+    max-width: 400px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+
+  /* 所有文本元素：强制居中 */
+  .book-detail-name,
+  .book-detail-author,
+  .book-detail-category,
+  .book-detail-stock,
+  .book-detail-sales,
+  .seller-tag {
+    text-align: center !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+.seller-tag{
+  padding-top: 3.5px;
+}
+  /* 价格组：弹性居中 */
+  .price-group {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 1rem auto !important;
+  }
+
+  /* 商家店铺模块 */
+  .seller-shop-block {
+    justify-content: center !important;
+    margin: 1rem auto !important;
+  }
+
+  /* 数量选择框*/
+  .book-detail-count {
+    margin: 1.5rem auto !important;
+  }
+
+  /* 按钮：强制居中*/
+  .add-cart-btn, 
+  .add-cart-btn2, 
+  .add-cart-btn1 {
+    display: block !important;
+    width: 100% !important;
+    min-width: 10.75rem !important;
+    margin: 0,5rem auto !important;
+    left: unset !important;
+    transform: translateX(66.58%) !important;
+    position: static !important;
+   margin-top: 16px !important;
+  }
+
+ 
+}
+.add-cart-btn11{
+  display: block !important;
+    width: 100% !important;
+    max-width: 13.75rem !important;
+    margin: 1rem auto !important;
+   
+    left: unset !important;
+    color: #000;
+    font-weight: 600;
+    background: linear-gradient(180deg, #ff9d0074 25%, #ebdddd 50%, #ff9d0074 100%);
+    position: static !important;
+}
+.add-cart-btn11:hover{
+  color: #ff0000;
 }
 </style>

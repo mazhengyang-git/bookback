@@ -67,7 +67,7 @@
     <div class="filter-main">
       <el-input
         v-model="searchKeyword"
-        placeholder="按图书名称搜索（如：三体）"
+        placeholder="按图书名称搜索（拼音/汉字）"
         style="font-weight: 600;"
         class="filter-control"
         @keyup.enter="handleSearch"
@@ -80,14 +80,14 @@
           </el-icon>
         </template>
       </el-input>
- <el-button
-      style="font-weight:600;width: 120px;"
-      type="primary"
-      :loading="isRefreshing"
-      @click="refreshAllData"
-    >
-      刷新列表
-    </el-button>
+      <el-button
+        style="font-weight:600;width: 120px;"
+        type="primary"
+        :loading="isRefreshing"
+        @click="refreshAllData"
+      >
+        刷新列表
+      </el-button>
       <div class="price-filter">
         <el-input
           v-model.number="minPrice"
@@ -105,8 +105,6 @@
           type="number"
           placeholder="最高价"
           style="width: 110px"
-          @input="doFilterAndShuffle"
-          @clear="handlePriceClear"
           clearable
           min="0"
         />
@@ -125,30 +123,41 @@
             @click="handleSort('asc')">价格从低到高</span>
       <span style="font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'price' && currentSortDirection === 'desc' }"
             @click="handleSort('desc')">价格从高到低</span>
+      <span style="font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'rating' }"
+            @click="handleRatingSort">好评优先</span>
+      <span style="font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'sales' }"
+            @click="handleSalesSort">销量最高</span>
     </div>
   </div>
 
-  <div style="padding: 0 20px; background:#fff; margin: 10px 0;">
-    <!-- 修复：刷新按钮样式+生效 -->
-   
-  </div>
+  <div style="padding: 0 20px; background:#fff; margin: 10px 0;"></div>
 
   <div v-if="!loading" class="book-list-container" v-cloak>
     <div class="book-card-list">
-      <!-- 修复：添加点击跳转详情事件 -->
       <el-card 
         v-for="book in showBooks" 
-        :key="book.id" 
+        :key="book.id || book.book_id" 
         class="book-card discount-book-card"
-       
         style="cursor: pointer;"
       >
         <div class="book-card-content">
-          <img  @click="goToDetail(book)" :src="book.cover || '/img/default-book.jpg'" class="book-cover" />
+          <div class="book-cover-wrapper">
+            <img @click="goToDetail(book)" :src="book.cover || '/img/default-book.jpg'" class="book-cover" />
+            <div class="cover-footer"> 
+              <!-- 评分组件渲染 -->
+              <pj 
+                class="pjwy" 
+                :book-id="showType === 'new' ? book.id : book.book_id" 
+                :source="showType === 'new' ? 'new' : 'normal'" 
+              />
+              <span class="sales-text">销量：{{ getBookSales(book) }}件</span>
+            </div>
+          </div>
+
           <div class="book-info">
-            <h3  @click="goToDetail(book)" class="book-name">{{ book.name }}</h3>
+            <h3 @click="goToDetail(book)" class="book-name">{{ book.name }}</h3>
             <p class="book-author">作者：{{ book.author }}</p>
-            <p class="book-price" >原价：{{ book.price }}</p>
+            <p class="book-price">原价：¥{{ formatPrice(book.price) }}</p>
             <p class="discount-price">
               优惠价：¥{{ formatPrice(getDiscountPrice(book)) }}
               <el-tag type="danger" class="discount-tag">{{ getDiscountRate(book) }}</el-tag>
@@ -157,7 +166,9 @@
         </div>
       </el-card>
 
-      <div v-if="showBooks.length === 0" class="empty-tip">暂无优惠图书 😕</div>
+      <div v-if="showBooks.length === 0" class="empty-tip">
+        {{ showType === 'new' ? '暂无新书优惠 😕' : '暂无普通图书优惠 😕' }}
+      </div>
     </div>
 
     <div class="pagination-wrapper" v-if="total > 0">
@@ -178,9 +189,35 @@
     <div class="page-footer">
       <div class="footer-content">
         <div class="footer-left">
-          <h3 class="footer-title">星途科幻</h3>
+          <h3 class="footer-title">星途科幻图书</h3>
           <p class="footer-slogan">探索宇宙的无限可能</p>
         </div>
+        <div class="footer-center">
+          <div class="footer-links">
+            <a href="/books" class="footer-link">图书一览</a>
+            <span class="footer-separator">|</span>
+            <a href="/huodong" class="footer-link">热门活动</a>
+            <span class="footer-separator">|</span>
+            <a href="/user" class="footer-link">个人中心</a>
+            <span class="footer-separator">|</span>
+            <a href="/cart" class="footer-link">购物仓库</a>
+          </div>
+        </div>
+        <div class="footer-right">
+          <p class="footer-copyright">© 2010-2026 xtkh.com 版权所有</p>
+          <p class="footer-contact">联系我们：contact@xingtu.com</p>
+        </div>
+      </div>
+      <div class="footer-legal">
+        <p class="legal-text">
+          互联网图书服务资格证书:(中)-经营性-20260209 中公网安备 33010002000126号
+        </p>
+        <p class="legal-text">
+          出版物网络交易平台服务经营备案证:新出发中备字第2017001号 信息网络传播视听许可证:110936a号
+        </p>
+        <p class="legal-text">
+          互联网违法和不良信息举报中心:0571-81683755 blxx@list.alixingxin-inc.com
+        </p>
       </div>
     </div>
   </div>
@@ -192,20 +229,30 @@ import { Search } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
+import { pinyin } from 'pinyin-pro'
+import { ElMessage } from 'element-plus'
+import pj from '@/views/front/book/抽离短评价.vue'
+import { getBookListApi } from '@/api/front/book'
+import { getSellerBookListApi } from '@/api/seller/front'
+import { useBookStore1 } from '@/store/newbook'
 
 const userStore = useUserStore()
 const router = useRouter()
+const bookStore1 = useBookStore1()
 
 const loading = ref(true)
-const allBooks = ref([]) 
+const allBooks = ref([])
+const newBookList = ref([])
+const sellerBooks = ref([])
+const discountBooks = ref([])
 const filteredBooks = ref([])
 const showBooks = ref([])
 
 const searchKeyword = ref('')
 const minPrice = ref(null)
 const maxPrice = ref(null)
-const sortBy = ref('')
-const currentSortDirection = ref('asc')
+const sortBy = ref<'price' | 'rating' | 'sales' | ''>('')
+const currentSortDirection = ref<'asc' | 'desc'>('asc')
 const showType = ref('normal')
 
 const currentPage = ref(1)
@@ -213,60 +260,145 @@ const pageSize = ref(6)
 const total = ref(0)
 const isRefreshing = ref(false)
 
-// 价格/折扣工具函数
-const getDiscountPrice = (book) => Number(book.discount_price ?? book.price) || 0
-const getDiscountRate = (book) => book.discount_rate || ''
-const formatPrice = (p) => Number(p).toFixed(2)
+// 随机打乱数组
+const shuffleArray = <T>(arr: T[]): T[] => {
+  const newArr = [...arr]
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+  }
+  return newArr
+}
+
+// 拼音工具
+const getFullPinyin = (text: string) =>
+  pinyin(text, { toneType: 'none', type: 'array' }).join('').toLowerCase()
+const getFirstLetterPinyin = (text: string) =>
+  pinyin(text, { pattern: 'first', toneType: 'none', type: 'array' }).join('').toLowerCase()
+
+// 价格工具
+const getDiscountPrice = (book: any) => Number(book.discount_price ?? book.price) || 0
+const hasDiscount = (book: any) => !!book.discount_price && book.discount_price < book.price
+const getDiscountRate = (book: any) => {
+  if (!hasDiscount(book)) return ''
+  const rate = (Number(book.discount_price) / Number(book.price)) * 10
+  return rate.toFixed(1) + '折'
+}
+const formatPrice = (p: any) => Number(p).toFixed(2)
+
+// 评分/销量
+const getBookAvgScore = (book: any) => Number(book.avg_score ?? 0)
+const getBookSales = (book: any) => Number(book.sales_count ?? book.sales ?? 0) || 0
+
+// 加载数据
+const loadMainBookData = async () => {
+  try {
+    const res = await getBookListApi('全部')
+    allBooks.value = res.code === 200 ? res.data || [] : []
+    const sellerRes = await getSellerBookListApi('全部')
+    sellerBooks.value = sellerRes.code === 200 ? (sellerRes.data || []).map(b => ({ ...b, is_seller: true })) : []
+    await bookStore1.fetchBookList()
+    newBookList.value = bookStore1.bookList1 || []
+  } catch (e) {
+    console.error('主图书加载失败', e)
+  }
+}
+
+const loadDiscountBooks = async () => {
+  try {
+    const res = await request.get('/api/front/discount/book/list')
+    discountBooks.value = res.data || []
+  } catch (e) {
+    discountBooks.value = []
+  }
+}
 
 // 切换分类
 const showNormalBooks = () => {
   showType.value = 'normal'
+  currentPage.value = 1
   doFilterAndShuffle()
 }
 const showNewBooks = () => {
   showType.value = 'new'
-  doFilterAndShuffle()
-}
-
-// 排序/搜索/清空
-const handleSort = (dir) => {
-  sortBy.value = 'price'
-  currentSortDirection.value = dir
   currentPage.value = 1
   doFilterAndShuffle()
 }
+
+// 排序
+const handleSort = (type: 'asc' | 'desc') => {
+  sortBy.value = sortBy.value === 'price' && currentSortDirection.value === type ? '' : 'price'
+  currentSortDirection.value = type
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+const handleRatingSort = () => {
+  sortBy.value = sortBy.value === 'rating' ? '' : 'rating'
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+const handleSalesSort = () => {
+  sortBy.value = sortBy.value === 'sales' ? '' : 'sales'
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 搜索/清空
 const handleSearch = () => { currentPage.value = 1; doFilterAndShuffle() }
 const handleClearSearch = () => { searchKeyword.value = ''; currentPage.value = 1; doFilterAndShuffle() }
 const handlePriceClear = () => { minPrice.value = null; maxPrice.value = null; currentPage.value = 1; doFilterAndShuffle() }
 
 // 核心筛选逻辑
 const doFilterAndShuffle = () => {
-  const source = showType.value === 'new' 
-    ? allBooks.value.filter(book => book.book_type === 1) 
-    : allBooks.value.filter(book => book.book_type === 0);
-  
-  let list = [...source].filter(book => getDiscountRate(book))
+  let sourceList: any[] = []
 
-  // 搜索过滤
-  if (searchKeyword.value) {
-    const kw = searchKeyword.value.toLowerCase()
-    list = list.filter(b => b.name?.toLowerCase().includes(kw))
+  if (showType.value === 'new') {
+    sourceList = [...newBookList.value]
+    discountBooks.value.forEach((discount: any) => {
+      const target = sourceList.find(item => item.id === discount.book_id && discount.book_type === 1)
+      if (target) {
+        target.discount_price = discount.discount_price
+        target.discount_rate = ((Number(discount.discount_price) / Number(target.price)) * 10).toFixed(1) + '折'
+      }
+    })
+    sourceList = sourceList.filter(b => hasDiscount(b))
+  } else {
+    sourceList = discountBooks.value.filter(b => b.book_type === 0)
+    sourceList.forEach((discountItem) => {
+      const targetBook = allBooks.value.find(book => book.id === discountItem.book_id)
+      if (targetBook) {
+        discountItem.sales_count = targetBook.sales_count || 0
+        discountItem.avg_score = targetBook.avg_score || 0
+        discountItem.name = discountItem.name || targetBook.name
+        discountItem.author = discountItem.author || targetBook.author
+        discountItem.cover = discountItem.cover || targetBook.cover
+        discountItem.price = discountItem.price || targetBook.price
+      }
+    })
+    sourceList = sourceList.filter(b => hasDiscount(b))
   }
-  // 价格过滤
-  const min = minPrice.value ?? 0
-  const max = maxPrice.value ?? 99999
-  list = list.filter(b => getDiscountPrice(b) >= min && getDiscountPrice(b) <= max)
-  // 排序
-  if (sortBy.value === 'price') {
-    list.sort((a, b) => {
-      const pa = getDiscountPrice(a)
-      const pb = getDiscountPrice(b)
-      return currentSortDirection.value === 'asc' ? pa - pb : pb - pa
+
+  // 搜索
+  const kw = searchKeyword.value.trim().toLowerCase()
+  if (kw) {
+    sourceList = sourceList.filter((b: any) => {
+      const name = b.name || ''
+      return name.toLowerCase().includes(kw) || getFullPinyin(name.slice(0,2)).startsWith(kw) || getFirstLetterPinyin(name.slice(0,2)).startsWith(kw)
     })
   }
 
-  filteredBooks.value = list
-  total.value = list.length
+  // 价格
+  const min = minPrice.value ?? 0
+  const max = maxPrice.value ?? 99999
+  sourceList = sourceList.filter(b => getDiscountPrice(b) >= min && getDiscountPrice(b) <= max)
+
+  // 排序
+  if (sortBy.value === 'price') sourceList.sort((a,b) => currentSortDirection.value === 'asc' ? getDiscountPrice(a)-getDiscountPrice(b) : getDiscountPrice(b)-getDiscountPrice(a))
+  if (sortBy.value === 'rating') sourceList.sort((a,b) => getBookAvgScore(b) - getBookAvgScore(a))
+  if (sortBy.value === 'sales') sourceList.sort((a,b) => getBookSales(b) - getBookSales(a))
+
+  filteredBooks.value = sourceList
+  total.value = sourceList.length
   doPaginationSlice()
 }
 
@@ -277,52 +409,61 @@ const doPaginationSlice = () => {
 }
 const handlePageChange = () => doPaginationSlice()
 
-// ✅ 修复：刷新列表按钮生效
+// ====================== 刷新按钮 ======================
 const refreshAllData = async () => {
   isRefreshing.value = true
   try {
-    // 重新请求优惠接口数据
-    const res = await request.get('/api/front/discount/book/list')
-    allBooks.value = res.data
+    //  1. 清空所有筛选条件（搜索、价格）
+    searchKeyword.value = ''
+    minPrice.value = null
+    maxPrice.value = null
+    
+    // 2. 强制重置所有排序
+    sortBy.value = ''
+    currentSortDirection.value = 'asc'
+    
+    // 3. 重新从服务器拉取最新数据
+    await Promise.all([loadMainBookData(), loadDiscountBooks()])
+    
+    // 4. 重新筛选 + 随机打乱商品顺序
     doFilterAndShuffle()
-    ElMessage.success('刷新成功！')
+    filteredBooks.value = shuffleArray(filteredBooks.value)
+    
+    // 5. 重置到第一页
+    currentPage.value = 1
+    doPaginationSlice()
+
+    ElMessage.success({message:'已刷新列表，重置所有筛选和排序！',offset:80})
   } catch (e) {
-    ElMessage.error('刷新失败！')
-    console.error(e)
+    ElMessage.error('刷新失败，请重试')
+    console.error('刷新异常', e)
   } finally {
     isRefreshing.value = false
   }
 }
 
-const goToDetail = (book) => {
-  router.push({
-    path: `/book/${book.book_id}`, // 路由是 /book/:id，不是 detail
-    query: { 
-      book_type: book.book_type // 携带类型：0=普通 1=新书
-    }
-  })
+
+// 跳转详情
+const goToDetail = (book: any) => {
+  router.push({ path: `/book/${showType.value === 'new' ? book.id : book.book_id}`, query: { book_type: showType.value === 'new' ? 1 : 0 } })
 }
 
 // 退出登录
 const handleLogout = () => {
   userStore.logout()
+  ElMessage.success('退出成功')
   router.push('/login')
 }
 
 // 初始化
 onMounted(async () => {
-  try {
-    const res = await request.get('/api/front/discount/book/list')
-    allBooks.value = res.data
-    doFilterAndShuffle()
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
+  loading.value = true
+  await loadMainBookData()
+  await loadDiscountBooks()
+  doFilterAndShuffle()
+  loading.value = false
 })
 </script>
-
 <style scoped>
 [v-cloak] {
    display: none !important;
@@ -363,7 +504,7 @@ onMounted(async () => {
   margin: 4px 0;
 }
 
-/* 你的原有样式全部保留 */
+
 .book-detail-chuban{ 
   margin-bottom: 10px;
    color: #626161;
@@ -413,7 +554,7 @@ onMounted(async () => {
   75% { transform: scale(1.1) rotate3d(0,1,0,10deg); }
 }
 
-/* 你的全部原有布局样式 */
+/* 布局样式 */
 :root { 
   font-size: 16px; 
 }
@@ -498,7 +639,7 @@ onMounted(async () => {
   }
 .syws { 
   display: flex; 
-  background: #e5e3e1;
+  background: rgba(22,93,255,0.08) !important;
    border: 1px solid rgba(64,158,255,0.3);
     transition: all 0.3s ease;
      border-radius: 0.375rem;
@@ -507,20 +648,22 @@ onMounted(async () => {
       justify-content: center; }
 .syses {
    color: #000;
-    font-size: clamp(1rem,2vw,1.125rem); 
+    font-size: clamp(1rem,2vw,1.03rem); 
     text-decoration: none; 
-    line-height: 1.2;
+    line-height: 1;
    }
 .syses:hover {
    color: #ec8f33; 
    text-shadow: 0 0 8px rgba(220,223,226,0.5);
    }
 .filter-bar { 
-  width: 100%; max-width: 100vw;
-   margin: 1.25rem auto;
-    padding: 1rem 1.25rem;
-     background: linear-gradient(180deg, #ecd9bb80 75%, #f0f2f5 100%);
-      border-radius: 0.5rem;
+  width: 100%;
+  max-width: 100vw;
+  margin: 1.25rem auto;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(180deg, #ffffff80 75%, #f0f2f5 100%);
+  background: linear-gradient(135deg, rgba(5, 82, 176, 0.073), rgba(230,162,60,0.05)) !important;
+  border-radius: 0.5rem;
      }
 .filter-main { 
   display: grid;
@@ -565,8 +708,7 @@ onMounted(async () => {
 }
 .book-list-container { 
   width: 81.9%;
-   left: -44px;
-
+  left: -4.2vw;
     max-width: 104vw;
      margin: 0 auto;
       padding: 1.25rem 1.25rem 4rem 1.25rem; 
@@ -578,37 +720,43 @@ onMounted(async () => {
         }
 .book-card-list { 
   display: grid;
-  grid-template-columns: repeat(1,1fr); 
+  grid-template-columns: repeat(3,1fr); 
   gap: 1.25rem; 
  
   margin-bottom: 1.5rem; 
   margin-bottom: 0px; 
-  margin-left: 0;
+  
  }
 .book-card { 
-  background: #fff !important;
+  background: rgba(87, 86, 86, 0.033) !important;
    border: none !important; 
    transition: all 0.3s; 
-   width: 1300px;
-    max-width: 1400px;
+   width: auto;
+   max-width: 400px;
+    min-width: 430px;
    }
 .book-card:hover {
-   background: rgba(226,223,223,0.033) !important;
-    box-shadow: 1px 4px 12px rgba(74,6,16,0.277);
+   background: rgba(255, 0, 0, 0.108) !important;
+    box-shadow: 3px 4px 12px rgba(240, 119, 137, 0.741);
    }
 .book-card-content { 
   display: flex;
    padding: clamp(0.75rem,2vw,0.9375rem);
  }
-.book-cover {
-   cursor: pointer; 
-   user-select: none !important;
-    -webkit-user-select: none !important; 
-    width: clamp(108px,15vw,113px);
-     height: clamp(130px,20vw,155px);
-      object-fit: cover; margin-right: clamp(0.75rem,2vw,0.9375rem);
-       border-radius: 0.25rem;
-       }
+ .book-cover {
+  cursor: pointer;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  width: auto;
+ max-width: 126px;
+  height: auto;
+  max-height: 320px;
+  transform: scalex(0.98);
+  object-fit: cover;
+  margin-right: clamp(0.75rem, 2vw, 0.9375rem);
+  border-radius: 0.25rem;
+}
+
 .book-info {
    flex: 1; 
    display: flex; 
@@ -643,7 +791,7 @@ onMounted(async () => {
    width: 100%;
     display: flex;
      position: relative;
-      left: 18vw;
+      left: 17.4vw;
        margin-left: 18.2vw;
         margin-top: 2rem; 
       }
@@ -664,4 +812,127 @@ onMounted(async () => {
    font-weight: bold; 
    background-color: #e6f4ff;
     }
+
+/* 图片下方评分+销量布局 */
+.book-cover-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cover-footer {
+  width: auto;
+  white-space: nowrap;
+ top: -6px;
+  position: absolute;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.sales-text {
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+.pjwy {
+  transform: scale(0.8);
+  transform-origin: left center;
+}
+</style>
+
+<style scoped>
+.page-footer {
+  width: 103.95vw;
+  min-width: 100%;
+  background: linear-gradient(1.5deg, #333333 0%, #b2b0b0 100%);
+  padding: 30px 0;
+  position: relative;
+  right: 0;
+  top: -16px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+}
+.footer-content {
+  max-width: 1200px;
+  min-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  white-space: nowrap;
+}
+.footer-left {
+  flex-shrink: 0;
+}
+.footer-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+}
+.footer-slogan {
+  font-size: 14px;
+  color: rgba(227, 224, 224, 0.9);
+  margin: 0;
+  white-space: nowrap;
+}
+.footer-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  white-space: nowrap;
+}
+.footer-link {
+  font-size: 14px;
+  color: #ffffff;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+.footer-link:hover {
+  color: #ffd700;
+}
+.footer-separator {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.footer-right {
+  flex-shrink: 0;
+  text-align: right;
+}
+.footer-copyright {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 5px 0;
+  white-space: nowrap;
+}
+.footer-contact {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  white-space: nowrap;
+}
+.footer-legal {
+  max-width: 1200px;
+  min-width: 1200px;
+  margin: 20px auto 0;
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  text-align: center;
+}
+.legal-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 5px 0;
+  white-space: nowrap;
+}
 </style>

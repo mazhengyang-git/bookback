@@ -90,8 +90,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   click: [book: MonthlyHotBookItem]
 }>()
-
+//@ts-ignore
 const defaultBooks: MonthlyHotBookItem[] = [
+  //@ts-ignore
   {
     id: 21,
     rank: 1,
@@ -104,7 +105,7 @@ const defaultBooks: MonthlyHotBookItem[] = [
     stock: 0,
     mulu: '',
     author_into: '',
-  },
+  },//@ts-ignore
   {
     id: 22,
     rank: 2,
@@ -117,7 +118,7 @@ const defaultBooks: MonthlyHotBookItem[] = [
     stock: 0,
     mulu: '',
     author_into: '',
-  },
+  },//@ts-ignore
   {
     id: 23,
     rank: 3,
@@ -130,7 +131,7 @@ const defaultBooks: MonthlyHotBookItem[] = [
     stock: 0,
     mulu: '',
     author_into: '',
-  },
+  },//@ts-ignore
   {
     id: 24,
     rank: 4,
@@ -143,7 +144,7 @@ const defaultBooks: MonthlyHotBookItem[] = [
     stock: 0,
     mulu: '',
     author_into: '',
-  },
+  },//@ts-ignore
   {
     id: 25,
     rank: 5,

@@ -62,24 +62,21 @@
           </h3>
 
           <div class="book-meta">
-            <!-- 优惠价格展示（划线原价+红色优惠价） -->
-            <template v-if="hasDiscount(item)">
-              <span style="text-decoration: line-through; color: #999;user-select: none;">
-                原价¥{{ formatPrice(item.price) }}
-              </span>
-              <li style="list-style: none;user-select: none;"><span style="color: #f56c6c; font-weight: bold; margin-left: -9px;">
-                优惠价¥{{ formatPrice(getDiscountPrice(item)) }}
-              </span>
-              <el-tag type="danger" size="small" style="margin-left: 5px;">
-                {{ getDynamicDiscountRate(item) }}
-              </el-tag></li>
-            </template>
-            <span v-else>
-              💰 ¥{{ formatPrice(item.price || 0) }}
-            </span>
+  <!-- 价格区域 -->
+  <template v-if="hasDiscount(item)">
+    <span class="original-price">原价¥{{ formatPrice(item.price) }}</span>
+    <div class="discount-line">
+      <span class="discount-price">优惠价¥{{ formatPrice(getDiscountPrice(item)) }}</span>
+      <el-tag type="danger" size="small" class="discount-tag">
+        {{ getDynamicDiscountRate(item) }}
+      </el-tag>
+    </div>
+  </template>
+  <span v-else class="normal-price">¥{{ formatPrice(item.price || 0) }}</span>
 
-            <span>📚 {{ item.spec || '普通版' }}</span>
-          </div>
+  <!-- 规格标签 -->
+  <span class="spec-label">📚 {{ item.spec || '平装版' }}</span>
+</div>
         </div>
 
         <!-- 按钮 -->
@@ -135,29 +132,35 @@ import { ElMessage } from 'element-plus'
 import { useShoucangStore } from '@/store/shoucang'
 import { useUserStore } from '@/store/user'
 import { getShoucangList, deleteShoucangItem, clearShoucang } from '@/api/front/shoucang'
-import { getBookDetailApi } from '@/api/front/book'
-import { useBookStore1 } from '@/store/newbook'
-import request from '@/utils/request'
 import type { RouteLocationAsPathGeneric, RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const shoucangStore = useShoucangStore()
 const userStore = useUserStore()
 const router = useRouter()
-const bookStore1 = useBookStore1()
 
 const loading = ref(true)
 const checkedIds = ref<number[]>([])
 const isAllChecked = ref(false)
 
-// ✅ 核心：价格计算函数（和图书列表完全统一）
+// 全局统一的价格工具函数
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
+
 const getDiscountPrice = (item: any) => Number(item.discount_price ?? item.price) || 0
-const hasDiscount = (item: any) => !!item.discount_price && item.discount_price < item.price
+
+const hasDiscount = (item: any) => {
+  //优惠价非空且优惠价<原价
+  return item.discount_price !== null 
+    && item.discount_price !== undefined 
+    && Number(item.discount_price) < Number(item.price)
+}
+
 const getDynamicDiscountRate = (item: any) => {
   if (!hasDiscount(item)) return ''
+  // 优先用后端返回的折扣率，没有则自动计算
+  if (item.discount_rate) return item.discount_rate + '折'
   const rate = (Number(item.discount_price) / Number(item.price)) * 10
   return rate.toFixed(1) + '折'
 }
@@ -180,22 +183,14 @@ const handleItemCheck = (shoucangId: number, checked: boolean) => {
 
 // 图书点击跳转
 const handleBookClick = (item: any) => {
-  const path = `/book/${item.id}?source=${item.source || 'normal'}`
+  // 根据source设置book_type
+  const bookType = item.source === 'seller' ? 2 : item.source === 'new' ? 1 : 0
+  const path = `/book/${item.id}?book_type=${bookType}`
+  
   if (router.currentRoute.value.path.startsWith('/book/')) {
     window.location.href = path
   } else {
     router.push(path)
-  }
-}
-
-// 加载优惠图书数据
-const discountBooks = ref<any[]>([])
-const loadDiscountBooks = async () => {
-  try {
-    const res = await request.get('/api/front/discount/book/list')
-    discountBooks.value = res.data || []
-  } catch (e) {
-    discountBooks.value = []
   }
 }
 
@@ -209,43 +204,14 @@ const loadShoucangData = async () => {
   }
 
   try {
-    // 并行加载：新书 + 优惠图书
-    await Promise.all([bookStore1.fetchBookList(), loadDiscountBooks()])
     const shoucangRes = await getShoucangList()
 
-//@ts-ignore
     if (shoucangRes.code === 200 && shoucangRes.data) {
       shoucangStore.clearShoucang()
-
-      for (const item of shoucangRes.data) {
-        const source = item.source || 'normal'
-        let realBookData = null
-
-        // 获取图书真实数据
-        if (source === 'new') {//@ts-ignore
-          realBookData = bookStore1.bookList1.find((b) => b.id === item.goodsId)
-        } else {
-          const res = await getBookDetailApi(item.goodsId)
-          realBookData = res.data
-        }
-
-        // 注入优惠价数据
-        let discount_price = 0
-        const discountItem = discountBooks.value.find(d => d.book_id === item.goodsId || d.id === item.goodsId)
-        if (discountItem) discount_price = discountItem.discount_price
-
-        // 添加到收藏
-        shoucangStore.addToShoucang({
-          shoucangId: item.id,
-          id: item.goodsId,//@ts-ignore
-          name: realBookData?.name || item.bookName || '未知图书',
-          price: Number(realBookData?.price || item.bookPrice) || 0,
-          discount_price: Number(discount_price) || 0, // 优惠价
-          cover: realBookData?.cover || item.bookCover || '/default-book.png',
-          spec: item.spec || '平装版',
-          source: source,
-        })
-      }
+ 
+      shoucangRes.data.forEach(item => {
+        shoucangStore.addToShoucang(item)
+      })
 
       checkedIds.value = shoucangStore.currentShoucang.map(item => item.shoucangId)
       isAllChecked.value = true
@@ -291,7 +257,6 @@ onMounted(() => {
 })
 </script>
 
-
 <style scoped>
 .book-meta {
   display: flex;
@@ -328,6 +293,49 @@ onMounted(() => {
 </style>
 
 <style scoped>
+.book-meta {
+ 
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 14px;
+  user-select: none;
+}
+
+.discount-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.discount-price {
+  color: #f56c6c;
+  font-weight: bold;
+  font-size: 16px;
+  user-select: none;
+}
+
+.normal-price {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.discount-tag {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.spec-label {
+  color: #777;
+  font-size: 13px;
+  user-select: none;
+  margin-top: 2px;
+}
 * {
   margin: 0;
   padding: 0;

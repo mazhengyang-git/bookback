@@ -53,6 +53,9 @@
       <button :class="{active: activeTab === 'huodongzixun'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('huodongzixun')">
         活动资讯
       </button>
+      <button :class="{active: activeTab === 'selleraudit'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('selleraudit')">
+        卖家审核
+      </button>
       <button
         link
         @click="switchTab('useradmin')"
@@ -101,6 +104,9 @@
        <div class="sub-page-container bookguan" v-show="activeTab === 'huodongzixun'">
         <huodongzx />
       </div>
+      <div class="sub-page-container bookguan" v-show="activeTab === 'selleraudit'">
+        <selleraudit />
+      </div>
     </div>
 
     <div class="router-view-container">
@@ -123,6 +129,7 @@ import orderadmin from '@/views/back/order/index.vue'
 import useradmin from '@/views/back/user/index.vue'
 import bookpai from '@/views/back/book/bookpaihang.vue'
 import huodongzx from '@/views/back/huodongzx/huodongzx.vue'
+import selleraudit from '@/views/back/seller/audit.vue'
 
 // 全局禁用 Dialog 滚动锁定 + 强制解锁 body 滚动
 onMounted(() => {

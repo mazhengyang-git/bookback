@@ -93,7 +93,7 @@ const finalAuthorTags = computed(() => {
 })
 
 const router = useRouter()
-// 直接跳转，无需任何延迟
+// 直接跳转，小延迟
 function go(path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) {
   setTimeout(() => {
     router.push(path)
@@ -161,7 +161,7 @@ onMounted(async () => {
 /* 标签容器 */
 .two-col-grid {
   display: grid;
-  /*永远两列 所有标签强制等宽 */
+  /*两列所有标签强制等宽 */
   grid-template-columns: repeat(2, 1fr);
   gap: 29px 20px; 
   justify-items: center; /* 标签在格子内居中 */
@@ -173,7 +173,7 @@ onMounted(async () => {
 /* 标签样式  */
 .hot-tag {
   cursor: pointer;
-  /*  强制占满整个网格格子宽度 */
+  /*  占满整个网格格子宽度 */
   width: 47.2%;
   box-sizing: border-box;
   margin-top: 15px;

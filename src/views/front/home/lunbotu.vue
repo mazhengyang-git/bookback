@@ -2,7 +2,7 @@
   <div class="se">
     <!-- 轮播容器 -->
     <div class="asss carousel-container">
-      <!-- 所有图片同时渲染，通过class控制状态 -->
+      <!-- 图片渲染，通过class控制状态 -->
       <div
         v-for="(item, index) in slides"
         :key="index"
@@ -269,31 +269,31 @@ onUnmounted(() => zilun && clearInterval(zilun))
 .pw.next {
   left: 40.5px;
 }
-/* ==================  dots 全部样式 ================== */
+/* dots 样式 */
 .dots {
-  /* 绑定缩放轮播容器，绝对定位 */
+  /* 绑定缩放轮播容器 */
   position: absolute;
-  /* 核心：原生水平居中 + 抵消父元素scale(0.6)缩放带来的偏移 */
+  /* 原生水平居中 */
   left: 50%;
-  /* 复合变换：先自身居中，再完美抵消父容器缩放扭曲 */
+  /* 复合变换 */
   transform: translateX(-50%) scale(1);
-  /* 固定在轮播整体底部，和你截图里位置完全一致 */
+  /* 固定在轮播整体底部 */
   bottom: 15px;
-  /* 层级足够高，不会被任何元素遮挡 */
+  /* 层级 */
   z-index: 9999;
   display: flex;
   gap: 10px;
 }
 .dots1 {
-  /* 绑定缩放轮播容器，绝对定位 */
+  /* 绑定缩放轮播容器 */
   position: absolute;
-  /* 核心：原生水平居中 + 抵消父元素scale(0.6)缩放带来的偏移 */
+  
   left: 50%;
-  /* 复合变换：先自身居中，再完美抵消父容器缩放扭曲 */
+  /* 复合变换 */
   transform: translateX(-50%) scale(1);
-  /* 固定在轮播整体底部，和你截图里位置完全一致 */
+  /* 固定在轮播整体底部 */
   bottom: -45px;
-  /* 层级足够高，不会被任何元素遮挡 */
+  /* 层级 */
   z-index: 9999;
   display: flex;
   gap: 10px;

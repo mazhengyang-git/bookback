@@ -1,41 +1,41 @@
 <template>
   <div class="pay-page"    v-cloak>
-    <div class="pay-header">
-      <h2 style="color: darkorange">确认支付</h2>
-      <el-button
-        style="padding: 5px"
-        @click="router.go(-1)"
-        type="link"
-        class="back-btn"
-        :unstable-disable-deprecated-warning="true"
-        >返回</el-button
-      >
-    </div>
+    <header class="pay-header">
+      <div class="header-inner">
+        <span class="back-btn" @click="router.go(-1)">← 返回</span>
+        <h1 class="header-title">确认支付</h1>
+        <span class="header-badge">立即购买</span>
+      </div>
+    </header>
+
+    <main class="pay-main">
 
     <!-- 加载中 -->
-    <div v-if="loading" class="loading-tip"><!--加载支付信息中...--></div>
+    <div v-if="loading" class="loading-tip"><div class="loading-spinner"></div><p>正在加载支付信息…</p></div>
 
     <!-- 直付商品信息 -->
     <div v-else-if="payGoods" class="pay-goods-card">
-      <div class="goods-item">
+      <section class="goods-item section-card">
         <img :src="payGoods.cover || '/default-book.png'" alt="图书封面" class="book-cover" />
         <div class="goods-info">
-          <h3 style="color: black">{{ payGoods.book_name || payGoods.name || '未知图书' }}</h3>
-          <p style="color: gray">规格：{{ payGoods.spec || '平装版' }}</p>
-          <!-- 🔥 修复：优先显示优惠价，无优惠时显示原价 -->
-          <p style="color: gray">
+          <h3>{{ payGoods.book_name || payGoods.name || '未知图书' }}</h3>
+          <p class="goods-meta">规格：{{ payGoods.spec || '平装版' }}</p>
+          <p class="goods-price-line">
             单价：¥{{ toFixedNumber(payGoods.discount_price || payGoods.price, 2) }}
-            <span v-if="payGoods.discount_price && payGoods.discount_price !== payGoods.price" style="color: #999; text-decoration: line-through; margin-left: 8px; font-size: 12px;">
+            <span
+              v-if="payGoods.discount_price && payGoods.discount_price !== payGoods.price"
+              class="goods-price-origin"
+            >
               ¥{{ toFixedNumber(payGoods.price, 2) }}
             </span>
           </p>
-          <p style="color: gray">数量：{{ payGoods.count || 1 }}</p>
+          <p class="goods-meta">数量：{{ payGoods.count || 1 }}</p>
         </div>
-      </div>
+      </section>
 
       <!-- 收货地址选择区域 -->
-      <div class="address-section">
-        <h3 style="margin-bottom: 15px; color: #333; font-size: 16px">配送至</h3>
+      <section class="address-section section-card">
+        <h3 class="block-title">配送至</h3>
 
         <el-form :model="addressForm" :rules="addressRules" ref="addressFormRef" label-width="80px">
           <el-form-item label="所在地区" prop="region">
@@ -57,13 +57,13 @@
             />
           </el-form-item>
         </el-form>
-      </div>
+      </section>
 
       <!-- 总计 -->
-      <div class="pay-total">
-        <span style="color: black">支付金额：</span>
+      <section class="pay-total">
+        <span class="total-label">支付金额</span>
         <span class="total-price">¥{{ toFixedNumber(totalAmount, 2) }}</span>
-      </div>
+      </section>
 
       <!-- 支付按钮 -->
       <div class="pay-btn-group">
@@ -81,15 +81,19 @@
 
     <!-- 无商品 -->
     <div v-else class="empty-tip">
-      <p>暂无待支付商品</p>
+      <div class="empty-icon">📖</div>
+      <p class="empty-text">暂无待支付商品</p>
       <el-button type="primary" @click="router.push('/home')">返回首页</el-button>
     </div>
+
+    </main>
 
     <!-- ================== 支付安全验证弹窗（手机号+验证码） ================== -->
     <el-dialog
   v-model="showPayVerifyDialog"
   title="支付安全验证"
   width="480px"
+  class="pay-verify-dialog"
   :close-on-click-modal="false"
 >
   <el-form
@@ -127,7 +131,7 @@
       </el-form-item>
     </template>
 
-    <!-- 密码验证 → 你要的新功能 -->
+    <!-- 密码验证 -->
     <template v-else>
       <el-form-item label="当前登录密码" prop="password">
         <el-input
@@ -146,6 +150,10 @@
     </el-button>
   </template>
 </el-dialog>
+
+    <footer class="pay-footer">
+      <p>© 2026 星途科幻图书 · 安全支付</p>
+    </footer>
   </div>
 </template>
 
@@ -157,6 +165,7 @@ import { getDirectPayGoodsInfo, submitDirectPay } from '@/api/front/pay'
 import { useUserStore } from '@/store/modules/user'
 import { sendSmsCode, loginByCode } from '@/api/front/user'
 import { verifyPayPwd } from '@/api/front/user'
+
 // 路由/仓库
 const route = useRoute()
 const router = useRouter()
@@ -167,6 +176,7 @@ const loading = ref(true)
 const submitting = ref(false)
 const payGoods = ref<any>(null)
 const verifyType = ref<'sms' | 'password'>('sms')
+
 // 地址相关逻辑
 const addressFormRef = ref<FormInstance>()
 const addressForm = reactive({
@@ -471,7 +481,110 @@ const regionOptions = [
       },
     ],
   },
-]
+  // ===================== 新增：山东省（山河四省）=====================
+  {
+    value: '370000',
+    label: '山东省',
+    children: [
+      { value: '370100', label: '济南市', children: [
+        { value: '370102', label: '历下区' },{ value: '370103', label: '市中区' },
+        { value: '370104', label: '槐荫区' },{ value: '370105', label: '天桥区' },
+        { value: '370112', label: '历城区' },{ value: '370113', label: '长清区' },
+        { value: '370114', label: '章丘区' },{ value: '370115', label: '济阳区' },
+        { value: '370116', label: '莱芜区' },{ value: '370117', label: '钢城区' },
+      ]},
+      { value: '370200', label: '青岛市', children: [
+        { value: '370202', label: '市南区' },{ value: '370203', label: '市北区' },
+        { value: '370211', label: '李沧区' },{ value: '370212', label: '黄岛区' },
+        { value: '370213', label: '崂山区' },{ value: '370214', label: '城阳区' },
+        { value: '370215', label: '即墨区' },
+      ]},
+      { value: '370300', label: '淄博市', children: [
+        { value: '370302', label: '淄川区' },{ value: '370303', label: '张店区' },
+        { value: '370304', label: '博山区' },{ value: '370305', label: '临淄区' },
+        { value: '370306', label: '周村区' },{ value: '370321', label: '桓台县' },
+      ]},
+      { value: '370400', label: '枣庄市', children: [
+        { value: '370402', label: '市中区' },{ value: '370403', label: '薛城区' },
+        { value: '370404', label: '峄城区' },{ value: '370405', label: '台儿庄区' },
+        { value: '370406', label: '山亭区' },
+      ]},
+      { value: '370500', label: '东营市', children: [{ value: '370502', label: '东营区' },{ value: '370503', label: '河口区' }]},
+      { value: '370600', label: '烟台市', children: [{ value: '370602', label: '芝罘区' },{ value: '370611', label: '福山区' },{ value: '370612', label: '莱山区' },{ value: '370613', label: '牟平区' }]},
+      { value: '370700', label: '潍坊市', children: [{ value: '370702', label: '潍城区' },{ value: '370703', label: '寒亭区' },{ value: '370704', label: '坊子区' },{ value: '370705', label: '奎文区' }]},
+      { value: '370800', label: '济宁市', children: [{ value: '370802', label: '任城区' },{ value: '370811', label: '兖州区' }]},
+      { value: '370900', label: '泰安市', children: [{ value: '370902', label: '泰山区' },{ value: '370911', label: '岱岳区' }]},
+      { value: '371000', label: '威海市', children: [{ value: '371002', label: '环翠区' },{ value: '371071', label: '文登区' }]},
+      { value: '371100', label: '日照市', children: [{ value: '371102', label: '东港区' },{ value: '371103', label: '岚山区' }]},
+      { value: '371200', label: '临沂市', children: [{ value: '371302', label: '兰山区' },{ value: '371311', label: '罗庄区' },{ value: '371312', label: '河东区' }]},
+      { value: '371300', label: '德州市', children: [{ value: '371402', label: '德城区' },{ value: '371403', label: '陵城区' }]},
+      { value: '371400', label: '聊城市', children: [{ value: '371502', label: '东昌府区' }]},
+      { value: '371500', label: '滨州市', children: [{ value: '371602', label: '滨城区' },{ value: '371603', label: '沾化区' }]},
+      { value: '371600', label: '菏泽市', children: [{ value: '371702', label: '牡丹区' },{ value: '371703', label: '定陶区' }]},
+    ]
+  },
+  // ===================== 新增：河南省（山河四省）=====================
+  {
+    value: '410000',
+    label: '河南省',
+    children: [
+      { value: '410100', label: '郑州市', children: [
+        { value: '410102', label: '中原区' },{ value: '410103', label: '二七区' },
+        { value: '410104', label: '管城回族区' },{ value: '410105', label: '金水区' },
+        { value: '410106', label: '上街区' },{ value: '410108', label: '惠济区' },
+      ]},
+      { value: '410200', label: '开封市', children: [
+        { value: '410202', label: '龙亭区' },{ value: '410203', label: '顺河回族区' },
+        { value: '410204', label: '鼓楼区' },{ value: '410205', label: '禹王台区' },
+        { value: '410211', label: '祥符区' },
+      ]},
+      { value: '410300', label: '洛阳市', children: [
+        { value: '410302', label: '老城区' },{ value: '410303', label: '西工区' },
+        { value: '410304', label: '瀍河回族区' },{ value: '410305', label: '涧西区' },
+        { value: '410311', label: '洛龙区' },{ value: '410312', label: '吉利区' },
+      ]},
+      { value: '410400', label: '平顶山市', children: [{ value: '410402', label: '新华区' },{ value: '410403', label: '卫东区' },{ value: '410404', label: '石龙区' },{ value: '410411', label: '湛河区' }]},
+      { value: '410500', label: '安阳市', children: [{ value: '410502', label: '文峰区' },{ value: '410503', label: '北关区' },{ value: '410505', label: '殷都区' },{ value: '410506', label: '龙安区' }]},
+      { value: '410600', label: '鹤壁市', children: [{ value: '410602', label: '鹤山区' },{ value: '410603', label: '山城区' },{ value: '410611', label: '淇滨区' }]},
+      { value: '410700', label: '新乡市', children: [{ value: '410702', label: '红旗区' },{ value: '410703', label: '卫滨区' },{ value: '410704', label: '凤泉区' },{ value: '410711', label: '牧野区' }]},
+      { value: '410800', label: '焦作市', children: [{ value: '410802', label: '解放区' },{ value: '410803', label: '中站区' },{ value: '410804', label: '马村区' },{ value: '410811', label: '山阳区' }]},
+      { value: '410900', label: '濮阳市', children: [{ value: '410902', label: '华龙区' }]},
+      { value: '411000', label: '许昌市', children: [{ value: '411002', label: '魏都区' },{ value: '411003', label: '建安区' }]},
+      { value: '411100', label: '漯河市', children: [{ value: '411102', label: '源汇区' },{ value: '411103', label: '郾城区' },{ value: '411104', label: '召陵区' }]},
+      { value: '411200', label: '三门峡市', children: [{ value: '411202', label: '湖滨区' },{ value: '411203', label: '陕州区' }]},
+      { value: '411300', label: '南阳市', children: [{ value: '411302', label: '宛城区' },{ value: '411303', label: '卧龙区' }]},
+      { value: '411400', label: '商丘市', children: [{ value: '411402', label: '梁园区' },{ value: '411403', label: '睢阳区' }]},
+      { value: '411500', label: '信阳市', children: [{ value: '411502', label: '浉河区' },{ value: '411503', label: '平桥区' }]},
+      { value: '411600', label: '周口市', children: [{ value: '411602', label: '川汇区' },{ value: '411603', label: '淮阳区' }]},
+      { value: '411700', label: '驻马店市', children: [{ value: '411702', label: '驿城区' }]},
+    ]
+  },
+  // ===================== 新增：山西省（山河四省）=====================
+  {
+    value: '140000',
+    label: '山西省',
+    children: [
+      { value: '140100', label: '太原市', children: [
+        { value: '140105', label: '小店区' },{ value: '140106', label: '迎泽区' },
+        { value: '140107', label: '杏花岭区' },{ value: '140108', label: '尖草坪区' },
+        { value: '140109', label: '万柏林区' },{ value: '140110', label: '晋源区' },
+      ]},
+      { value: '140200', label: '大同市', children: [
+        { value: '140212', label: '平城区' },{ value: '140213', label: '云冈区' },
+        { value: '140214', label: '新荣区' },{ value: '140215', label: '云州区' },
+      ]},
+      { value: '140300', label: '阳泉市', children: [{ value: '140302', label: '城区' },{ value: '140303', label: '矿区' },{ value: '140311', label: '郊区' }]},
+      { value: '140400', label: '长治市', children: [{ value: '140402', label: '潞州区' },{ value: '140403', label: '上党区' },{ value: '140404', label: '屯留区' },{ value: '140405', label: '潞城区' }]},
+      { value: '140500', label: '晋城市', children: [{ value: '140502', label: '城区' }]},
+      { value: '140600', label: '朔州市', children: [{ value: '140602', label: '朔城区' },{ value: '140603', label: '平鲁区' }]},
+      { value: '140700', label: '晋中市', children: [{ value: '140702', label: '榆次区' },{ value: '140721', label: '太谷区' }]},
+      { value: '140800', label: '运城市', children: [{ value: '140802', label: '盐湖区' }]},
+      { value: '140900', label: '忻州市', children: [{ value: '140902', label: '忻府区' }]},
+      { value: '141000', label: '临汾市', children: [{ value: '141002', label: '尧都区' }]},
+      { value: '141100', label: '吕梁市', children: [{ value: '141102', label: '离石区' }]},
+    ]
+  },
+];
 const addressRules = {
   region: [{ type: 'array', required: true, message: '请选择省市区', trigger: 'change' }],
   detail: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
@@ -539,7 +652,6 @@ const closePayVerify = () => {
   countdown.value = 0
 }
 
-
 // 确认验证 + 支付
 const confirmPayVerify = async () => {
   if (verifyType.value === 'sms' && !payVerifyForm.value.code) {
@@ -584,10 +696,15 @@ const confirmPayVerify = async () => {
   }
 }
 
-// 获取source参数
-const source = route.query.source || 'normal'
+// 数据源：普通书/新书/商家书
+const source = computed(() => {
+  const type = Number(route.query.book_type)
+  if (type === 1) return 'new'
+  if (type === 2) return 'seller'
+  return route.query.source || 'normal'
+})
 
-// loadDirectPayGoodsInfo 接口调用，传source
+// 加载直付商品信息
 const loadDirectPayGoodsInfo = async () => {
   try {
     const bookId = Number(route.query.bookId) || 0
@@ -598,8 +715,7 @@ const loadDirectPayGoodsInfo = async () => {
       return
     }
 
-    // 传 source 给后端
-    const res = await getDirectPayGoodsInfo(bookId, buyCount, source)
+    const res = await getDirectPayGoodsInfo(bookId, buyCount, source.value)
     if (res.code === 200 && res.data) {
       payGoods.value = { ...res.data }
     }
@@ -610,23 +726,20 @@ const loadDirectPayGoodsInfo = async () => {
   }
 }
 
-// doRealPay 接口调用，传source
+// 真实支付请求
 const doRealPay = async () => {
   submitting.value = true
   try {
     const bookId = Number(route.query.bookId) || 0
     const buyCount = Number(route.query.buyCount) || 0
-    const source = route.query.source || 'normal'
-
     const addressPayload = {
-      province: addressForm.region[0],
-      city: addressForm.region[1],
-      district: addressForm.region[2],
-      detail: addressForm.detail,
-    }
+  province: addressForm.region[0] || '',
+  city: addressForm.region[1] || '',
+  district: addressForm.region[2] || '', // 增加默认值
+  detail: addressForm.detail,
+}
 
-    // 传给 submitDirectPay 接口
-    const res = await submitDirectPay(bookId, buyCount, source, addressPayload)
+    const res = await submitDirectPay(bookId, buyCount, source.value, addressPayload)
     if (res.code === 200) {
       ElMessage.success('支付成功！')
       router.push('/user')
@@ -641,7 +754,7 @@ const doRealPay = async () => {
   }
 }
 
-// 点击支付按钮 → 先校验地址 → 弹出验证码
+// 点击支付按钮
 const submitDirectPay1 = async () => {
   if (!userStore.token) {
     ElMessage.warning('请先登录')
@@ -676,81 +789,239 @@ onUnmounted(() => clearInterval(timer))
 </script>
 
 <style scoped>
+/* Reference: activity BookLaunchLayout - warm commerce tone */
 .pay-page {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 0 20px;
+  min-height: 100vh;
+  background: #fefce8;
+  padding-bottom: 40px;
 }
 .pay-header {
+  background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
+  color: #fff;
+  padding: 14px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  gap: 16px;
 }
 .back-btn {
+  cursor: pointer;
   font-size: 14px;
-  padding: 0;
+  opacity: 0.9;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.back-btn:hover {
+  opacity: 1;
+}
+.header-title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+}
+.pay-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+.loading-tip,
+.empty-tip {
+  text-align: center;
+  padding: 80px 20px;
+  color: #78716c;
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid #fde68a;
+  border-top-color: #b45309;
+  border-radius: 50%;
+  animation: pay-spin 0.8s linear infinite;
+}
+@keyframes pay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.empty-text {
+  margin: 0 0 20px;
+  font-size: 16px;
+}
+.pay-goods-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.section-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.block-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #b45309;
+  display: inline-block;
 }
 .goods-item {
   display: flex;
-  gap: 20px;
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background-color: #fff;
+  gap: 24px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 .book-cover {
   width: 120px;
   height: 173px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }
 .goods-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 .goods-info h3 {
   margin: 0;
   font-size: 18px;
+  font-weight: 700;
+  color: #1c1917;
+}
+.goods-meta {
+  color: #57534e;
+  font-size: 14px;
+  margin: 0;
+}
+.goods-price-line {
+  color: #78716c;
+  font-size: 14px;
+  margin: 0;
+}
+.goods-price-origin {
+  color: #a8a29e;
+  text-decoration: line-through;
+  margin-left: 8px;
+  font-size: 12px;
 }
 .address-section {
-  margin: 20px 0;
-  padding: 20px;
-  border: 1px dashed #dcdfe6;
-  border-radius: 8px;
-  background-color: #fdfdfd;
+  margin: 0;
 }
 .pay-total {
-  text-align: right;
-  margin: 30px 0;
-  font-size: 20px;
-  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  font-size: 18px;
+  font-weight: 600;
+}
+.total-label {
+  color: #57534e;
 }
 .total-price {
-  color: #f56c6c;
-  margin-left: 10px;
+  color: #dc2626;
+  font-size: 24px;
+  font-weight: 700;
 }
 .pay-btn-group {
-  text-align: right;
+  margin-top: 4px;
 }
-.loading-tip,
-.empty-tip {
-  text-align: center;
-  padding: 100px 0;
+.pay-btn-group :deep(.el-button) {
+  width: 100%;
+  height: 48px;
   font-size: 16px;
-  color: #666;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #92400e, #b45309) !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pay-btn-group :deep(.el-button:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(146, 64, 14, 0.3);
+}
+.pay-footer {
+  text-align: center;
+  padding: 24px;
+  color: #a8a29e;
+  font-size: 12px;
+  border-top: 1px solid #e7e5e4;
+  margin-top: 8px;
+}
+.pay-footer p {
+  margin: 0;
 }
 .code-box {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .verify-form {
-  padding: 10px 0;
+  padding: 8px 0;
+}
+:deep(.pay-verify-dialog .el-dialog__header) {
+  border-bottom: 1px solid #f0f0f0;
+}
+@media (max-width: 768px) {
+  .header-title {
+    font-size: 16px;
+  }
+  .goods-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 16px;
+  }
+  .book-cover {
+    width: 100px;
+    height: 144px;
+  }
+  .pay-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .code-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .code-box .el-button {
+    width: 100%;
+  }
 }
 </style>

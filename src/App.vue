@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-// 根组件 - 无业务逻辑，仅承载路由
+// 根组件 承载路由
 </script>
 
 <style scoped>
@@ -17,9 +17,9 @@
   background-color: white !important;
 }
 
-/* 覆盖全项目所有样式 */
+
 /* ========== 全局样式 ========== */
-/* 覆盖浏览器滚动条 */
+/* 滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   background-color: #ffffff !important;

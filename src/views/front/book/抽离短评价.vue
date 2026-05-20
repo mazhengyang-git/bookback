@@ -1,16 +1,17 @@
 <template>
   <div class="book-comment-container">
     <div class="comment-header">
-      <!-- 整个区域用 v-if 包住，数据没好完全不渲染 -->
+      <!-- 区域 v-if ，数据没好完全不渲染 -->
       <div v-if="bookAvgScore !== null" class="score-summary">
         <el-rate
           v-model="bookAvgScore"
           disabled
           :max="5"
+          show-score
           text-color="#ff7d00"
           score-format="(value) => value.toFixed(1)"
         />
-        <span class="avg-score-text">{{ bookAvgScore.toFixed(1) }} 分</span>
+        <!-- <span class="avg-score-text">{{ bookAvgScore.toFixed(1) }} 分</span> -->
       </div>
       <!-- 数据没加载时：用空占位，保持布局位置不变 -->
       <div v-else class="score-summary placeholder"></div>
@@ -37,7 +38,7 @@ const commentList = ref<CommentItem[]>([])
 const fetchRandomComments = async () => {
   if (!props.bookId) return
   try {
-    // 🔥 传入 source
+    // 传 source
     const res = await getRandomComments(props.bookId, props.source)
     if (res.code === 200) {
       commentList.value = res.data || []
@@ -49,7 +50,7 @@ const fetchRandomComments = async () => {
 
 const fetchBookScore = async () => {
   try {
-    // 传入 source
+    // 传 source
     const res = await getBookAvgScore(props.bookId, props.source)//@ts-ignore
     if (res.code === 200) {
       bookAvgScore.value = res.data.avgScore || 0.0

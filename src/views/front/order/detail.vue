@@ -14,15 +14,28 @@
         <div class="order-body">
           <!--@vue-ignore--><img :src="order.bookCover || '/public/default-book.png'" class="cover" />
           <div class="info">
-            <p class="name"><!--@vue-ignore-->{{ order.bookName }}</p>
+            <p class="name">
+              <!--@vue-ignore-->{{ order.bookName }}
+            
+              <el-tag v-if="order.source === 'seller'" type="warning" class="seller-tag">商家自营</el-tag>
+            </p>
             <p style="user-select: none;" class="info-text">数量：{{ order.count }}</p>
-            <!-- 显示优惠价总价，格式化2位小数 -->
             <p style="user-select: none;" class="info-text">
               总价：¥{{ Number(order.totalPrice).toFixed(2) }}
             </p>
             <p style="user-select: none;" class="info-text">
               状态：<el-tag type="success">{{ order.status }}</el-tag>
             </p>
+
+            <!-- 商家店铺卡片 -->
+            <div v-if="order.source === 'seller'" class="seller-shop-block" @click="goSellerShop(order)">
+              <el-avatar :size="48" :src="order.sellerAvatar || order.seller_avatar || '/img/default-avatar.png'" />
+              <div class="seller-shop-text">
+                <span class="seller-shop-label">商家店铺</span>
+                <span class="seller-shop-name">{{ order.shopName || order.shop_name || '未知店铺' }}</span>
+              </div>
+            </div>
+
            <!--@vue-ignore--> <p
               class="detail-link"
               @click="go(`/book1/${order.bookId}?source=${order.source || 'normal'}`)"
@@ -45,13 +58,13 @@
     <div v-if="!orderList.length" class="empty"></div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import dayjs from 'dayjs'
 import type { Order } from '@/types/index'
 import { getUserOrderList } from '@/api/front/order'
 import router from '@/router'
+import { ElMessage } from 'element-plus' //引入提示组件
 //@ts-ignore
 import { RouteLocationAsRelativeGeneric, RouteLocationAsPathGeneric } from 'vue-router'
 
@@ -63,6 +76,17 @@ const go = (path: string) => {
     return
   }
   router.push(path)
+}
+
+// 跳转到商家店铺
+const goSellerShop = (order: any) => {
+  // 兼容驼峰/下划线两种字段名
+  const shopId = order.shopId || order.shop_id
+  if (!shopId) {
+    ElMessage.warning('该订单的店铺信息缺失，无法跳转')
+    return
+  }
+  router.push(`/shop/${shopId}`)
 }
 
 const getMyOrder = async () => {
@@ -153,8 +177,10 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .cover {
-  width: 110px;
-  height: 148px;
+  width: 8.6vw;
+  margin-right: 30px;
+  height: auto;
+  transform: scaleX(1.05);
   border-radius: 12px;
   object-fit: cover;
   background: #f8fafc;
@@ -247,6 +273,7 @@ onMounted(() => {
 }
 </style>
 <style scoped>
+
 /* 地址相关样式 */
 .address-section {
   margin-top: 12px;
@@ -265,4 +292,43 @@ onMounted(() => {
   color: #333;
 }
 
+</style>
+<style scoped>
+/* 商家自营标签 */
+.seller-tag {
+  margin-left: 10px;
+  background-color: #fdf6ec;
+  color: #e6a23c;
+  border-color: #faecd8;
+}
+
+/* 商家店铺卡片 */
+.seller-shop-block {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #fff7e6;
+  border-radius: 8px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.seller-shop-block:hover {
+  background-color: #fff1d8;
+  transform: translateY(-1px);
+}
+.seller-shop-text {
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+}
+.seller-shop-label {
+  font-size: 12px;
+  color: #999;
+}
+.seller-shop-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
 </style>

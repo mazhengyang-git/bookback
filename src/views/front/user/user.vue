@@ -130,11 +130,17 @@ const openAvatarDialog = () => {
 }
 
 const beforeAvatarUpload = (file: any) => {
-  const isImg = file.type === 'image/jpeg' || file.type === 'image/png'
+   const isImg = file.type === 'image/jpeg' || file.type === 'image/png'|| file.type === 'image/webp'|| file.type === 'image/x-webp'
+  if (!isImg) {
+    ElMessage.error('头像只能是 JPG/PNG/webp 格式')
+    return false
+  }
   const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isImg) ElMessage.error('只能 JPG/PNG')
-  if (!isLt2M) ElMessage.error('不能超过 2MB')
-  return isImg && isLt2M
+  if (!isLt2M) {
+    ElMessage.error('头像大小不能超过 2MB')
+    return false
+  }
+  return true
 }
 
 const customUpload = async (options: any) => {

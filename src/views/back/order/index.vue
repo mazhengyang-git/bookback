@@ -1,103 +1,120 @@
 <template>
-  <div class="admin-order-container" >
+  <div class="admin-order-container">
     <div class="admin-header">
       <h2 style="color: #000;">订单管理</h2>
-      <!-- 筛选导航条 -->
-      <div class="filter-scroll-wrapper" style="font-weight: bold;">
-        <el-scrollbar class="filter-scroll" horizontal>
-          <div class="filter-btn-group">
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '全部' }"
-              @click="handleFilter('全部')"
-            >
-              全部
+      <!-- 刷新按钮 + 筛选导航条 -->
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+        <el-button 
+          type="primary" 
+          size="small" 
+          icon="el-icon-refresh" 
+          @click="getOrderList"
+        >
+          刷新订单
+        </el-button>
+        <div class="filter-scroll-wrapper" style="font-weight: bold; flex: 1;">
+          <el-scrollbar class="filter-scroll" horizontal>
+            <div class="filter-btn-group">
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '全部' }"
+                @click="handleFilter('全部')"
+              >
+                全部
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '待付款' }"
+                @click="handleFilter('待付款')"
+              >
+                待付款
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '已付款' }"
+                @click="handleFilter('已付款')"
+              >
+                已付款
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '待发货' }"
+                @click="handleFilter('待发货')"
+              >
+                待发货
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '已发货' }"
+                @click="handleFilter('已发货')"
+              >
+                已发货
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '已收货' }"
+                @click="handleFilter('已收货')"
+              >
+                已收货
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '已完成' }"
+                @click="handleFilter('已完成')"
+              >
+                已完成
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '已取消' }"
+                @click="handleFilter('已取消')"
+              >
+                已取消
+              </div>
             </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '待付款' }"
-              @click="handleFilter('待付款')"
-            >
-              待付款
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '已付款' }"
-              @click="handleFilter('已付款')"
-            >
-              已付款
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '待发货' }"
-              @click="handleFilter('待发货')"
-            >
-              待发货
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '已发货' }"
-              @click="handleFilter('已发货')"
-            >
-              已发货
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '已收货' }"
-              @click="handleFilter('已收货')"
-            >
-              已收货
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '已完成' }"
-              @click="handleFilter('已完成')"
-            >
-              已完成
-            </div>
-            <div
-              class="filter-btn"
-              :class="{ active: selectedStatus === '已取消' }"
-              @click="handleFilter('已取消')"
-            >
-              已取消
-            </div>
-          </div>
-        </el-scrollbar>
+          </el-scrollbar>
+        </div>
       </div>
     </div>
 
     <!-- 表格容器+粘性横向滚动条 -->
     <div class="table-sticky-wrapper">
-      <el-table style="color: #000;"  v-loading="loading" :data="orderList" border  :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
-> stripe fit>
+      <el-table 
+        style="color: #000;"  
+        v-loading="loading" 
+        :data="orderList" 
+        border  
+        :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
+        stripe 
+        fit
+      >
         <el-table-column prop="orderNo" label="订单编号" min-width="136" />
         <el-table-column prop="username" label="下单用户" min-width="83" />
         <el-table-column prop="bookName" label="图书名称" min-width="110" show-overflow-tooltip />
         <el-table-column prop="count" label="数量" min-width="60" />
-     <!-- 原价 -->
-<el-table-column prop="originalPrice" label="原价" min-width="80">
-  <template #default="scope">
-    ¥{{ scope.row.originalPrice }}
-  </template>
-</el-table-column>
+        <!-- 原价 -->
+        <el-table-column prop="originalPrice" label="原价" min-width="80">
+          <template #default="scope">
+            ¥{{ scope.row.originalPrice }}
+          </template>
+        </el-table-column>
 
-<!-- 优惠单价
-<el-table-column prop="realUnitPrice" label="优惠单价" min-width="100">
-  <template #default="scope">
-    <span style="color:red; font-weight:bold">
-      ¥{{ scope.row.realUnitPrice }}
-    </span>
-  </template>
-</el-table-column>
- -->
-<!-- 实付总价 -->
-<el-table-column  prop="totalPrice" label="实付总价" min-width="95">
-  <template  #default="scope">
-    <span style="color:red; font-weight:bold">
-    ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}</span>
-  </template>
-</el-table-column>
+        <!-- 优惠单价 -->
+        <!-- <el-table-column prop="realUnitPrice" label="优惠单价" min-width="100">
+          <template #default="scope">
+            <span style="color:red; font-weight:bold">
+              ¥{{ scope.row.realUnitPrice }}
+            </span>
+          </template>
+        </el-table-column> -->
+        
+        <!-- 实付总价 -->
+        <el-table-column  prop="totalPrice" label="实付总价" min-width="95">
+          <template  #default="scope">
+            <span style="color:red; font-weight:bold">
+            ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" min-width="84">
           <template #default="scope">
             <el-tag :type="getStatusTagType(scope.row.status)">
@@ -157,9 +174,16 @@ const getOrderList = async () => {
       code: number
       data: any[]
     }
-    orderList.value = res.data.map((item) => ({ ...item, newStatus: item.status }))
+    // 图书名称显示
+    orderList.value = res.data.map((item) => ({ 
+      ...item, 
+      newStatus: item.status,
+      bookName: item.bookName || '未知图书' // 兜底处理
+    }))
+    ElMessage.success('订单列表刷新成功')
   } catch (error) {
     console.error('获取订单列表失败：', error)
+    ElMessage.error('获取订单列表失败，请重试')
   } finally {
     loading.value = false
   }
@@ -196,10 +220,13 @@ const handleUpdateStatus = async (id: number, status: string) => {
     }
     if (res.code === 200) {
       ElMessage.success(res.msg)
-      getOrderList()
+      getOrderList() // 修改状态后自动刷新
+    } else {
+      ElMessage.error(res.msg || '修改订单状态失败')
     }
   } catch (error) {
     console.error('修改订单状态失败：', error)
+    ElMessage.error('修改订单状态失败，请重试')
   }
 }
 
@@ -207,7 +234,6 @@ onMounted(() => {
   getOrderList()
 })
 </script>
-
 <style scoped>
 .admin-order-container {
   width: 100%;

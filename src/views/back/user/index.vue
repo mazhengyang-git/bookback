@@ -14,6 +14,21 @@
         <template #header>
           <span class="card-title">用户信息</span>
         </template>
+        
+        <!-- 头像展示区域 -->
+        <div style="display: flex; align-items: center; margin-bottom: 20px">
+          <div class="avatar-wrapper" style="position: relative; margin-right: 20px">
+            <el-avatar :src="currentAvatar" size="80" />
+            <!-- 头像上传加号按钮 -->
+            <div class="avatar-upload-btn" @click="openAvatarDialog">
+              <el-icon><Plus /></el-icon>
+            </div>
+          </div>
+          <div>
+            <h2 style="margin: 0">{{ userStore.user?.username || '未知用户' }}</h2>
+          </div>
+        </div>
+
         <div class="user-info-content">
           <!-- 手机号区域（处理空字符串 + 绑定隐藏） -->
           <div v-if="!userStore.user?.phone || userStore.user?.phone.trim() === ''">
@@ -64,7 +79,6 @@
           <el-button
             style="
               position: relative;
-
               padding-top: 10px;
               padding-bottom: 10px;
               height: 30px;
@@ -85,6 +99,22 @@
           >
         </template>
       </el-card>
+
+      <!-- 修改头像弹窗 -->
+      <el-dialog v-model="showAvatarDialog" title="修改头像" width="500px">
+        <el-upload
+          class="avatar-uploader"
+          :http-request="customUpload"
+          :show-file-list="false"
+          :before-upload="beforeAvatarUpload"
+        >
+          <el-avatar v-if="previewAvatar" :src="previewAvatar" size="120" />
+          <el-icon v-else class="upload-icon"><Plus /></el-icon>
+        </el-upload>
+        <div style="margin-top: 15px; text-align: center; color: #909399; font-size: 13px;">
+          支持 jpg/png/webp 格式，大小不超过 2MB
+        </div>
+      </el-dialog>
 
       <!-- 修改账密弹窗 -->
       <el-dialog
@@ -132,7 +162,7 @@
         </template>
       </el-dialog>
 
-      <!-- 新增：修改手机号弹窗 -->
+      <!-- 修改手机号弹窗 -->
       <el-dialog
         v-model="showEditPhoneDialog"
         title="修改绑定手机号"
@@ -154,13 +184,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, reactive } from 'vue'
+import { ref, onMounted, onActivated, reactive, computed } from 'vue'
 //@ts-ignore
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus'
+// 导入图标 + 头像接口
+import { Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'//@ts-ignore
 import { deleteOrder, getUserOrderList } from '@/api/front/order'
-import { updateUserInfoApi } from '@/api/front/user'
+import { updateUserInfoApi, uploadAvatar, getSign } from '@/api/front/user'
 import { bindPhone } from '@/api/back/announcement'
 import dayjs from 'dayjs'
 
@@ -171,6 +203,57 @@ const phone = ref('')
 // 修改手机号弹窗变量
 const showEditPhoneDialog = ref(false)
 const editPhone = ref('')
+
+// ===================== 头像功能 =====================
+const showAvatarDialog = ref(false)
+const previewAvatar = ref('')
+
+// 头像计算属性（默认头像）
+const currentAvatar = computed(() => {
+  return userStore.user?.avatar || 'https://cube.elemecdn.com/0/5/0df5cf44e51f19950fddc469d08jpeg.jpeg'
+})
+
+// 打开头像弹窗
+const openAvatarDialog = () => {
+  previewAvatar.value = userStore.user?.avatar || ''
+  showAvatarDialog.value = true
+}
+
+// 上传前校验
+const beforeAvatarUpload = (file: any) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/x-webp']
+  const isImg = allowedTypes.includes(file.type)
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImg) {
+    ElMessage.error('仅支持 JPG/PNG/WEBP 格式')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+  return true
+}
+
+// 上传头像
+const customUpload = async (options: any) => {
+  try {
+    const res = await uploadAvatar(options.file)
+    if (res.code === 200) {
+      ElMessage.success('头像上传成功')
+      // 更新pinia里的头像
+      if (userStore.user) {
+        userStore.user.avatar = res.data.url
+      }
+      showAvatarDialog.value = false
+    } else {
+      ElMessage.error(res.msg || '上传失败')
+    }
+  } catch (e) {
+    ElMessage.error('上传失败')
+  }
+}
 
 // ===================== 绑定手机号（绑定后刷新用户信息） =====================
 const handleBind = async () => {
@@ -382,7 +465,16 @@ const getOrderList = async () => {
 }
 
 onActivated(() => userStore.isLogin && getOrderList())
-onMounted(() => getOrderList())
+onMounted(async () => {
+  getOrderList()
+  // 同步用户签名
+  if (userStore.isLogin) {
+    const res = await getSign()
+    if (res.code === 200 && userStore.user) {
+      userStore.user.sign = res.data.sign
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -489,5 +581,48 @@ button {
 :deep(.el-table td),
 :deep(.el-table th) {
   border-color: #e4e7ed;
+}
+
+/* 头像样式 */
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+.avatar-upload-btn {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+  background: #409eff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.avatar-uploader {
+  display: flex;
+  justify-content: center;
+}
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed #d9d9d9;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #409eff;
+}
+.upload-icon {
+  font-size: 32px;
+  color: #c0c4cc;
 }
 </style>

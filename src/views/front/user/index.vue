@@ -396,7 +396,7 @@ const userStore = useUserStore()
 const router = useRouter()
 const phone = ref('')
 
-// ===================== 头像功能 =====================
+// 头像功能 
 const showAvatarDialog = ref(false)
 const previewAvatar = ref('')
 
@@ -410,9 +410,9 @@ const openAvatarDialog = () => {
 }
 
 const beforeAvatarUpload = (file: any) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    ElMessage.error('头像只能是 JPG/PNG 格式')
+   const isImg = file.type === 'image/jpeg' || file.type === 'image/png'|| file.type === 'image/webp'|| file.type === 'image/x-webp'
+  if (!isImg) {
+    ElMessage.error('头像只能是 JPG/PNG/webp 格式')
     return false
   }
   const isLt2M = file.size / 1024 / 1024 < 2
@@ -1248,8 +1248,8 @@ margin-left: -23.5px;
 
 /* 图书封面 */
 .order-book-cover {
-  width: 72px;
-  height: 96px;
+  width: 100%;
+  height: auto;
 
   object-fit: cover;
 

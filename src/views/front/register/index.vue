@@ -54,7 +54,7 @@
             />
           </el-form-item>
 
-          <!-- ================== 图片验证码 ================== -->
+          <!-- 图片验证码  -->
           <el-form-item label="验证" prop="captcha">
             <div class="captcha-row">
               <el-input
@@ -122,7 +122,7 @@ import { register } from '@/api/front/user'
 const router = useRouter()
 const registerFormRef = ref<FormInstance>()
 
-// captcha 放入表单对象
+// captcha放入表单对象
 const registerForm = reactive({
   username: '',
   password: '',

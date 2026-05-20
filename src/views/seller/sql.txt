@@ -1,0 +1,101 @@
+-- ============================================================
+-- 星途科幻图书电商平台 - 卖家系统独立数据表
+-- 执行前请确认数据库：sci_fi_book_platform（与项目一致）
+-- 约束：仅新增 3 张表，不修改 book / newbook 等原有表
+
+
+1. 为店铺资料、发布图书、申请管理三个模块和管理端其他有上传图片(商品管理,新书速递)的相关功能模块，参考:front/user/index.vue的加号图片上传功能,加上加号上传图片的功能:（支持url路径和加号上传双渠道，用户任选其一）
+2. 完善商家上架的图书的删除与编辑功能，对应商家和管理员账号才有删除权限，对应商家才能编辑，编辑后需要重新申请
+
+所有改动必须兼容现有代码，不要省略任何步骤。
+
+
+-- ============================================================
+
+USE sci_fi_book_platform;
+
+-- 1. 卖家店铺表
+DROP TABLE IF EXISTS `seller_book`;
+DROP TABLE IF EXISTS `seller_bookapply`;
+DROP TABLE IF EXISTS `seller`;
+
+CREATE TABLE `seller` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '卖家店铺ID',
+  `user_id` int NOT NULL COMMENT '关联用户表 user.id',
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '店铺头像URL',
+  `shop_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '店铺名称',
+  `intro` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '店铺简介',
+  `contact` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '联系方式',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_seller_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家店铺表';
+
+-- 2. 卖家图书上架申请表（完整图书字段 + 审核字段）
+CREATE TABLE `seller_bookapply` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '申请ID',
+  `seller_id` int NOT NULL COMMENT '卖家店铺ID seller.id',
+  `book_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '图书名称',
+  `author` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '作者',
+  `author_into` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '作者简介',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图书分类',
+  `price` decimal(10,2) NOT NULL COMMENT '图书单价',
+  `stock` int NOT NULL DEFAULT '0' COMMENT '库存',
+  `sales_count` int NOT NULL DEFAULT '0' COMMENT '累计销量',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '封面URL',
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书简介',
+  `mulu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书目录',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '上下架 1上架 0下架',
+  `publisher` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '出版社',
+  `avg_score` decimal(2,1) NOT NULL DEFAULT '0.0' COMMENT '平均分',
+  `comment_count` int NOT NULL DEFAULT '0' COMMENT '评价数',
+  `audit_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '审核状态 0待审核 1通过 2驳回',
+  `audit_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '驳回原因',
+  `source_book_id` int DEFAULT NULL COMMENT '关联已上架图书ID（修改重审时）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_apply_seller` (`seller_id`),
+  KEY `idx_apply_audit` (`audit_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家图书上架申请表';
+
+-- 3. 卖家正式图书表（字段结构与 seller_bookapply 一致）
+CREATE TABLE `seller_book` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '卖家图书ID',
+  `seller_id` int NOT NULL COMMENT '卖家店铺ID',
+  `book_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '图书名称',
+  `author` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '作者',
+  `author_into` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '作者简介',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '图书分类',
+  `price` decimal(10,2) NOT NULL COMMENT '图书单价',
+  `stock` int NOT NULL DEFAULT '0' COMMENT '库存',
+  `sales_count` int NOT NULL DEFAULT '0' COMMENT '累计销量',
+  `cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '封面URL',
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书简介',
+  `mulu` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '图书目录',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '上下架 1上架 0下架',
+  `publisher` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '出版社',
+  `avg_score` decimal(2,1) NOT NULL DEFAULT '0.0' COMMENT '平均分',
+  `comment_count` int NOT NULL DEFAULT '0' COMMENT '评价数',
+  `audit_status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '审核状态 1已通过',
+  `audit_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '审核备注',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上架时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_seller_book_seller` (`seller_id`),
+  KEY `idx_seller_book_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家正式图书表';
+
+-- 若表已存在，请执行以下迁移（添加修改重审关联字段）：
+-- ALTER TABLE seller_bookapply ADD COLUMN source_book_id int DEFAULT NULL COMMENT '关联已上架图书ID（修改重审时）' AFTER audit_reason;
+
+-- ============================================================
+-- 可选测试数据（按需执行）
+-- ============================================================
+-- INSERT INTO seller (user_id, avatar, shop_name, intro, contact)
+-- SELECT id, IFNULL(avatar,''), CONCAT(username,'的科幻书店'), '专营科幻好书', phone
+-- FROM user WHERE role='seller' LIMIT 1;
+
+-- ============================================================
+-- 依赖说明（本项目后端已具备，一般无需额外安装）
+-- npm install express mysql2 jsonwebtoken bcrypt multer cors dotenv
+-- 前端：Vue3 + Element Plus 已集成，无需新增 npm 包
+-- ============================================================

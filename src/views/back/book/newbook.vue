@@ -78,8 +78,8 @@
         <el-form-item label="库存" prop="stock">
           <el-input-number v-model="bookForm.stock" :min="0" />
         </el-form-item>
-        <el-form-item label="封面URL" prop="cover">
-          <el-input v-model="bookForm.cover" placeholder="请输入图书封面图片URL" />
+        <el-form-item label="封面" prop="cover">
+          <ImageUrlUpload v-model="bookForm.cover" placeholder="请输入图书封面图片 URL" />
         </el-form-item>
         <el-form-item label="简介" prop="desc">
           <el-input
@@ -124,6 +124,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAdminBookList, addBook, updateBook, deleteBook } from '@/api/back/newbook'
+import ImageUrlUpload from '@/components/ImageUrlUpload.vue'
 import type { newBook } from '@/types/index'
 
 const loading = ref(false)
@@ -269,7 +270,7 @@ onMounted(() => getBookList())
 .table-scroll-wrapper {
   width: 110%;
   overflow-x: auto;
-  /* 滚动条美化 */
+  /* 滚动条 */
   position: relative;
   left: -30px;
   scrollbar-width: thin;

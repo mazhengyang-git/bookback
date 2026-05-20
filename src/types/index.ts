@@ -76,7 +76,7 @@ export interface ShoucangItem extends Book {
   count: number // 购买数量
   checked: boolean // 是否选中
 }
-// 原有 User 和 Book 类型保留，新增 Order 即可
+
 // 公告数据类型（和后端对应）
 export interface Announcement {
   id: number

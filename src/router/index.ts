@@ -11,6 +11,7 @@ const routes = [
   { path: '/userinfo', name: 'UserInfo', component: () => import('@/views/front/user/user.vue'), meta: { requiresAuth: true } },
   { path: '/books', name: 'BookList', component: () => import('@/views/front/book/list.vue') },
    { path: '/books1', name: 'BookList1', component: () => import('@/views/front/book/list1.vue') },
+   { path: '/books2', name: 'BookList2', component: () => import('@/views/front/book/list2.vue') },
   { path: '/book/:id', name: 'BookDetail', component: () => import('@/views/front/book/detail.vue') },
   { path: '/book1/:id', name: 'BookDetail1', component: () => import('@/views/front/book/detail1.vue') },
   { path: '/cart', name: 'CartList', component: () => import('@/views/front/cart/index.vue'), meta: { requiresAuth: true } },
@@ -43,9 +44,31 @@ const routes = [
       { path: 'bookpaihang', name: 'BookPaihangadmin', component: () => import('@/views/back/book/bookpaihang.vue') },
       { path: 'newbook', name: 'newbookadmin', component: () => import('@/views/back/book/newbook.vue') },
         { path: 'huodongzx', name: 'huodongzxadmin', component: () => import('@/views/back/huodongzx/huodongzx.vue') },
+        { path: 'seller-audit', name: 'SellerAuditAdmin', component: () => import('@/views/back/seller/audit.vue') },
     ]
   },
-  { path: '/seller', name: 'SellerCenter', component: () => import('@/views/seller/index.vue'), meta: { requiresAuth: true } },
+  {
+    path: '/seller',
+    component: () => import('@/views/seller/layout.vue'),
+    meta: { requiresAuth: true },
+    redirect: '/seller/home',
+    children: [
+      { path: 'home', name: 'SellerCenter', component: () => import('@/views/seller/index.vue') },
+      { path: 'profile', name: 'SellerProfile', component: () => import('@/views/seller/profile.vue') },
+      { path: 'apply', name: 'SellerApply', component: () => import('@/views/seller/apply.vue') },
+      { path: 'apply-list', name: 'SellerApplyList', component: () => import('@/views/seller/applyList.vue') },
+      { path: 'book-list', name: 'SellerBookList', component: () => import('@/views/seller/bookList.vue') },
+    { path: 'selleruser', name: 'SellerUser', component: () => import('@/views/seller/user.vue') },
+    {
+      path: 'orders',
+      name: 'SellerOrders',
+      component: () => import('@/views/seller/order.vue'),
+      meta: { requiresAuth: true, role: 'seller' }
+    }
+  ],
+  },
+  { path: '/shop/:id', name: 'ShopHome', component: () => import('@/views/front/seller/home.vue') },
+  { path: '/seller-zone', name: 'SellerZone', component: () => import('@/views/front/seller/zone.vue') },
   { path: '/404', name: 'NotFound', component: () => import('@/views/404.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/404' },
 ]
@@ -63,7 +86,7 @@ router.beforeEach((to, from, next) => {
   if (to.path === '/home') {
     if (!userStore.isLogin) return next()
     if (userRole === 'buyer') return next()
-    if (userRole === 'seller') { ElMessage.info('已为您跳转至卖家页面'); return next('/seller') }
+    if (userRole === 'seller') { ElMessage.info('已为您跳转至卖家页面'); return next('/seller/home') }
     if (userRole === 'admin') { ElMessage.info('已为您跳转至管理页面'); return next('/admin') }
   }
 

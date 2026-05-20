@@ -196,7 +196,7 @@ const loadHomeData = async () => {
     const res = await fetch('/home-static.json')
     const data = await res.json()
 
-    // 2. 如果本地有数据 → 直接用
+    // 2. 如果本地有数据→直接用
     if (data?.bookList?.length) {//@ts-ignore
       bookStore.setBookList(data.bookList)
       hotBooks.value = getRandomBooks(data.bookList, 10)
@@ -366,7 +366,7 @@ onMounted(async () => {
   content: '';
   position: absolute;
   bottom: 840px;
-  left: 74.5px; /* 0 = 和文字左对齐，50% = 居中 */
+  left: 74.5px; 
   width: 100px; /* 蓝线长度 */
   height: 2px;
   background: linear-gradient(90deg, transparent, #409eff, transparent);
@@ -489,7 +489,7 @@ onMounted(async () => {
   margin: clamp(15px, 2vw, 20px) 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-/* 子容器：margin占位 */
+/* 子容器margin占位 */
 .monthly-inner {
   position: static;
   /* 缩放比例 */
@@ -896,11 +896,11 @@ button {
   }
 }
 
-/*热门图书：内置横向滚动条,固定2行5列+首卡完整显示+无页面空白*/
+/*热门图书：内置横向滚动条,固定2行5列+首卡完整显示*/
 
 .hot-book-list {
   display: grid;
-  /*严格固定5列，每列宽度响应式*/
+  /*固定5列，每列宽度响应式*/
   grid-template-columns: repeat(5, clamp(180px, 17vw, 200px));
   grid-template-rows: repeat(2, auto);
   gap: clamp(15px, 1.8vw, 20px);
@@ -951,7 +951,7 @@ button {
   font-size: clamp(14px, 1.2vw, 16px);
 }
 
-/*滚动条极简样式（图书区域）*/
+/*滚动条样式（图书区域）*/
 .hot-book-list::-webkit-scrollbar {
   height: clamp(16px, 1vw, 19px);
 }
@@ -1019,7 +1019,7 @@ button {
   cursor: move;
   user-select: none;
   -webkit-user-select: none;
-  /* 扩大可拖动热区 */
+  /* 可拖动热区 */
   padding: 25px;
   width: 80px;
   height: 80px;

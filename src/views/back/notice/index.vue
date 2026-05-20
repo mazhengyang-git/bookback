@@ -246,7 +246,7 @@ onMounted(() => getList())
 /* 窗口宽度 ≤ 600px 时，弹窗向左靠，不居中 */
 @media (max-width: 600px) {
   .modal-overlay {
-    justify-content: flex-start; /* 取消居中，左对齐 */
+    justify-content: flex-start; /* 左对齐 */
     padding-left: 120px; /* 左侧留空隙，完全避开按钮栏 */
   }
   .form-modal {

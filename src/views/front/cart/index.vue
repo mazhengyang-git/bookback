@@ -4,7 +4,7 @@
 
     <h2 class="cart-title">我的购物车</h2>
 
-    <!-- 加载中（和商城一致，初始不闪） -->
+    <!-- 加载中 -->
     <div v-if="loading" class="loading-tip"></div>
 
     <!-- 购物车列表 -->
@@ -97,7 +97,7 @@ import { useUserStore } from '@/store/user'
 import { getCartList, updateCartCount, deleteCartItem, clearCart } from '@/api/front/cart'
 import { getBookDetailApi } from '@/api/front/book'
 import { useBookStore1 } from '@/store/newbook'
-import request from '@/utils/request'
+import { getSellerBookDetailApi } from '@/api/seller/front'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
@@ -108,18 +108,26 @@ const bookStore1 = useBookStore1()
 const loading = ref(true)
 const checkedIds = ref<number[]>([])
 const isAllChecked = ref(false)
-// 优惠图书数据
-const discountBooks = ref<any[]>([])
 
-// 价格工具函数
+// 全局统一的价格工具函数
 const formatPrice = (price: any): string => {
   const num = Number(price) || 0
   return num.toFixed(2)
 }
+
 const getDiscountPrice = (item: any) => Number(item.discount_price ?? item.price) || 0
-const hasDiscount = (item: any) => !!item.discount_price && item.discount_price < item.price
+
+const hasDiscount = (item: any) => {
+  // 优惠价非空且优惠价<原价
+  return item.discount_price !== null 
+    && item.discount_price !== undefined 
+    && Number(item.discount_price) < Number(item.price)
+}
+
 const getDynamicDiscountRate = (item: any) => {
   if (!hasDiscount(item)) return ''
+  // 优先用后端返回的折扣率，没有则自动计算
+  if (item.discount_rate) return item.discount_rate + '折'
   const rate = (Number(item.discount_price) / Number(item.price)) * 10
   return rate.toFixed(1) + '折'
 }
@@ -130,16 +138,6 @@ const selectedTotal = computed(() => {
     .filter((item) => checkedIds.value.includes(item.cartId))
     .reduce((sum, item) => sum + getDiscountPrice(item) * item.count, 0)
 })
-
-// 加载优惠图书列表
-const loadDiscountBooks = async () => {
-  try {
-    const res = await request.get('/api/front/discount/book/list')
-    discountBooks.value = res.data || []
-  } catch (e) {
-    discountBooks.value = []
-  }
-}
 
 const handleUpdateCount = async (cartId: number, count: number) => {
   try {
@@ -158,7 +156,6 @@ const handleUpdateCount = async (cartId: number, count: number) => {
 
     await updateCartCount(cartId, count)
     cartStore.updateCount(cartId, count)
-    cartStore.calcTotalPrice()
   } catch (error) {
     ElMessage.error('修改数量失败')
   }
@@ -182,15 +179,16 @@ const handleCheckAll = (checked: boolean) => {
 }
 
 const handleBookClick = (item: any) => {
-  const path = `/book/${item.id}?source=${item.source || 'normal'}`
-  if (router.currentRoute.value.path.startsWith('/book/')) {
-    window.location.href = path
-  } else {
-    router.push(path)
-  }
+  // 按 book_type 跳转
+  let bookType = 0
+  if (item.source === 'new') bookType = 1
+  if (item.source === 'seller') bookType = 2
+
+  const path = `/book/${item.id}?book_type=${bookType}`
+  router.push(path)
 }
 
-// 并行加载 + 最后关 loading
+// 加载购物车数据
 const loadCartData = async () => {
   if (!userStore.token) {
     ElMessage.warning('请先登录')
@@ -200,11 +198,10 @@ const loadCartData = async () => {
   }
 
   try {
-    // 并行加载：新书 + 优惠图书
-    await Promise.all([bookStore1.fetchBookList(), loadDiscountBooks()])
+    // 并行加载
+    await bookStore1.fetchBookList()
     const cartRes = await getCartList()
 
-//@ts-ignore
     if (cartRes.code === 200 && cartRes.data) {
       cartStore.clearCart()
 
@@ -212,41 +209,42 @@ const loadCartData = async () => {
         const source = item.source || 'normal'
         let realBookData = null
 
-        if (source === 'new') {//@ts-ignore
+        if (source === 'new') {
+          // 新书：从仓库取，discount_price和discount_rate
           realBookData = bookStore1.bookList1.find((b) => b.id === item.goodsId)
+        } else if (source === 'seller') {
+          // 商家书：调用专属接口
+          const sellerRes = await getSellerBookDetailApi(item.goodsId)
+          realBookData = sellerRes.data
         } else {
+          // 普通书：调用详情接口
           const res = await getBookDetailApi(item.goodsId)
           realBookData = res.data
         }
 
-        // ✅ 注入优惠价数据
-        let discount_price = 0
-        const discountItem = discountBooks.value.find(d => d.book_id === item.goodsId || d.id === item.goodsId)
-        if (discountItem) discount_price = discountItem.discount_price
-
-//@ts-ignore
+        // 使用接口返回的优惠价
         cartStore.addToCart({
           cartId: item.id,
-          id: item.goodsId,//@ts-ignore
-          name: realBookData?.name || item.bookName || '未知图书',//@ts-ignore
+          id: item.goodsId,
+          name: realBookData?.name || item.bookName || '未知图书',
           price: Number(realBookData?.price || item.bookPrice || 0),
-          discount_price: Number(discount_price) || 0, // 优惠价
-          count: item.quantity || item.count,//@ts-ignore
+          // 用接口返回的优惠价
+          discount_price: realBookData?.discount_price ? Number(realBookData.discount_price) : null,
+          discount_rate: realBookData?.discount_rate,
+          count: item.quantity || item.count,
           cover: realBookData?.cover || item.bookCover || '/default-book.png',
-          spec: item.spec || '平装版',//@ts-ignore
-          stock: realBookData?.stock || 999,//@ts-ignore
+          spec: item.spec || '平装版',
+          stock: realBookData?.stock || 999,
           source: source,
         })
       }
 
-      cartStore.calcTotalPrice()
       checkedIds.value = cartStore.currentCart.map((item) => item.cartId)
       isAllChecked.value = true
     }
   } catch (error) {
     console.error('加载购物车失败', error)
   } finally {
-    // 数据就绪关 loading → 不闪
     loading.value = false
   }
 }
@@ -263,7 +261,6 @@ const handleReduce = async (cartId: number) => {
     try {
       await deleteCartItem(cartId)
       cartStore.deleteItem(cartId)
-      cartStore.calcTotalPrice()
       checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
       ElMessage.success('删除成功')
     } catch (error) {
@@ -275,7 +272,6 @@ const handleReduce = async (cartId: number) => {
   try {
     await updateCartCount(cartId, targetItem.count - 1)
     cartStore.updateCount(cartId, targetItem.count - 1)
-    cartStore.calcTotalPrice()
   } catch (error) {
     ElMessage.error('修改数量失败')
   }
@@ -290,7 +286,6 @@ const handleAdd = async (item: any) => {
   try {
     await updateCartCount(item.cartId, item.count + 1)
     cartStore.updateCount(item.cartId, item.count + 1)
-    cartStore.calcTotalPrice()
   } catch (error) {
     ElMessage.error('修改数量失败')
   }
@@ -300,7 +295,6 @@ const handleDelete = async (cartId: number) => {
   try {
     await deleteCartItem(cartId)
     cartStore.deleteItem(cartId)
-    cartStore.calcTotalPrice()
     checkedIds.value = checkedIds.value.filter((id) => id !== cartId)
     ElMessage.success('删除成功')
   } catch (error) {
@@ -514,7 +508,7 @@ button {
 /* 图书信息区 */
 .item-info {
   flex: 1; /* 填充剩余空间 */
-  min-width: 0; /* 解决flex文本溢出问题 */
+  min-width: 0; 
 }
 .item-name {
   font-size: clamp(18px, 2.5vw, 20px);

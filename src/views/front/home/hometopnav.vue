@@ -99,13 +99,15 @@
       <!-- 已登录 -->
       <div v-else class="login-bar" style="position: relative; left: 10px">
         <el-button
-          style="position: relative; background-color: #d5d3d0; font-size: 17px; color: #000"
+        class="yse"
+          style="position: relative; font-size: 17px; color: #000"
           link
           @click="go('/user')"
           ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
         >
         <el-button
-          style="position: relative; background-color: #d5d3d0; font-size: 17px; color: red"
+          class="yse"
+          style="position: relative;  font-size: 17px; color: red"
           link
           @click="go('/cart')"
           ><img
@@ -378,7 +380,7 @@ const handleLogout = () => {
 
 /* ========== 导航按钮视觉 ========== */
 .syws {
-  background: #e5e3e1;
+  background: rgba(22,93,255,0.08) !important;
   border: 1px solid rgba(64, 158, 255, 0.3);
   display: flex;
 
@@ -407,19 +409,20 @@ const handleLogout = () => {
   padding-right: clamp(4px, 0.3vw, 6px);
 }
 .sx:hover {
-  transform: translateY(-1px);
+  transform: translateY(0px);
   box-shadow: 0 5px 15px rgba(64, 160, 255, 0.549);
 }
 
 .acwy {
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* 子按钮强制100%等宽，完全统一 */
-  /* 核心居中 父按钮严格水平居中 */
+  align-items: stretch; /* 子按钮强制等宽 */
+  /* 父按钮严格水平居中 */
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
+  background-color: white;
   z-index: 999;
   margin-top: 2px; 
 }
@@ -427,7 +430,7 @@ const handleLogout = () => {
 /* 盒模型完全统一 */
 .ac1,
 .ac2 {
-  /* 统一固定宽度，按钮完全等宽 */
+  /* 按钮完全等宽 */
   width: clamp(101px, 10vw, 117.7px) !important;
   padding: 7px 20px !important;
   height: auto !important;
@@ -435,7 +438,7 @@ const handleLogout = () => {
   font-weight: 500;
  color: #000;
   box-sizing: border-box;
-  margin: 0 !important; /* 清除所有自带外边距 */
+  margin: 0 !important; /* 清除自带外边距 */
   border: 1px soild black !important;
 }
 
@@ -457,7 +460,12 @@ const handleLogout = () => {
 
 <style scoped>
 /* 按钮交互视觉*/
-
+.yse{
+  background-color: #0000001a !important;
+}
+.yse:hover{
+  background-color: rgb(238, 236, 235) !important;
+}
 .syws {
   transition: all 0.2s ease-out;
 }
