@@ -14,3 +14,11 @@ export const getusermentList = () => {
     method: 'GET',
   })
 }
+
+export function toggleSellerBan(data: { userId: number; isBanned: number }) {
+  return request({
+    url: '/api/userment/ban',
+    method: 'put',
+    data
+  })
+}

@@ -38,6 +38,9 @@
       <button :class="{active: activeTab === 'user'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('user')">
         用户信息
       </button>
+      <button :class="{active: activeTab === 'system'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('system')">
+        系统配置
+      </button>
       <button :class="{active: activeTab === 'bookguan'}" class="an1" style="-webkit-user-select: none; margin-top: 20px" @click="switchTab('bookguan')">
         商品管理
       </button>
@@ -104,6 +107,9 @@
        <div class="sub-page-container bookguan" v-show="activeTab === 'huodongzixun'">
         <huodongzx />
       </div>
+      <div class="sub-page-container bookguan" v-show="activeTab === 'system'">
+        <system />
+      </div>
       <div class="sub-page-container bookguan" v-show="activeTab === 'selleraudit'">
         <selleraudit />
       </div>
@@ -130,7 +136,7 @@ import useradmin from '@/views/back/user/index.vue'
 import bookpai from '@/views/back/book/bookpaihang.vue'
 import huodongzx from '@/views/back/huodongzx/huodongzx.vue'
 import selleraudit from '@/views/back/seller/audit.vue'
-
+import system from '@/views/back/system/index.vue'
 // 全局禁用 Dialog 滚动锁定 + 强制解锁 body 滚动
 onMounted(() => {
   // 1. 禁用 Dialog 默认的滚动锁定
@@ -152,7 +158,7 @@ const router = useRouter()
 const activeTab = ref('notice')
 
 const switchTab = (
-  tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan' | 'bookpaihang' | 'newbook' | 'huodongzixun',
+  tab: 'notice' | 'user' | 'bookguan' | 'useradmin' | 'orderguan' | 'bookpaihang' | 'newbook' | 'huodongzixun'|'system',
 ) => {
   activeTab.value = activeTab.value === tab ? '' : tab
 }

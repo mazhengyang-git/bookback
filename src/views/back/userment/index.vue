@@ -41,8 +41,18 @@
             身份角色：{{
               item.role === 'buyer' ? '买家' : item.role === 'seller' ? '卖家' : '管理员'
             }}
+            <!-- 🔴 状态标签，加了兜底判断 -->
+            <el-tag
+              v-if="item.role === 'seller' && (item.is_seller_banned || 0) === 1"
+              type="danger"
+              size="small"
+              style="margin-left: 8px"
+            >
+              已限制
+            </el-tag>
           </p>
           <span>创建时间：{{ item.create_time }}</span>
+
           <el-button
             type="warning"
             size="small"
@@ -50,6 +60,18 @@
             @click="openVerify(item)"
           >
             重置密码
+          </el-button>
+
+          <!-- 👇👇👇 限制/解除按钮，加了兜底 + 防重复点击 -->
+          <el-button
+            v-if="item.role === 'seller'"
+            :type="(item.is_seller_banned || 0) === 1 ? 'success' : 'danger'"
+            size="small"
+            style="margin-left: 10px"
+            :loading="loadingMap[item.id]"
+            @click="toggleBan(item)"
+          >
+            {{ (item.is_seller_banned || 0) === 1 ? '解除限制' : '限制账户' }}
           </el-button>
         </div>
       </div>
@@ -87,7 +109,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getusermentList } from '@/api/back/userment'
+import { getusermentList, toggleSellerBan } from '@/api/back/userment'
 import type { userment } from '@/types/index'
 import { ElMessage } from 'element-plus'
 import { resetUserPassword } from '@/api/back/announcement'
@@ -100,13 +122,13 @@ const stats = ref({
 })
 const selectedRole = ref<string>('all')
 
-// 弹窗相关
 const verifyDialog = ref(false)
 const currentUser = ref<any>({})
 const verifyPhone = ref('')
 const verifyCode = ref('')
-// 存储随机验证码
 const codeCache = ref('')
+
+const loadingMap = ref<Record<number, boolean>>({})
 
 // 打开验证弹窗
 const openVerify = (user: userment) => {
@@ -117,13 +139,12 @@ const openVerify = (user: userment) => {
   currentUser.value = user
   verifyPhone.value = ''
   verifyCode.value = ''
-  codeCache.value = '' // 清空旧验证码
+  codeCache.value = ''
   verifyDialog.value = true
 }
 
-// 获取随机验证码（弹窗+控制台双显示）
+// 获取验证码
 const getCode = () => {
-  // 校验必须先输入手机号
   if (!verifyPhone.value) {
     ElMessage.error('请先输入用户绑定的手机号！')
     return
@@ -132,48 +153,63 @@ const getCode = () => {
     ElMessage.error('输入的手机号与用户绑定手机号不匹配！')
     return
   }
-
-  // 生成6位随机验证码
   const code = Math.floor(100000 + Math.random() * 900000).toString()
   codeCache.value = code
-
-  // 1. 弹窗显示验证码（管理员临时可见）
   ElMessage.success(`重置密码验证码：${code}`)
-  // 2. 控制台打印验证码
-  console.log('【管理员重置密码】用户手机号：', currentUser.value.phone, ' 验证码：', code)
 }
 
 // 确认重置密码
 const confirmReset = async () => {
-  // 校验手机号
   if (verifyPhone.value !== currentUser.value.phone) {
     ElMessage.error('输入的手机号与用户绑定手机号不匹配！')
     return
   }
-  // 校验验证码
   if (!verifyCode.value || verifyCode.value !== codeCache.value) {
     ElMessage.error('验证码错误！')
     return
   }
-
   try {
     const res = await resetUserPassword({
       userId: currentUser.value.id,
       phone: verifyPhone.value,
     })
-    //@ts-ignore
     if (res.code === 200) {
-      // 前端仅提示成功，绝不显示密码
       ElMessage.success('密码重置成功！')
       verifyDialog.value = false
     } else {
-      //@ts-ignore
       ElMessage.error(res.msg)
     }
   } catch (err) {
     ElMessage.error('重置失败，服务器异常')
   }
 }
+
+// ==============================================
+// 🔴 修复：方法名改成 toggleBan，不和接口重名
+// ==============================================
+const toggleBan = async (user: any) => {
+  if (loadingMap.value[user.id]) return
+  loadingMap.value[user.id] = true
+
+  const currentBanStatus = user.is_seller_banned || 0
+  const newBanStatus = currentBanStatus === 1 ? 0 : 1
+
+  try {
+    // 调用接口，不会递归自己了
+    await toggleSellerBan({
+      userId: user.id,
+      isBanned: newBanStatus
+    })
+
+    ElMessage.success(newBanStatus ? '已限制该卖家图书申请权限' : '已解除限制')
+    await getList()
+  } catch (err) {
+    ElMessage.error('操作失败')
+  } finally {
+    loadingMap.value[user.id] = false
+  }
+}
+
 // 筛选用户
 const filteredUserList = computed(() => {
   if (selectedRole.value === 'all') return userList.value
@@ -184,7 +220,10 @@ const filteredUserList = computed(() => {
 const getList = async () => {
   try {
     const res = await getusermentList()
-    userList.value = res.data.list
+    userList.value = res.data.list.map(u => ({
+      ...u,
+      is_seller_banned: u.is_seller_banned || 0
+    }))
     stats.value = res.data.statistics
   } catch (err) {
     console.error(err)
@@ -193,7 +232,6 @@ const getList = async () => {
 
 onMounted(() => getList())
 </script>
-
 <style scoped>
 .notice-manage {
   padding: 20px;
