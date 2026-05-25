@@ -39,12 +39,13 @@ const announcementRouter = require('./router/announcement');
 const bookguan = require('./router/bookguanli');
 const newbookguan = require('./router/newbookguanli');
 const bookcom = require('./router/bookComrute');
+const bookcom1 = require('./router/bookComrute1');
 const shoucang = require('./router/shoucangroute');
 const bookpaihang = require('./router/systembookpaihang');
 const bookDiscountRouter = require('./router/bookdiscount');
 const sellerorder = require('./sellerroute/sellerorder');
 const sellerRouter = require('./sellerroute/sellerRoute');
-
+const addressRouter = require('./router/address');
 app.use('/api', bookDiscountRouter);
 app.use('/api/seller', sellerRouter);
 app.use('/api/user', userRouter);
@@ -54,12 +55,15 @@ app.use('/api/cart', cartRouter);
 app.use('/api/book', bookRouter);
 app.use('/api', newbookRouter);
 app.use('/api/userment', umentRouter);
+
+app.use('/api', addressRouter);
 app.use('/api/announcement', announcementRouter);
 app.use('/api/bookguanli', bookguan);
 app.use('/api/newbookguanli', newbookguan);
 app.use('/api/pay', payRouter);
 app.use('/api', userdate);
 app.use('/api', bookcom);
+app.use('/api', bookcom1);
 app.use('/api', hdzx);
 
 app.use('/api/shoucang', shoucang);

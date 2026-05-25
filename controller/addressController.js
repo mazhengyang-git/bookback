@@ -1,9 +1,4 @@
 const pool = require('../config/db');
-const {
-  isSalesCountedStatus,
-  adjustBookSalesDelta,
-} = require('../utils/bookSales');
-
 // 省市区数据转成编码名称映射 
 const regionMap = {};
 const regionOptions = [
@@ -416,242 +411,70 @@ function buildRegionMap(options) {
   });
 }
 buildRegionMap(regionOptions);
-
-// ===================== 获取订单接口 =====================
-const getUserOrders = async (req, res) => {
+// 获取用户所有地址
+exports.getAddressList = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const userId = req.user.id;
-    
-    // 关联 seller 店铺表，查询店铺信息
-    const [orders] = await pool.execute(`
-      SELECT 
-        o.*, 
-        b.book_name, 
-        b.cover AS book_cover,
-        n.book_name AS new_book_name,
-        n.cover AS new_book_cover,
-        s.book_name AS seller_book_name,
-        s.cover AS seller_book_cover,
-        -- 店铺字段（匹配你的 seller 表）
-        se.id AS shop_id,
-        se.shop_name,
-        se.avatar AS seller_avatar
-      FROM \`order\` o
-      LEFT JOIN book b ON o.book_id = b.id AND o.source = 'normal'
-      LEFT JOIN newbook n ON o.book_id = n.id AND o.source = 'new'
-      LEFT JOIN seller_book s ON o.book_id = s.id AND o.source = 'seller'
-      -- 关联店铺表（核心！）
-      LEFT JOIN seller se ON s.seller_id = se.id
-      WHERE o.user_id = ?
-      ORDER BY o.create_time DESC
-    `, [userId]);
-
-    // 编码转中文 + 注入店铺数据
-    const formatOrders = orders.map(item => {
-      const provinceName = regionMap[item.province] || item.province || '';
-      const cityName = regionMap[item.city] || item.city || '';
-      const districtName = regionMap[item.district] || item.district || '';
-
-      return {
-        id: item.id,
-        orderNo: item.order_no,
-        bookName: item.source === 'new' 
-          ? item.new_book_name 
-          : (item.source === 'seller' ? item.seller_book_name : item.book_name) || '未知图书',
-        count: item.count,
-        totalPrice: Number(item.total_price) || 0,
-        status: item.status || '已付款',
-        bookCover: item.source === 'new' 
-          ? (item.new_book_cover || '/default-book.png') 
-          : (item.source === 'seller' ? (item.seller_book_cover || '/default-book.png') : (item.book_cover || '/default-book.png')),
-        createTime: item.create_time || '',
-        bookId: item.book_id,
-        source: item.source,
-        province: provinceName,
-        city: cityName,
-        district: districtName,
-        detailAddress: item.detail_address,
-        fullAddress: `${provinceName} ${cityName} ${districtName} ${item.detail_address || ''}`.trim(),
-        // 店铺信息
-        shopId: item.shop_id || null,
-        shopName: item.shop_name || '官方店铺',
-        sellerAvatar: item.seller_avatar || '/default-avatar.png'
-      };
-    });
-
-    res.json({ code: 200, msg: '获取订单成功', data: formatOrders });
-  } catch (error) {
-    console.error('[订单接口错误]', error);
-    res.status(500).json({ code: 500, msg: '获取订单失败', data: [] });
-  }
-};
-
-// ===================== 删除订单 =====================
-const deleteOrders=async(req,res)=>{
-  let connection;
-  try{
-    const {orderno}=req.body
-    const userId=req.user.id
-
-    if (!orderno) {
-      return res.status(400).json({ code: 400, msg: '订单编号不能为空',data:null });
-    } 
-
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
-
-    const [orderResult]=await connection.execute(
-      `SELECT book_id, \`count\`, status, source, COALESCE(sales_recorded,0) AS sales_recorded FROM \`order\` WHERE \`order_no\` = ? AND user_id = ?`, 
-      [orderno, userId]
-    ); 
-
-    if (!orderResult.length) {
-      await connection.rollback();
-      return res.status(403).json({ code: 403, msg: '无权删除该订单', data: null });
-    }   
-
-    const order = orderResult[0];
-    const paidStatus = ["已付款", "待发货", "已完成", "已发货","待收货", "已收货"];
-
-    if (Number(order.sales_recorded) === 1) {
-      await adjustBookSalesDelta(connection, order, -Math.abs(Number(order.count) || 0));
-    }
-    
-    // 库存回滚
-    if (paidStatus.includes(order.status)) {
-      if (order.source === 'new') {
-        await connection.execute(
-          `UPDATE newbook SET stock = stock + ? WHERE id = ?`,
-          [order.count, order.book_id]
-        );
-      } else if (order.source === 'seller') {
-        await connection.execute(
-          `UPDATE seller_book SET stock = stock + ? WHERE id = ?`,
-          [order.count, order.book_id]
-        );
-      } else {
-        await connection.execute(
-          `UPDATE book SET stock = stock + ? WHERE id = ?`,
-          [order.count, order.book_id]
-        );
-      }
-    }
-    if (!['已取消', '已完成', '已收货'].includes(order.status)) {
-      await connection.rollback();
-      return res.status(400).json({ code: 400, msg: '仅已完成/已取消订单可删除', data: null });
-    }
-    const [result]= await connection.execute(
-      'DELETE FROM `order` WHERE `order_no` = ? AND user_id = ?', 
-      [orderno, userId]
+    const [list] = await pool.query(
+      'SELECT * FROM user_address WHERE user_id = ? ORDER BY is_default DESC, create_time DESC',
+      [userId]
     );
-
-    await connection.commit();
-    res.status(200).json({ code: 200, msg: '删除成功，库存已恢复', data: null });
-
-  } catch(error){
-    if(connection) await connection.rollback();
-    console.error('删除订单失败：', error);
-    res.status(500).json({ code: 500, msg: '服务器错误',data:null });
-  } finally {
-    if(connection) connection.release();
-  }
-}
-const updateOrderStatus = async (req, res) => {
-  let connection;
-  try {
-    const { orderNo, status } = req.body;
-    const userId = req.user.id;
-
-    if (!orderNo || !status) {
-      return res.status(400).json({ code: 400, msg: '参数错误' });
-    }
-
-    // 仅允许用户修改为这两个状态
-    const allowStatus = ['已收货', '已取消'];
-    if (!allowStatus.includes(status)) {
-      return res.status(403).json({ code: 403, msg: '非法状态' });
-    }
-
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
-
-    // 查询订单
-    const [orderRows] = await connection.execute(
-      'SELECT id, book_id, `count`, status, source, IFNULL(sales_recorded, 0) AS sales_recorded FROM `order` WHERE order_no = ? AND user_id = ? FOR UPDATE',
-      [orderNo, userId]
-    );
-
-    if (!orderRows.length) {
-      await connection.rollback();
-      return res.status(404).json({ code: 404, msg: '订单不存在' });
-    }
-
-    const oldOrder = orderRows[0];
-    const oldStatus = oldOrder.status;
-
-    // 1. 确认收货：只能 待收货 → 已收货
-    if (status === '已收货' && oldStatus !== '待收货') {
-      await connection.rollback();
-      return res.json({ code: 400, msg: '只有待收货订单可确认收货' });
-    }
-
-    // 2. 退货退款：只能 待收货/已发货 → 已取消
-    if (status === '已取消' && !['待收货', '已发货'].includes(oldStatus)) {
-      await connection.rollback();
-      return res.json({ code: 400, msg: '该订单无法退货退款' });
-    }
-
-    // ===================== 销量逻辑 =====================
-    const oldCounted = isSalesCountedStatus(oldStatus);
-    const newCounted = isSalesCountedStatus(status);
-    const recorded = !!oldOrder.sales_recorded;
-
-    console.log('===== 用户端订单销量调试 =====');
-    console.log('旧状态:', oldStatus, '是否计数:', oldCounted);
-    console.log('新状态:', status, '是否计数:', newCounted);
-    console.log('是否已记录销量:', recorded);
-    console.log('============================');
-
-    // 先更新订单状态
-    await connection.execute(
-      'UPDATE `order` SET status = ? WHERE order_no = ? AND user_id = ?',
-      [status, orderNo, userId]
-    );
-
-   
-    // 1. 非计数状态 → 计数状态（比如待收货 → 已收货）：加销量 + 标记1
-    if (newCounted && !oldCounted && !recorded) {
-      console.log('✅ 用户确认收货：增加销量');
-      await adjustBookSalesDelta(connection, oldOrder, Number(oldOrder.count) || 0);
-      await connection.execute('UPDATE `order` SET sales_recorded = 1 WHERE id = ?', [oldOrder.id]);
-    }
-
-    // 2. 计数状态 → 非计数状态（比如待收货/已发货 → 已取消）：减销量 + 标记0 + 回滚库存
-    else if (!newCounted && oldCounted && recorded) {
-      console.log('✅ 用户退货退款：扣减销量');
-      await adjustBookSalesDelta(connection, oldOrder, -Math.abs(Number(oldOrder.count) || 0));
-      await connection.execute('UPDATE `order` SET sales_recorded = 0 WHERE id = ?', [oldOrder.id]);
-      
-      // 回滚库存
-      if (oldOrder.source === 'new') {
-        await connection.execute('UPDATE newbook SET stock = stock + ? WHERE id = ?', [oldOrder.count, oldOrder.book_id]);
-      } else if (oldOrder.source === 'seller') {
-        await connection.execute('UPDATE seller_book SET stock = stock + ? WHERE id = ?', [oldOrder.count, oldOrder.book_id]);
-      } else {
-        await connection.execute('UPDATE book SET stock = stock + ? WHERE id = ?', [oldOrder.count, oldOrder.book_id]);
-      }
-    }
-    // ------------------------------------------------------------------------
-
-    await connection.commit();
-    res.json({ code: 200, msg: '订单状态修改成功' });
-
+    res.json({ code: 200, data: list });
   } catch (err) {
-    if (connection) await connection.rollback();
-    console.error('修改订单状态错误：', err);
-    res.json({ code: 500, msg: '操作失败' });
-  } finally {
-    if (connection) connection.release();
+    res.json({ code: 500, msg: '获取地址失败' });
   }
 };
-module.exports = { getUserOrders,deleteOrders, updateOrderStatus };
+
+// 获取默认地址
+exports.getDefaultAddress = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [addr] = await pool.query(
+      'SELECT * FROM user_address WHERE user_id = ? AND is_default = 1 LIMIT 1',
+      [userId]
+    );
+    res.json({ code: 200, data: addr[0] || null });
+  } catch (err) {
+    res.json({ code: 500, msg: '获取默认地址失败' });
+  }
+};
+
+// 新增/编辑地址
+exports.saveAddress = async (req, res) => {
+  const userId = req.user.id;
+  const { id, province, city, district, detail_address, is_default } = req.body;
+  try {
+    // 设为默认时，清空其他默认地址
+    if (is_default) {
+      await pool.query('UPDATE user_address SET is_default = 0 WHERE user_id = ?', [userId]);
+    }
+    if (!id) {
+      // 新增
+      await pool.query(
+        'INSERT INTO user_address (user_id, province, city, district, detail_address, is_default) VALUES (?,?,?,?,?,?)',
+        [userId, province, city, district, detail_address, is_default || 0]
+      );
+    } else {
+      // 编辑
+      await pool.query(
+        'UPDATE user_address SET province=?, city=?, district=?, detail_address=?, is_default=? WHERE id=? AND user_id=?',
+        [province, city, district, detail_address, is_default || 0, id, userId]
+      );
+    }
+    res.json({ code: 200, msg: '保存成功' });
+  } catch (err) {
+    res.json({ code: 500, msg: '保存失败' });
+  }
+};
+
+// 删除地址
+exports.deleteAddress = async (req, res) => {
+  const userId = req.user.id;
+  const { id } = req.body;
+  try {
+    await pool.query('DELETE FROM user_address WHERE id=? AND user_id=?', [id, userId]);
+    res.json({ code: 200, msg: '删除成功' });
+  } catch (err) {
+    res.json({ code: 500, msg: '删除失败' });
+  }
+};

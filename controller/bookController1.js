@@ -3,26 +3,8 @@ const pool = require('../config/db');
 // 1. 校验用户评价权限
 const checkCommentAuth = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { bookId, source } = req.query;
-
-    if (!bookId || !source) {
-      return res.json({ code: 400, msg: '图书ID/来源不能为空', data: { hasAuth: false, hasCommented: false } });
-    }
-
-    const [buyResult] = await pool.execute(
-      `SELECT id FROM \`order\` WHERE user_id = ? AND book_id = ? AND source = ? AND status IN ('已付款', '待发货', '已发货', '已收货', '已完成')`,
-      [userId, bookId, source]
-    );
-    const hasAuth = buyResult.length > 0;
-
-    const [commentResult] = await pool.execute(
-      `SELECT id FROM book_comment WHERE user_id = ? AND book_id = ? AND source = ?`,
-      [userId, bookId, source]
-    );
-    const hasCommented = commentResult.length > 0;
-
-    res.json({ code: 200, msg: '权限校验成功', data: { hasAuth, hasCommented } });
+    // 商家后台：永远允许
+    res.json({ code: 200, msg: '权限校验成功', data: { hasAuth: true, hasCommented: false } });
   } catch (error) {
     console.error('【权限接口报错】', error);
     res.status(500).json({ code: 500, msg: '权限校验失败', data: { hasAuth: false, hasCommented: false } });
@@ -92,14 +74,8 @@ const addComment = async (req, res) => {
     if (!bookId || !score || !source) return res.json({ code: 400, msg: '参数不能为空', data: null });
     if (score < 0 || score > 5) return res.json({ code: 400, msg: '评分必须0~5分', data: null });
 
-    const [buyCheck] = await pool.execute(
-      `SELECT id FROM \`order\` WHERE user_id = ? AND book_id = ? AND source = ? AND status IN ('已付款', '待发货', '已发货', '已收货', '已完成')`,
-      [userId, bookId, source]
-    );
-    if (buyCheck.length === 0) {
-      return res.json({ code: 403, msg: '未购买该图书，无法评价', data: null });
-    }
-
+    // 商家版：跳过购买校验
+    // 校验是否已评价
     const [commentCheck] = await pool.execute(
       `SELECT id FROM book_comment WHERE user_id = ? AND book_id = ? AND source = ?`,
       [userId, bookId, source]
@@ -234,33 +210,37 @@ const editComment = async (req, res) => {
   }
 };
 
-// 7. 发表追评 存储商家标识+店铺名
+// 7. 发表追评
+
 const addReply = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { bookId, commentId, content, source, isSeller = 0, shopName = '' } = req.body;
+    const { bookId, commentId, content, source } = req.body;
 
     if (!bookId || !commentId || !content || !source) {
       return res.json({ code: 400, msg: '参数不能为空' });
     }
 
-    // 判断是否商家
-    const [sellerInfo] = await pool.execute(`SELECT shop_name FROM seller WHERE user_id = ?`,[userId])
-    const realShopName = sellerInfo.length ? sellerInfo[0].shop_name : shopName
+    // 自动从seller表读取真实店铺名
+    const [sellerInfo] = await pool.execute(
+      `SELECT shop_name FROM seller WHERE user_id = ?`,
+      [userId]
+    );
+    const realShopName = sellerInfo.length ? sellerInfo[0].shop_name : '商家';
 
     await pool.execute(
-      `INSERT INTO book_comment_reply (comment_id, user_id, content, source, is_seller, shop_name) VALUES (?, ?, ?, ?, ?, ?)`,
-      [commentId, userId, content.trim(), source, isSeller, realShopName]
+      `INSERT INTO book_comment_reply (comment_id, user_id, content, source, is_seller, shop_name) 
+       VALUES (?, ?, ?, ?, 1, ?)`,
+      [commentId, userId, content.trim(), source, realShopName]
     );
 
-    res.json({ code: 200, msg: '追评发表成功' });
+    res.json({ code: 200, msg: '商家回复成功' });
   } catch (error) {
-    console.error('【发表追评接口报错】', error);
-    res.status(500).json({ code: 500, msg: '追评失败' });
+    console.error('【商家回复接口报错】', error);
+    res.status(500).json({ code: 500, msg: '回复失败' });
   }
 };
-
-// 8. 获取追评列表 返回商家标识与店铺名
+// 8. 获取追评列表
 const getReplyList = async (req, res) => {
   try {
     const { commentId, source } = req.query;
@@ -283,7 +263,7 @@ const getReplyList = async (req, res) => {
       commentId: item.comment_id,
       content: item.content?.trim() || '无内容',
       nickname: item.username || '匿名用户',
-      shopName: item.shop_name || '',
+      shopName: item.shop_name || '', // 新增：店铺名
       createTime: item.create_time,
       isSeller: item.is_seller === 1
     }));
@@ -292,6 +272,41 @@ const getReplyList = async (req, res) => {
   } catch (error) {
     console.error('【获取追评列表报错】', error);
     res.status(500).json({ code: 500, msg: '获取追评失败', data: [] });
+  }
+};
+const deleteReply = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { replyId, commentId, source } = req.body;
+
+    if (!replyId || !commentId || !source) {
+      return res.json({ code: 400, msg: '参数不能为空' });
+    }
+
+    // 1. 校验这条追评是否存在，且是当前用户发布的
+    const [checkOwn] = await pool.execute(
+      `SELECT user_id FROM book_comment_reply WHERE id = ? AND comment_id = ? AND source = ?`,
+      [replyId, commentId, source]
+    );
+
+    if (checkOwn.length === 0) {
+      return res.json({ code: 404, msg: '追评不存在' });
+    }
+
+    if (checkOwn[0].user_id !== userId) {
+      return res.json({ code: 403, msg: '无权删除他人的回复' });
+    }
+
+    // 2. 删除追评
+    await pool.execute(
+      `DELETE FROM book_comment_reply WHERE id = ? AND comment_id = ? AND source = ?`,
+      [replyId, commentId, source]
+    );
+
+    res.json({ code: 200, msg: '删除成功' });
+  } catch (error) {
+    console.error('【删除追评接口报错】', error);
+    res.status(500).json({ code: 500, msg: '删除失败' });
   }
 };
 
@@ -303,5 +318,6 @@ module.exports = {
   deleteComment,
   editComment,
   addReply,
-  getReplyList
+  getReplyList,
+  deleteReply
 };
