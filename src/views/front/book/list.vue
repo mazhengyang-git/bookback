@@ -283,9 +283,7 @@
       <!-- 左侧图书列表 -->
       <div class="left-content">
         <div class="book-card-list">
-          <div class="sywss1">
-            <el-button link class="sysess1" @click="$router.push('/books2')">卖家专场</el-button>
-          </div>
+         
           <!-- <div class="syws1">
             <el-button link class="syses1" @click="$router.push('/books1')">优惠专区</el-button>
             <el-button link class="syses1" @click="$router.push('/seller-zone')">卖家专区</el-button> 
@@ -357,13 +355,13 @@
                     @click="addToShoucang(book)"
                     :disabled="!userStore.token"
                   >
-                    {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
+                    {{ userStore.token ? '收藏图书' : '请先登录' }}
                   </el-button>
                 </li>
               </div>
             </div>
             <!--  v-if防止星星闪烁 -->
-            <div style="position: absolute; top: 10px; width: 86%; left: 560px">
+            <div style="position: absolute; top: -10px; width: 86%; left: 403px">
               <p class="xlwy">销量：{{ Number(book.sales_count) || 0 }}件</p>
               <bookping v-if="book.id != null" :book-id="book.id" :source="showType" />
             </div>
@@ -546,7 +544,7 @@ const filteredBooks = ref<Book[]>([])
 const showBooks = ref<Book[]>([])
 
 const currentPage = ref(1)
-const pageSize = ref(6)
+const pageSize = ref(8)
 const total = ref(0)
 const showType = ref('normal')
 const shouldShufflePage = ref(false)
@@ -796,7 +794,7 @@ discountBooks.value.forEach((discount) => {
     const matchTag =
       selectedTags.value.length === 0 || selectedTags.value.includes(book.category || '')
     const matchMin = sanitizedMin === null || currentPrice >= sanitizedMin
-    const matchMax = sanitizedMin === null || currentPrice <= sanitizedMax
+    const matchMax = sanitizedMax === null || currentPrice <= sanitizedMax
 
     return (
       matchName &&
@@ -870,8 +868,8 @@ onMounted(async () => {
   if (keyword) searchKeyword.value = keyword as string
   if (aauthor) selectedAAuthor.value = aauthor as string
 
+  
   shouldShufflePage.value = true
-  hasRandomizedInitialPage.value = true
   doFilterAndShuffle()
   loading.value = false
 })
@@ -938,8 +936,9 @@ onMounted(() => {
 }
 .xlwy {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+
+  top: 69px;
+  left: 79px;
   font-size: 14px;
   color: #000000;
   font-size: px;
@@ -1312,6 +1311,9 @@ onMounted(() => {
   max-width: 100vw;
   margin: 1.25rem auto;
   padding: 1rem 1.25rem;
+  position: relative;
+  z-index: 3;
+margin-bottom: -19px;
   background: linear-gradient(180deg, #ffffff80 75%, #f0f2f5 100%);
   background: linear-gradient(135deg, rgba(5, 82, 176, 0.073), rgba(230,162,60,0.05)) !important;
   border-radius: 0.5rem;
@@ -1404,7 +1406,7 @@ onMounted(() => {
   background-color: #eaeceec5;
   min-height: calc(100vh - 3.75rem - 80px);
   position: relative;
-  margin-top: -30px;
+ padding-top: 50px;
   margin-bottom: -24.1px;
   @media (max-width: 768px) {
     padding: 0 0.625rem 3rem;
@@ -1422,8 +1424,10 @@ onMounted(() => {
 
 /* 左侧内容区域 */
 .left-content {
+ 
   flex: 1;
-  min-width: 0;
+ 
+  zoom: 0.8;
 }
 
 /* 右侧内容区域 */
@@ -1514,20 +1518,23 @@ onMounted(() => {
 }
 .book-card-list {
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  width: 150%;
+  grid-template-columns: repeat(2, 1fr);
+  position: relative;
+  float: left;
   gap: 1.25rem;
   margin-bottom: 1.5rem; /* 卡片底部间距 */
   margin-bottom: 0px;
-  margin-left: 0;
+  margin-left: 38px;
+ 
 }
 
 .book-card {
   background: #fff !important;
   border: none !important;
   transition: all 0.3s;
-  width: 1000px;
-  max-width: 1000px;
+  width: auto;
+  max-width: 580px;
+  min-width: 580px;
 }
 .book-card:hover {
   background: rgba(226, 223, 223, 0.033) !important;
@@ -1612,7 +1619,7 @@ onMounted(() => {
 
   display: flex;
   position: relative;
-  left: 44px;
+  left: 170px;
   margin-left: 18.2vw;
   margin-top: 2rem;
 }

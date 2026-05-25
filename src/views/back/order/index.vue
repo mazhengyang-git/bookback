@@ -2,7 +2,6 @@
   <div class="admin-order-container">
     <div class="admin-header">
       <h2 style="color: #000;">订单管理</h2>
-      <!-- 刷新按钮 + 筛选导航条 -->
       <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
         <el-button 
           type="primary" 
@@ -24,13 +23,6 @@
               </div>
               <div
                 class="filter-btn"
-                :class="{ active: selectedStatus === '待付款' }"
-                @click="handleFilter('待付款')"
-              >
-                待付款
-              </div>
-              <div
-                class="filter-btn"
                 :class="{ active: selectedStatus === '已付款' }"
                 @click="handleFilter('已付款')"
               >
@@ -49,6 +41,13 @@
                 @click="handleFilter('已发货')"
               >
                 已发货
+              </div>
+              <div
+                class="filter-btn"
+                :class="{ active: selectedStatus === '待收货' }"
+                @click="handleFilter('待收货')"
+              >
+                待收货
               </div>
               <div
                 class="filter-btn"
@@ -77,11 +76,9 @@
       </div>
     </div>
 
-    <!-- 表格容器+粘性横向滚动条 -->
     <div class="table-sticky-wrapper">
       <el-table 
         style="color: #000;"  
-        v-loading="loading" 
         :data="orderList" 
         border  
         :header-cell-style="{ color: '#333', fontSize: '14px', fontWeight: 600 }"
@@ -92,25 +89,13 @@
         <el-table-column prop="username" label="下单用户" min-width="83" />
         <el-table-column prop="bookName" label="图书名称" min-width="110" show-overflow-tooltip />
         <el-table-column prop="count" label="数量" min-width="60" />
-        <!-- 原价 -->
         <el-table-column prop="originalPrice" label="原价" min-width="80">
           <template #default="scope">
             ¥{{ scope.row.originalPrice }}
           </template>
         </el-table-column>
-
-        <!-- 优惠单价 -->
-        <!-- <el-table-column prop="realUnitPrice" label="优惠单价" min-width="100">
+        <el-table-column prop="totalPrice" label="实付总价" min-width="95">
           <template #default="scope">
-            <span style="color:red; font-weight:bold">
-              ¥{{ scope.row.realUnitPrice }}
-            </span>
-          </template>
-        </el-table-column> -->
-        
-        <!-- 实付总价 -->
-        <el-table-column  prop="totalPrice" label="实付总价" min-width="95">
-          <template  #default="scope">
             <span style="color:red; font-weight:bold">
             ¥{{ Number(scope.row.totalPrice ?? 0).toFixed(2) }}</span>
           </template>
@@ -136,10 +121,10 @@
               style="width: 100%"
               @change="(val: string) => handleUpdateStatus(scope.row.id, val)"
             >
-              <el-option label="待付款" value="待付款" />
               <el-option label="已付款" value="已付款" />
               <el-option label="待发货" value="待发货" />
               <el-option label="已发货" value="已发货" />
+              <el-option label="待收货" value="待收货" />
               <el-option label="已收货" value="已收货" />
               <el-option label="已完成" value="已完成" />
               <el-option label="已取消" value="已取消" />
@@ -156,11 +141,10 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { adminGetAllOrders, adminUpdateOrderStatus } from '@/api/back/order'
 
-const loading = ref(false)
 const orderList = ref<any[]>([])
 const selectedStatus = ref('全部')
 
-// 筛选按钮点击事件
+// 筛选切换
 const handleFilter = (status: string) => {
   selectedStatus.value = status
   getOrderList()
@@ -168,66 +152,39 @@ const handleFilter = (status: string) => {
 
 // 获取订单列表
 const getOrderList = async () => {
-  loading.value = true
   try {
-    const res = (await adminGetAllOrders(selectedStatus.value)) as unknown as {
-      code: number
-      data: any[]
-    }
-    // 图书名称显示
-    orderList.value = res.data.map((item) => ({ 
-      ...item, 
-      newStatus: item.status,
-      bookName: item.bookName || '未知图书' // 兜底处理
+   
+    const statusParam = selectedStatus.value === '全部' ? undefined : selectedStatus.value
+    const res = await adminGetAllOrders(statusParam)
+    
+    orderList.value = res.data.map((item: { status: any }) => ({
+      ...item,
+      newStatus: item.status
     }))
-    ElMessage.success('订单列表刷新成功')
-  } catch (error) {
-    console.error('获取订单列表失败：', error)
-    ElMessage.error('获取订单列表失败，请重试')
-  } finally {
-    loading.value = false
+  } catch (e) {
+    console.error('获取订单失败', e)
   }
 }
 
-// 状态标签样式
+// 状态样式
 const getStatusTagType = (status: string) => {
-  switch (status) {
-    case '待付款':
-      return 'warning'
-    case '已付款':
-      return 'info'
-    case '待发货':
-      return 'primary'
-    case '已发货':
-      return 'success'
-    case '已收货':
-      return 'success'
-    case '已完成':
-      return 'success'
-    case '已取消':
-      return 'danger'
-    default:
-      return ''
+  const map: any = {
+    '待付款': 'warning', '已付款': 'info', '待发货': 'primary',
+    '已发货': 'success', '待收货': 'primary', '已收货': 'success',
+    '已完成': 'success', '已取消': 'danger'
   }
+  return map[status] || 'info'
 }
 
 // 修改订单状态
 const handleUpdateStatus = async (id: number, status: string) => {
   try {
-    const res = (await adminUpdateOrderStatus(id, status)) as unknown as {
-      code: number
-      msg: string
-    }
+    const res = await adminUpdateOrderStatus(id, status)
     if (res.code === 200) {
-      ElMessage.success(res.msg)
-      getOrderList() // 修改状态后自动刷新
-    } else {
-      ElMessage.error(res.msg || '修改订单状态失败')
+      ElMessage.success('修改成功')
+      getOrderList()
     }
-  } catch (error) {
-    console.error('修改订单状态失败：', error)
-    ElMessage.error('修改订单状态失败，请重试')
-  }
+  } catch (e) {}
 }
 
 onMounted(() => {

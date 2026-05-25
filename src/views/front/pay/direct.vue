@@ -165,7 +165,7 @@ import { getDirectPayGoodsInfo, submitDirectPay } from '@/api/front/pay'
 import { useUserStore } from '@/store/modules/user'
 import { sendSmsCode, loginByCode } from '@/api/front/user'
 import { verifyPayPwd } from '@/api/front/user'
-
+import { getDefaultAddress } from '@/api/front/address'
 // 路由/仓库
 const route = useRoute()
 const router = useRouter()
@@ -773,7 +773,21 @@ const submitDirectPay1 = async () => {
   payVerifyForm.value.phone = userStore.user?.phone || ''
   showPayVerifyDialog.value = true
 }
-
+onMounted(async () => {
+  if (!userStore.token) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    loading.value = false
+    return
+  }
+  // 自动加载默认地址
+  const addrRes = await getDefaultAddress()
+  if (addrRes.data) {
+    addressForm.region = [addrRes.data.province, addrRes.data.city, addrRes.data.district]
+    addressForm.detail = addrRes.data.detail_address
+  }
+ 
+})
 // 初始化
 onMounted(() => {
   if (!userStore.token) {

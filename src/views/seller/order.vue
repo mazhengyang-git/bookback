@@ -38,28 +38,31 @@
           type="primary" 
           size="small" 
           icon="el-icon-refresh" 
+           style="font-weight: 600;"
           @click="getOrderList"
         >
           刷新订单
         </el-button>
         <div class="filter-scroll-wrapper" style="flex: 1;">
           <el-scrollbar class="filter-scroll" horizontal>
-            <div class="filter-btn-group">
+            <div  class="filter-btn-group">
               <div
+               style="font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '全部' }"
                 @click="handleFilter('全部')"
               >
                 全部订单
               </div>
-              <div
+              <!-- <div
                 class="filter-btn"
                 :class="{ active: selectedStatus === '待付款' }"
                 @click="handleFilter('待付款')"
               >
                 待付款
-              </div>
+              </div> -->
               <div
+              style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '已付款' }"
                 @click="handleFilter('已付款')"
@@ -67,6 +70,7 @@
                 已付款
               </div>
               <div
+               style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '待发货' }"
                 @click="handleFilter('待发货')"
@@ -74,6 +78,7 @@
                 待发货
               </div>
               <div
+               style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '已发货' }"
                 @click="handleFilter('已发货')"
@@ -81,6 +86,15 @@
                 已发货
               </div>
               <div
+               style="color: #000 !important;font-weight: 600;"
+                class="filter-btn"
+                :class="{ active: selectedStatus === '待收货' }"
+                @click="handleFilter('待收货')"
+              >
+                待收货
+              </div>
+              <div
+               style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '已收货' }"
                 @click="handleFilter('已收货')"
@@ -88,6 +102,7 @@
                 已收货
               </div>
               <div
+               style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '已完成' }"
                 @click="handleFilter('已完成')"
@@ -95,6 +110,7 @@
                 已完成
               </div>
               <div
+               style="color: #000 !important;font-weight: 600;"
                 class="filter-btn"
                 :class="{ active: selectedStatus === '已取消' }"
                 @click="handleFilter('已取消')"
@@ -108,7 +124,7 @@
     </div>
 
     <!-- 表格容器 -->
-    <div class="table-wrapper">
+    <div class="table-wrapper"  style="color: #000 !important;font-weight: 550;">
       <el-table 
         style="color: #000;"  
         v-loading="loading" 
@@ -163,13 +179,14 @@
               v-model="scope.row.newStatus"
               placeholder="修改状态"
               size="small"
-              style="width: 100%"
+              style="width: 100%;"
               @change="(val: string) => handleUpdateStatus(scope.row.id, val)"
             >
-              <el-option label="待付款" value="待付款" />
+              <!-- <el-option label="待付款" value="待付款" /> -->
               <el-option label="已付款" value="已付款" />
               <el-option label="待发货" value="待发货" />
               <el-option label="已发货" value="已发货" />
+              <el-option label="待收货" value="待收货" />
               <el-option label="已收货" value="已收货" />
               <el-option label="已完成" value="已完成" />
               <el-option label="已取消" value="已取消" />
@@ -196,15 +213,15 @@ const stats = computed(() => {
   const pending = orderList.value.filter(item => 
     item.status === '已付款' || item.status === '待付款'
   ).length
+  // 新增待收货到待发货统计
   const shipping = orderList.value.filter(item => 
-    item.status === '待发货' || item.status === '已发货'
+    item.status === '待发货' || item.status === '已发货' || item.status === '待收货'
   ).length
   const completed = orderList.value.filter(item => 
     item.status === '已完成' || item.status === '已收货'
   ).length
   return { pending, shipping, completed }
 })
-
 // 筛选按钮点击事件
 const handleFilter = (status: string) => {
   selectedStatus.value = status
@@ -243,6 +260,8 @@ const getStatusTagType = (status: string) => {
       return 'primary'
     case '已发货':
       return 'success'
+    case '待收货':
+      return 'primary'
     case '已收货':
       return 'success'
     case '已完成':
@@ -253,7 +272,6 @@ const getStatusTagType = (status: string) => {
       return ''
   }
 }
-
 // 修改订单状态
 const handleUpdateStatus = async (id: number, status: string) => {
   try {
@@ -335,6 +353,7 @@ onMounted(() => {
   font-size: 14px;
   color: #6b7280;
   margin-top: 4px;
+  font-weight: 600;
 }
 
 /* 头部布局 */
@@ -352,6 +371,7 @@ onMounted(() => {
 /* 筛选导航条 */
 .filter-scroll-wrapper {
   max-width: 100%;
+ 
 }
 .filter-scroll {
   height: 40px;

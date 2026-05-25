@@ -14,8 +14,8 @@
         </h2>
 
         <el-tabs v-model="loginType" class="login-tabs">
-          <el-tab-pane label="密码登录" name="password" />
-          <el-tab-pane label="验证码登录" name="code" />
+          <el-tab-pane @click="" label="密码登录" name="password" />
+          <el-tab-pane @click="" label="验证码登录" name="code" />
         </el-tabs>
 
         <el-form
@@ -25,16 +25,16 @@
           ref="formRef"
           label-width="80px"
         >
-          <el-form-item style="font-weight: 700" label="账号" prop="username">
+          <el-form-item   style="font-weight: 700" label="账号" prop="username">
             <el-input
               maxlength="13"
-              placeholder="请输入用户名/手机号"
+              :placeholder="loginType==='password'?'请输入用户名':'请输入手机号'"
               v-model="form.username"
               @keyup.enter="submitLogin"
               show-word-limit
             />
           </el-form-item>
-
+       
           <el-form-item
             v-if="loginType === 'password'"
             style="font-weight: 700"
@@ -103,9 +103,12 @@ import { useUserStore } from '@/store/modules/user'
 const router = useRouter()
 const userStore = useUserStore()
 
+
 const loginType = ref('password')
 const countdown = ref(0)
 let timer: any = null
+
+
 
 const form = ref({
   username: '',
@@ -191,14 +194,14 @@ const submitLogin = async () => {
       const res = await login(form.value)//@ts-ignore
       if (res.code === 200) {//@ts-ignore
         userStore.login({ token: res.data.token, user: { ...res.data.user, role: form.value.role } })
-        ElMessage.success('登录成功')
+        ElMessage.success({message:'登录成功',offset:80})
         switch (form.value.role) {
           case 'admin': router.replace('/admin'); break
           case 'seller': router.replace('/seller'); break
           default: router.replace('/home')
         }
       } else {//@ts-ignore
-        ElMessage.error(res.msg || '登录失败')
+        ElMessage.error({message:res.msg || '登录失败',offset:80})
         refreshCaptcha()
       }
     } catch (err) {
@@ -214,14 +217,14 @@ const submitLogin = async () => {
       })//@ts-ignore
       if (res.code === 200) {//@ts-ignore
         userStore.login({ token: res.data.token, user: { ...res.data.user, role: form.value.role } })
-        ElMessage.success('登录成功')
+        ElMessage.success({message:'登录成功',offset:80})
         switch (form.value.role) {
           case 'admin': router.replace('/admin'); break
           case 'seller': router.replace('/seller'); break
           default: router.replace('/home')
         }
       } else {//@ts-ignore
-        ElMessage.error(res.msg || '登录失败')
+        ElMessage.error({message:res.msg || '登录失败',offset:80})
         refreshCaptcha()
       }
     } catch (err) {

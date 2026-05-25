@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/store/modules/user'
 import { ElMessage, ElDialog } from 'element-plus'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 // 引入组件
 import notice from '@/views/back/notice/index.vue'
@@ -163,16 +163,12 @@ const switchTab = (
   activeTab.value = activeTab.value === tab ? '' : tab
 }
 
-const goToFront = () => {
-  try {
-    userStore.logout()
-    ElMessage.success('已退出管理员账号，返回前台')
-    router.push('/home')
-  } catch (err) {
-    console.error('退出登录失败：', err)
-    ElMessage.error('退出失败，强制返回前台')
-    router.push('/home')
-  }
+// 先跳转再退出：后台子页面 onUnmounted 会停掉轮询，避免清空 token 后仍请求鉴权接口
+const goToFront = async () => {
+  await router.push('/home')
+  await nextTick()
+  userStore.logout()
+  ElMessage.success('已退出管理员账号，返回前台')
 }
 </script>
 <style scoped>

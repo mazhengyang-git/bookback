@@ -192,4 +192,7 @@ const handleSubmit = async () => {
 onMounted(loadEdit)
 </script>
 <style scoped>
+.seller-apply{
+margin-left: 28%;
+}
 </style>

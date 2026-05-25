@@ -24,7 +24,7 @@
               总价：¥{{ Number(order.totalPrice).toFixed(2) }}
             </p>
             <p style="user-select: none;" class="info-text">
-              状态：<el-tag type="success">{{ order.status }}</el-tag>
+              状态：<el-tag :type="getStatusTagType(order.status)">{{ order.status }}</el-tag>
             </p>
 
             <!-- 商家店铺卡片 -->
@@ -45,6 +45,49 @@
           </div>
         </div>
 
+        <!-- 订单操作按钮 -->
+        <div class="order-operate" style="margin: 15px 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <!-- 确认收货：仅待收货 -->
+          <el-button
+            v-if="order.status === '待收货'"
+            type="primary"
+            icon="el-icon-check"
+            size="small"
+            style="width: 100px;padding-left: 0px;"
+            @click="handleConfirmReceive(order.orderNo)"
+          >确认收货</el-button>
+
+          <!-- 已付款/待发货：申请退款 -->
+          <el-button
+            v-if="['已付款','待发货'].includes(order.status)"
+            type="danger"
+            icon="el-icon-refresh-left"
+            size="small"
+            style="width: 100px;padding-left: 0px;"
+            @click="handleRefundOnly(order.orderNo)"
+          >申请退款</el-button>
+
+          <!-- 已发货/待收货/已收货：退货退款 -->
+          <el-button
+            v-if="['已发货','待收货','已收货'].includes(order.status)"
+            type="danger"
+            icon="el-icon-refresh-left"
+            size="small"
+            style="width: 100px;padding-left: 0px;"
+            @click="handleRefundReturn(order.orderNo)"
+          >退货退款</el-button>
+
+          <!-- 删除订单：已取消/已完成/已收货 -->
+          <el-button
+            v-if="['已取消','已完成','已收货'].includes(order.status)"
+            type="danger"
+            icon="el-icon-delete"
+            size="small"
+            style="width: 100px;padding-left: 0px;"
+            @click="handleRemoveOrder(order.orderNo)"
+          >删除订单</el-button>
+        </div>
+
         <!-- 收货地址展示区域 -->
         <div class="address-section" v-if="order.fullAddress">
           <p style="user-select: none;" class="address-title">收货地址：</p>
@@ -58,17 +101,19 @@
     <div v-if="!orderList.length" class="empty"></div>
   </div>
 </template>
+
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import dayjs from 'dayjs'
 import type { Order } from '@/types/index'
-import { getUserOrderList } from '@/api/front/order'
+import { getUserOrderList, deleteOrder, updateOrderStatus } from '@/api/front/order'
 import router from '@/router'
-import { ElMessage } from 'element-plus' //引入提示组件
+import { ElMessage, ElMessageBox } from 'element-plus'
 //@ts-ignore
 import { RouteLocationAsRelativeGeneric, RouteLocationAsPathGeneric } from 'vue-router'
 
 const orderList = ref<Order[]>([])
+let refreshTimer: string | number | NodeJS.Timeout | null | undefined = null // 定时器
 
 const go = (path: string) => {
   if (path.startsWith('/book') || path.startsWith('/book1')) {
@@ -87,6 +132,78 @@ const goSellerShop = (order: any) => {
     return
   }
   router.push(`/shop/${shopId}`)
+}
+
+// 订单状态标签
+const getStatusTagType = (status: string) => {
+  const map = {
+    '待付款': 'warning',
+    '已付款': 'info',
+    '待发货': 'primary',
+    '已发货': 'success',
+    '待收货': 'primary',
+    '已完成': 'success',
+    '已取消': 'danger',
+    '已收货': 'success',
+  }
+  //@ts-ignore
+  return map[status] || 'info'
+}
+
+// 确认收货
+const handleConfirmReceive = async (orderNo: string) => {
+  await ElMessageBox.confirm('确认已经收到商品？')
+  const res = await updateOrderStatus({ orderNo, status: '已收货' })
+  //@ts-ignore
+  if (res.code === 200) {
+    ElMessage.success('收货成功')
+    getMyOrder()
+  }
+}
+
+// 已付款/待发货：仅退款（取消订单）
+const handleRefundOnly = async (no: string) => {
+  await ElMessageBox.confirm('确定要申请退款吗？订单将取消，资金原路退回。')
+  try {
+    const res = await updateOrderStatus({ orderNo: no, status: '已取消' })
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('退款申请成功，订单已取消')
+      getMyOrder()
+    }
+  } catch (err) {
+    ElMessage.error('操作失败，请稍后重试')
+  }
+}
+
+// 已发货/待收货/已收货：退货退款
+const handleRefundReturn = async (no: string) => {
+  await ElMessageBox.confirm('确定要申请退货退款吗？申请后将进入售后流程。')
+  try {
+    const res = await updateOrderStatus({ orderNo: no, status: '已取消' })
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('退货退款申请成功')
+      getMyOrder()
+    }
+  } catch (err) {
+    ElMessage.error('操作失败，请稍后重试')
+  }
+}
+
+// 删除订单
+const handleRemoveOrder = async (orderNo: string) => {
+  await ElMessageBox.confirm('确定要删除该订单吗？删除后无法恢复。')
+  try {
+    const res = await deleteOrder(orderNo)
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('订单删除成功')
+      getMyOrder()
+    }
+  } catch (err) {
+    ElMessage.error('删除失败')
+  }
 }
 
 const getMyOrder = async () => {
@@ -112,6 +229,19 @@ onMounted(() => {
     await getMyOrder()
   }
   bookjiazai()
+
+  // ====================== 2.5秒自动刷新订单 ======================
+  refreshTimer = setInterval(() => {
+    getMyOrder()
+  }, 2500)
+})
+
+// 页面离开时清除定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 <style scoped>

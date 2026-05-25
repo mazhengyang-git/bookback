@@ -21,7 +21,7 @@
               style="font-weight: 700"
               maxlength="13"
               v-model="registerForm.username"
-              placeholder="请输入用户名/手机号"
+              placeholder="请输入用户名"
               clearable
               show-word-limit
             />

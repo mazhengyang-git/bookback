@@ -21,8 +21,24 @@
             <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="book_name" label="书名" min-width="140" />
-        <el-table-column prop="author" label="作者" width="100" />
+       <el-table-column prop="book_name" label="书名" min-width="140">
+
+  <template  #default="{ row }">
+    <!-- 1. 显示书名 -->
+    <span>{{ row.book_name }}</span>
+    <!-- 2. 显示按钮 -->
+    <el-button 
+      type="success" 
+      class="add-cart-btn11" 
+      size="large" 
+      style="margin-left: 10px"
+      @click="  openCommentModal(row)"
+    >
+      查看图书评价
+    </el-button>
+  </template>
+</el-table-column>
+       <el-table-column prop="author" label="作者" width="100" />
         <el-table-column prop="category" label="分类" width="100" />
         <el-table-column prop="price" label="价格" width="90">
           <template #default="{ row }">¥{{ Number(row.price).toFixed(2) }}</template>
@@ -42,20 +58,43 @@
         </el-table-column>
       </el-table>
     </div>
+    <el-dialog 
+  v-model="commentVisible" 
+  title="图书评价中心" 
+  width="750px" 
+  append-to-body 
+  close-on-click-modal 
+  close-on-press-escape 
+  destroy-on-close
+  @closed="handleCommentClose"
+>
+  <!-- BookComment -->
+  <BookComment 
+    v-if="currentBook"
+    :book-id="currentBook.id" 
+    :source="currentBook.source" 
+    @comment-updated="refreshScoreData" 
+  />
+</el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import BookComment from '@/views/front/book/bookcomment1.vue'
 import { getSellerPublishedListApi, deleteSellerPublishedApi } from '@/api/seller/book'
 import type { SellerBook } from '@/types/seller'
-
+import { getBookAvgScore, getCommentList } from '@/api/front/bookComment'
+const commentVisible = ref(false)
 const router = useRouter()
 const loading = ref(false)
 const list = ref<SellerBook[]>([])
-
+  const route = useRoute()
+  const bookId = computed(() => Number(route.params.id))
+  const bookType = computed(() => Number(route.query.book_type ?? 0)) // 0=普通 1=新书 2=卖家自营
+  const source = computed(() => (bookType.value == 1 ? 'new' : bookType.value == 2 ? 'seller' : 'normal'))
 const loadList = async () => {
   loading.value = true
   try {
@@ -67,7 +106,55 @@ const loadList = async () => {
     loading.value = false
   }
 }
+const currentBook = ref<{ id: number; source: string } | null>(null)
 
+
+// 点击按钮时，把当前行的数据存起来
+const openCommentModal = (row: SellerBook) => {
+  // 卖家上架的书评
+  currentBook.value = {
+    id: row.id,
+    source: 'seller'
+  }
+  commentVisible.value = true
+}
+
+// 弹窗关闭时清空，防止数据残留
+const handleCommentClose = () => {
+  currentBook.value = null
+}
+const localAvgScore = ref<number | null>(null)
+const commentTotalCount = ref<number>(0)
+const randomComments = ref<any[]>([])
+// 刷新评分
+const fetchScoreAndRandomComments = async (bookId: number, source: string) => {
+  if (!bookId || !source) return
+  try {
+    const scoreRes = await getBookAvgScore(bookId, source)
+    //@ts-ignore
+    if (scoreRes.code === 200) {
+      localAvgScore.value = scoreRes.data.avgScore || 0.0
+      commentTotalCount.value = scoreRes.data.commentCount || 0
+    }
+  } catch (err) {
+    console.error('获取图书评分失败', err)
+  }
+
+  try {
+    const listRes = await getCommentList(bookId, source)
+    //@ts-ignore
+    if (listRes.code === 200 && Array.isArray(listRes.data)) {
+      const shuffledList = [...listRes.data].sort(() => Math.random() - 0.5)
+      randomComments.value = shuffledList.slice(0, 3)
+    }
+  } catch (err) {
+    console.error('获取评论列表失败', err)
+  }
+}
+
+const refreshScoreData = () => {
+  fetchScoreAndRandomComments(bookId.value, source.value)
+}
 const handleEdit = (id: number) => {
   router.push(`/seller/apply?bookId=${id}`)
 }
@@ -104,5 +191,23 @@ onMounted(loadList)
 :deep(.el-table th) {
   color: #383737 !important;
   font-weight: 600 !important;
+}
+:deep(.el-button){
+   height: auto !important;
+   padding: 9px;
+   position: relative;
+
+}
+@media (max-width:1100px) {
+  :deep(.el-button){
+position: relative;
+   left: -8px;
+  }
+}
+.add-cart-btn11{
+ background-color: rgb(199, 151, 87) !important;
+}
+.add-cart-btn11:hover{
+  background-color: #c94a4a !important;
 }
 </style>

@@ -169,7 +169,7 @@
     @click="go('/shoucang')"
     ><img
       class="gwdh1"
-      style="width: 32px; height: auto; margin-right: 3px"
+      style="width: 32px; height: auto; margin-right: 9px"
       src="/public/img/收藏夹.png"
     /><span style="color: red">收藏夹</span></el-button
   >
@@ -231,7 +231,7 @@
                 <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
                 <p class="book-detail-chuban">出版社：{{ book.publisher }}</p>
                 <li style="list-style: none">
-                  <el-button type="primary" size="large" class="add-cart-btn2" @click="addToShoucang(book)" :disabled="!userStore.token">
+                  <el-button type="primary" size="large" class="add-cart-btn2" style="margin-left: 0px;" @click="addToShoucang(book)" :disabled="!userStore.token">
                     {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
                   </el-button>
                 </li>
@@ -358,7 +358,7 @@
   width: auto;
   min-width: 130px;
   font-size: clamp(1rem, 2vw, 1.125rem);
-  background-color: #e6a23c !important;
+ 
   border: none !important;
   margin-left: 16px;
   position: relative;
@@ -490,6 +490,7 @@
 .shop-card-list {
   display: flex;
   gap: 20px;
+  margin-left: 80px !important;
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
@@ -550,7 +551,7 @@
  
   color: #000000;
 }
-/* 优惠专区视觉 */
+/* 专区视觉 */
 .discount-book-card {
   border: 1px solid #ff4d4f !important;
   background: #fff9f9 !important;
@@ -788,15 +789,16 @@
   color: #e6a23c; 
 }
 .book-list-container { 
-  width: 81.9%;
-  left: -4.2vw;
-    max-width: 104vw;
+  width: auto;
+ 
+    max-width: 93.1vw;
      margin: 0 auto;
       padding: 1.25rem 1.25rem 4rem 1.25rem; 
       background-color: #ffffffc5;
        min-height: calc(100vh - 3.75rem - 80px); 
        position: relative;
         margin-top: 36px;
+    
          margin-bottom: -24.1px; 
         }
 .book-card-list { 
@@ -813,8 +815,9 @@
    border: none !important; 
    transition: all 0.3s; 
    width: auto;
-   max-width: 400px;
-    min-width: 430px;
+     margin-left: 20px !important;
+   max-width: 460px;
+    min-width: 450px;
      box-shadow: 3px 4px 12px rgba(71, 64, 65, 0.49);
    }
 .book-card:hover {
@@ -867,10 +870,10 @@
 .pagination-wrapper {
    width: 100%;
     display: flex;
-     position: relative;
-      left: 17.4vw;
-       margin-left: 18.2vw;
-        margin-top: 2rem; 
+  
+       margin-left: 19.2vw !important;
+        margin-top: 2rem !important; 
+        margin-right: 2rem !important;
       }
 .sort-btn {
    padding: 4px 10px;
@@ -895,7 +898,7 @@
   width: auto;
   min-width: 130px;
   font-size: clamp(1rem, 2vw, 1.125rem);
-  background-color: #e6a23c !important;
+
   border: none !important;
   margin-left: 16px;
   position: relative;
@@ -1210,7 +1213,7 @@
 }
 /* 收藏按钮 */
 .add-cart-btn2 {
-  background-color: #e6a23c !important;
+
   border: none !important;
 }
 .add-cart-btn2:hover {

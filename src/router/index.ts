@@ -9,6 +9,12 @@ const routes = [
   { path: '/register', name: 'Register', component: () => import('@/views/front/register/index.vue') },
   { path: '/user', name: 'UserCenter', component: () => import('@/views/front/user/index.vue'), meta: { requiresAuth: true } },
   { path: '/userinfo', name: 'UserInfo', component: () => import('@/views/front/user/user.vue'), meta: { requiresAuth: true } },
+  {
+    path: '/user/address',
+    name: 'Address',
+    component: () => import('@/views/front/user/address.vue'),
+    meta: { title: '收货地址管理' }
+  },
   { path: '/books', name: 'BookList', component: () => import('@/views/front/book/list.vue') },
    { path: '/books1', name: 'BookList1', component: () => import('@/views/front/book/list1.vue') },
    { path: '/books2', name: 'BookList2', component: () => import('@/views/front/book/list2.vue') },
@@ -85,9 +91,8 @@ router.beforeEach((to, from, next) => {
 
   if (to.path === '/home') {
     if (!userStore.isLogin) return next()
-    if (userRole === 'buyer') return next()
+    if (userRole === 'buyer' || userRole === 'admin') return next()
     if (userRole === 'seller') { ElMessage.info('已为您跳转至卖家页面'); return next('/seller/home') }
-    if (userRole === 'admin') { ElMessage.info('已为您跳转至管理页面'); return next('/admin') }
   }
 
   if ((to.path === '/login' || to.path === '/register') && userStore.isLogin) {

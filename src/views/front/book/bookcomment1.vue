@@ -19,64 +19,8 @@
       </div>
     </div>
 
-    <!-- 发表主评价（普通买家专用） -->
-    <div v-if="userAuthInfo.hasAuth && !userAuthInfo.hasCommented" class="comment-submit-box">
-      <h4 class="submit-title">发表你的评价</h4>
-      <el-form ref="submitFormRef" :model="commentForm" label-width="80px">
-        <el-form-item label="综合评分">
-          <div class="score-input-box">
-            <el-rate
-              v-model="commentForm.score"
-              :max="5"
-              step="0.5"
-              show-score
-              text-color="#ff7d00"
-              :score-format="(val)=>val.toFixed(1)"
-              @change="handleScoreChange"
-            />
-            <el-input
-              v-model.number="commentForm.score"
-              type="number"
-              :min="0"
-              :max="5"
-              step="0.5"
-              style="width: 80px; margin-left: 15px"
-              @change="handleInputScoreChange"
-            />
-            <span class="score-tip">评分范围 0.0 ~ 5.0 分</span>
-          </div>
-        </el-form-item>
-
-        <el-form-item label="评价内容">
-          <el-input
-            v-model="commentForm.content"
-            type="textarea"
-            rows="4"
-            maxlength="500"
-            placeholder="请输入您的阅读评价、阅读感受（最多500字）"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" @click="submitComment" :loading="submitLoading">
-            提交评价
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div v-else-if="!userAuthInfo.hasAuth" class="no-auth-tip">
-      <el-icon><InfoFilled /></el-icon>
-      <span>您未购买该图书，暂无评价权限</span>
-    </div>
-
-    <div v-else-if="userAuthInfo.hasCommented" class="has-comment-tip">
-      <el-icon><SuccessFilled /></el-icon>
-      <span>您已完成该图书的评价，感谢您的反馈</span>
-    </div>
-
-    <!-- 评价列表（纯展示+普通用户操作） -->
+  
+    <!-- 评价列表 -->
     <div class="comment-list-box">
       <h4 class="list-title">全部用户评价 ({{ commentTotalCount }})</h4>
       <el-empty v-if="commentList.length === 0" description="暂无用户评价，快来第一个评价吧" />
@@ -90,6 +34,7 @@
             >
               {{ item.nickname }}
             </span>
+
             <div class="item-score">
               <el-rate
                 v-model="item.score"
@@ -102,28 +47,22 @@
             </div>
             <span class="comment-time">{{ formatTime(item.createTime) }}</span>
             
-            <!-- 仅普通用户编辑/删除自己的评价 -->
             <el-button 
               v-if="userStore.user?.id === item.userId && editCommentId !== item.id"
               type="primary" 
               link 
               size="small"
               @click="handleEditComment(item)"
-            >
-              编辑
-            </el-button>
+            >编辑</el-button>
             <el-button 
               v-if="userStore.user?.id === item.userId"
               type="danger" 
               link 
               size="small"
               @click="handleDeleteComment(item.id)"
-            >
-              删除
-            </el-button>
+            >删除</el-button>
           </div>
 
-          <!-- 评论内容 -->
           <div class="comment-content">
             <div v-if="editCommentId === item.id" class="edit-box">
               <div class="score-input-box mb-10">
@@ -163,11 +102,11 @@
             <span v-else>{{ item.content || '用户未填写文字评价' }}</span>
           </div>
 
-          <!-- 普通用户追评输入框 -->
-          <div v-if="userAuthInfo.hasAuth" class="reply-input-box">
+          <!-- 追评输入框 -->
+          <div class="reply-input-box">
             <el-input
               v-model="replyContent[item.id]"
-              :placeholder="item.userId === userStore.user?.id ? '发表你的追评' : '热情问答，文明用语'"
+              placeholder="商家回复：热情问答，文明用语"
               maxlength="200"
               show-word-limit
               :rows="2"
@@ -179,45 +118,53 @@
               class="mt-5"
               :loading="replyLoading[item.id]"
               @click="submitReply(item.id)"
-            >
-              发表追评
-            </el-button>
+            >发表回复</el-button>
           </div>
 
-          <!-- 追评列表（展示商家店铺名+标签，纯展示！） -->
+          <!-- 追评列表：显示【商家】标签 -->
           <div v-if="item.replyList && item.replyList.length > 0" class="reply-list">
-            <div class="reply-title">追评 ({{ item.replyList.length }})</div>
-            <div class="reply-item-list">
-              <div 
-                v-for="(reply, idx) in getShowReplyList(item.id, item.replyList)" 
-                :key="reply.id" 
-                class="reply-item"
-              >
-                <div class="reply-top">
-                  <span class="reply-name">
-                    <!-- 自动显示商家店铺名（后端返回，前端只展示） -->
-                    <template v-if="reply.isSeller">
-                      {{ reply.shopName || '商家' }}
-                    </template>
-                    <template v-else>
-                      {{ reply.nickname }}
-                    </template>
-                  </span>
-                  <!-- 商家绿色标签 -->
-                  <el-tag v-if="reply.isSeller" type="success" size="small">商家</el-tag>
-                  <span class="reply-time">{{ formatTime(reply.createTime) }}</span>
-                </div>
-                <div class="reply-content">{{ reply.content }}</div>
-              </div>
-            </div>
-            <div 
-              v-if="item.replyList.length > 3" 
-              class="expand-btn"
-              @click="toggleExpandReply(item.id)"
-            >
-              <span>{{ expandedReplies[item.id] ? '收起↑' : '展开↓' }}</span>
-            </div>
-          </div>
+  <div class="reply-title">追评/商家回复 ({{ item.replyList.length }})</div>
+  <div class="reply-item-list">
+    <div 
+      v-for="(reply, idx) in getShowReplyList(item.id, item.replyList)" 
+      :key="reply.id" 
+      class="reply-item"
+    >
+      <div class="reply-top">
+        <span style="user-select: none;" class="reply-name">
+          <!-- 商家回复：显示店铺名 -->
+          <template v-if="reply.isSeller" >
+            {{ reply.shopName || shopName }}
+          </template>
+          <!-- 普通用户：显示账号名 -->
+          <template v-else>
+            {{ reply.nickname }}
+          </template>
+        </span>
+        <el-tag v-if="reply.isSeller" type="success" size="small">商家</el-tag>
+        <span class="reply-time">{{ formatTime(reply.createTime) }}</span>
+
+        <!-- 新增：删除按钮（仅发布者可见） -->
+        <el-button 
+          v-if="userStore.user?.id === reply.userId"
+          type="danger" 
+          link 
+          size="small"
+          style="margin-left: 10px"
+          @click="handleDeleteReply(reply.id, item.id)"
+        >删除</el-button>
+      </div>
+      <div class="reply-content">{{ reply.content }}</div>
+    </div>
+  </div>
+  <div 
+    v-if="item.replyList.length > 3" 
+    class="expand-btn"
+    @click="toggleExpandReply(item.id)"
+  >
+    <span>{{ expandedReplies[item.id] ? '收起↑' : '展开↓' }}</span>
+  </div>
+</div>
         </div>
       </div>
     </div>
@@ -227,23 +174,37 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
-import { InfoFilled, SuccessFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 
-// 普通买家接口（无任何商家接口！）
 import {
   checkCommentAuth,
   getBookAvgScore,
   getCommentList,
   addComment,
+  getRandomComments,
   deleteCommentApi,
   editCommentApi,
   addReplyApi,
   getReplyListApi,
-} from '@/api/front/bookComment'
+  deleteReplyApi
+} from '@/api/front/bookComment1'
 
-// 类型定义
+import { getSellerProfileApi } from '@/api/seller/profile'
+
+// 在组件顶部变量
+const shopName = ref('商家') // 默认值
+const loadShopInfo = async () => {
+  try {
+    const res = await getSellerProfileApi()
+    if (res.code === 200 && res.data?.shop_name) {
+      shopName.value = res.data.shop_name
+    }
+  } catch (err) {
+    console.error('获取店铺信息失败', err)
+  }
+}
+
 interface CommentForm { score: number; content: string }
 interface CommentItem {
   id: number; userId: number; nickname: string; score: number;
@@ -251,13 +212,11 @@ interface CommentItem {
 }
 interface CommentAuth { hasAuth: boolean; hasCommented: boolean }
 
-// Props
 const props = defineProps<{ bookId: number; source: string }>()
 const userStore = useUserStore()
 const emit = defineEmits(['comment-updated'])
 const router = useRouter()
 
-// 响应式数据
 const allImagesLoaded = ref(false)
 const submitFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
@@ -266,55 +225,11 @@ const commentTotalCount = ref<number>(0)
 const userAuthInfo = ref<CommentAuth>({ hasAuth: false, hasCommented: false })
 const commentForm = ref<CommentForm>({ score: 5.0, content: '' })
 const commentList = ref<CommentItem[]>([])
+const randomComments = ref<any[]>([])
 
-// 编辑评论
 const editCommentId = ref<number>(0)
 const editForm = ref<CommentForm>({ score: 0, content: '' })
 
-const handleEditComment = (item: CommentItem) => {
-  editCommentId.value = item.id
-  editForm.value = { score: item.score, content: item.content || '' }
-}
-const cancelEditComment = () => { editCommentId.value = 0 }
-const handleEditScoreChange = (val: number) => {
-  editForm.value.score = parseFloat(val.toFixed(1))
-}
-const handleEditInputScoreChange = () => {
-  let val = editForm.value.score
-  if (val < 0) val = 0.0
-  if (val > 5) val = 5.0
-  editForm.value.score = parseFloat(val.toFixed(1))
-}
-const saveEditComment = async (commentId: number) => {
-  if (!editForm.value.score) {
-    ElMessage.warning('请填写评分')
-    return
-  }
-  if (!editForm.value.content.trim()) {
-    ElMessage.warning('请填写评论内容')
-    return
-  }
-  try {
-    const res = await editCommentApi({
-      commentId,
-      score: editForm.value.score,
-      content: editForm.value.content,
-      source: props.source,
-    })
-    if (res.code === 200) {
-      ElMessage.success('编辑成功')
-      cancelEditComment()
-      await Promise.all([fetchCommentList(), fetchBookScore()])
-      emit('comment-updated')
-    } else {
-      ElMessage.error('编辑失败')
-    }
-  } catch (err) {
-    ElMessage.error('网络异常')
-  }
-}
-
-// 普通用户追评
 const replyContent = ref<Record<number, string>>({})
 const replyLoading = ref<Record<number, boolean>>({})
 const expandedReplies = ref<Record<number, boolean>>({})
@@ -322,17 +237,15 @@ const expandedReplies = ref<Record<number, boolean>>({})
 const toggleExpandReply = (commentId: number) => {
   expandedReplies.value[commentId] = !expandedReplies.value[commentId]
 }
+
 const getShowReplyList = (commentId: number, list: any[]) => {
   return expandedReplies.value[commentId] ? list : list.slice(0, 3)
 }
 
-// 普通买家发表追评（无商家参数！）
+// 发表回复：自动标记为商家
 const submitReply = async (commentId: number) => {
   const content = replyContent.value[commentId]?.trim()
-  if (!content) {
-    ElMessage.warning('请输入追评内容')
-    return
-  }
+  if (!content) { ElMessage.warning('请输入回复内容'); return }
   replyLoading.value[commentId] = true
   try {
     const res = await addReplyApi({
@@ -340,13 +253,15 @@ const submitReply = async (commentId: number) => {
       commentId,
       content,
       source: props.source,
+      isSeller: true,
+      shopName: shopName.value // 传给后端
     })
     if (res.code === 200) {
-      ElMessage.success('追评发表成功')
+      ElMessage.success('回复成功')
       replyContent.value[commentId] = ''
       await fetchCommentList()
     } else {
-      ElMessage.error('追评失败')
+      ElMessage.error('回复失败')
     }
   } catch (err) {
     ElMessage.error('网络异常')
@@ -354,23 +269,50 @@ const submitReply = async (commentId: number) => {
     replyLoading.value[commentId] = false
   }
 }
-
-// 工具方法
-const handleScoreChange = (val: number) => {
-  commentForm.value.score = parseFloat(val.toFixed(1))
+const handleEditComment = (item: CommentItem) => {
+  editCommentId.value = item.id
+  editForm.value = { score: item.score, content: item.content || '' }
 }
+const cancelEditComment = () => { editCommentId.value = 0 }
+const handleEditScoreChange = (val: number) => { editForm.value.score = parseFloat(val.toFixed(1)) }
+const handleEditInputScoreChange = () => {
+  let val = editForm.value.score
+  if (val < 0) val = 0
+  if (val > 5) val = 5
+  editForm.value.score = parseFloat(val.toFixed(1))
+}
+const saveEditComment = async (commentId: number) => {
+  if (!editForm.value.score) { ElMessage.warning('请填写评分'); return }
+  if (!editForm.value.content.trim()) { ElMessage.warning('请填写内容'); return }
+  try {
+    const res = await editCommentApi({ commentId, score: editForm.value.score, content: editForm.value.content, source: props.source })
+    if (res.code === 200) {
+      ElMessage.success('编辑成功')
+      cancelEditComment()
+      await Promise.all([fetchCommentList(), fetchBookScore()])
+      emit('comment-updated')
+    }
+  } catch { ElMessage.error('网络异常') }
+}
+
+const handleScoreChange = (val: number) => { commentForm.value.score = parseFloat(val.toFixed(1)) }
 const handleInputScoreChange = () => {
   let val = commentForm.value.score
-  if (val < 0) val = 0.0
-  if (val > 5) val = 5.0
+  if (val < 0) val = 0
+  if (val > 5) val = 5
   commentForm.value.score = parseFloat(val.toFixed(1))
+}
+
+const fetchRandomComments = async () => {
+  if (!props.bookId) return
+  try {
+    const res = await getRandomComments(props.bookId, props.source)
+    if (res.code === 200) randomComments.value = res.data || []
+  } catch {}
 }
 
 const fetchCommentAuth = async () => {
-  if (!userStore.user?.id) {
-    userAuthInfo.value = { hasAuth: false, hasCommented: false }
-    return
-  }
+  if (!userStore.user?.id) { userAuthInfo.value = { hasAuth: false, hasCommented: false }; return }
   try {
     const res = await checkCommentAuth(props.bookId, props.source)
     if (res.code === 200) userAuthInfo.value = res.data
@@ -381,7 +323,7 @@ const fetchBookScore = async () => {
   try {
     const res = await getBookAvgScore(props.bookId, props.source)
     if (res.code === 200) {
-      bookAvgScore.value = res.data.avgScore || 0.0
+      bookAvgScore.value = res.data.avgScore || 0
       commentTotalCount.value = res.data.commentCount || 0
     }
   } catch {}
@@ -393,8 +335,8 @@ const fetchCommentList = async () => {
     if (res.code === 200) {
       const list = res.data || []
       for (let item of list) {
-        const replyRes = await getReplyListApi(item.id, props.source)
-        item.replyList = replyRes.code === 200 ? replyRes.data : []
+        const r = await getReplyListApi(item.id, props.source)
+        item.replyList = r.code === 200 ? r.data : []
       }
       commentList.value = list
     }
@@ -402,78 +344,70 @@ const fetchCommentList = async () => {
 }
 
 const submitComment = async () => {
-  if (!submitFormRef.value) return
-  if (commentForm.value.score <= 0) {
-    ElMessage.warning('请选择图书评分')
-    return
-  }
-  if (!commentForm.value.content.trim()) {
-    ElMessage.warning('请输入评价内容')
-    return
-  }
+  if (commentForm.value.score <= 0) { ElMessage.warning('请评分'); return }
+  if (!commentForm.value.content.trim()) { ElMessage.warning('请输入内容'); return }
   submitLoading.value = true
   try {
-    const res = await addComment({
-      bookId: props.bookId,
-      score: commentForm.value.score,
-      content: commentForm.value.content,
-      source: props.source
-    })
+    const res = await addComment({ bookId: props.bookId, score: commentForm.value.score, content: commentForm.value.content, source: props.source })
     if (res.code === 200) {
-      ElMessage.success('评价提交成功！')
+      ElMessage.success('发表成功')
       await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
-      commentForm.value = { score: 5.0, content: '' }
+      commentForm.value = { score: 5, content: '' }
       emit('comment-updated')
-    } else {
-      ElMessage.error(res.msg || '提交失败')
     }
-  } catch (err) {
+  } catch {
     ElMessage.error('网络异常')
-  } finally {
-    submitLoading.value = false
-  }
+  } finally { submitLoading.value = false }
 }
 
-const formatTime = (time: string) => {
-  if (!time) return ''
-  return new Date(time).toLocaleString()
-}
-
-const goUserInfo = (nickname: string) => {
-  if (!nickname) return
-  router.push({ path: '/userinfo', query: { username: nickname } })
-}
+const formatTime = (time: string) => time ? new Date(time).toLocaleString() : ''
+const goUserInfo = (nickname: string) => { router.push({ path: '/userinfo', query: { username: nickname } }) }
 
 const handleDeleteComment = async (commentId: number) => {
-  ElMessageBox.confirm('确定要删除这条评价吗？删除后无法恢复', '提示', {
-    confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning'
+  ElMessageBox.confirm('确定删除？', '提示', { type: 'warning' }).then(async () => {
+    const res = await deleteCommentApi({ commentId, bookId: props.bookId, source: props.source })
+    if (res.code === 200) {
+      ElMessage.success('删除成功')
+      await Promise.all([fetchBookScore(), fetchCommentList()])
+      emit('comment-updated')
+    }
+  }).catch(() => {})
+}
+
+const handleDeleteReply = async (replyId: number, commentId: number) => {
+  ElMessageBox.confirm('确定要删除这条回复吗？删除后无法恢复', '提示', {
+    type: 'warning'
   }).then(async () => {
+    // 关键：打印要传给后端的参数，看是不是都有值
+    console.log('删除追评参数：', { replyId, commentId, source: props.source });
+
     try {
-      const res = await deleteCommentApi({ commentId, bookId: props.bookId, source: props.source })
+      const res = await deleteReplyApi({
+        replyId,
+        commentId,
+        source: props.source
+      })
       if (res.code === 200) {
-        ElMessage.success('评价已删除')
-        await Promise.all([fetchBookScore(), fetchCommentList()])
-        emit('comment-updated')
+        ElMessage.success('删除成功')
+        await fetchCommentList()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
     } catch (err) {
-      ElMessage.error('删除失败，请稍后重试')
+      console.error('删除请求错误：', err)
+      ElMessage.error('网络异常，请稍后重试')
     }
-  }).catch(() => ElMessage.info('已取消删除'))
+  }).catch(() => {})
 }
-
 onMounted(async () => {
+  await loadShopInfo()
   if (props.bookId) {
-    await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
+    await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList(), fetchRandomComments()])
   }
-  nextTick(() => {
-    setTimeout(() => allImagesLoaded.value = true, 50)
-  })
+  nextTick(() => setTimeout(() => allImagesLoaded.value = true, 50))
 })
-
-watch(() => props.bookId, async (newId) => {
-  if (newId) {
+watch(() => props.bookId, async (id) => {
+  if (id) {
     bookAvgScore.value = null
     await Promise.all([fetchCommentAuth(), fetchBookScore(), fetchCommentList()])
   }

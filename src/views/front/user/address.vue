@@ -1,190 +1,59 @@
 <template>
-  <div class="pay-page" v-cloak>
-    <header class="pay-header">
-      <div class="header-inner">
-        <span class="back-btn" @click="router.go(-1)">← 返回</span>
-        <h1 class="header-title">确认订单</h1>
-        <span class="header-badge">购物车结算</span>
+  <div class="address-page" v-cloak>
+    <div class="header">
+      <h2 style="color: #000;margin-left: 20%;">收货地址管理</h2>
+      <el-button type="primary" @click="openAdd" style="margin-right: 20%;">+ 新增地址</el-button>
+    </div>
+
+    <!-- 地址列表 -->
+    <div class="list" v-loading="loading" style="color: #000;font-weight: 600;">
+      <div class="item" v-for="item in list" :key="item.id">
+        <div>
+          <p>{{ formatAddress(item.province, item.city, item.district) }}</p>
+          <p>{{ item.detail_address }}</p>
+          <el-tag type="success" v-if="item.is_default">默认</el-tag>
+        </div>
+        <div>
+          <el-button text @click="edit(item)">编辑</el-button>
+          <el-button text type="danger" @click="del(item.id)">删除</el-button>
+        </div>
       </div>
-    </header>
-
-    <main class="pay-main">
-
-    <!-- 加载/空状态 -->
-    <div v-if="loading" class="loading-tip">
-      <div class="loading-spinner"></div>
-      <p>正在加载订单信息…</p>
-    </div>
-    <div v-else-if="!payList.length" class="empty-tip">
-      <div class="empty-icon">🛒</div>
-      <p class="empty-text">暂无待支付商品</p>
-      <el-button type="primary" class="empty-action" @click="router.push('/cart')">返回购物车</el-button>
+      <el-empty v-if="list.length===0" description="暂无地址" />
     </div>
 
-    <!-- 订单与地址信息 -->
-    <div v-else class="order-wrapper">
-      <!-- 1. 地址选择区域 -->
-      <section class="address-section section-card">
-        <h3 class="block-title">配送至</h3>
-        <el-form :model="addressForm" :rules="addressRules" ref="addressFormRef" label-width="80px" class="address-form">
-          <el-form-item label="所在地区" prop="region">
-            <el-cascader
-              v-model="addressForm.region"
-              :options="regionOptions"
-              placeholder="请选择省/市/区"
-              style="width: 100%"
-              :props="{ expandTrigger: 'hover' }"
-            />
-          </el-form-item>
-          <el-form-item label="详细地址" prop="detail">
-            <el-input
-              v-model="addressForm.detail"
-              type="textarea"
-              :rows="2"
-              placeholder="请输入街道、楼牌号等详细信息"
-            />
-          </el-form-item>
-        </el-form>
-      </section>
-
-      <!-- 2. 商品列表 -->
-      <section class="goods-section section-card">
-        <h3 class="block-title">商品清单</h3>
-        <div class="goods-list">
-        <div v-for="item in payList" :key="item.id" class="pay-item">
-          <img :src="item.book_cover || '/default-book.png'" class="cover" />
-          <div class="goods-info">
-            <p class="goods-name">{{ item.book_name }}</p>
-            <p class="goods-price">
-              单价：¥{{ toFixedNumber(item.discount_price || item.book_price, 2) }} × {{ item.quantity }}
-              <span
-                v-if="item.discount_price && item.discount_price !== item.book_price"
-                class="goods-price-origin"
-              >
-                ¥{{ toFixedNumber(item.book_price, 2) }}
-              </span>
-            </p>
-          </div>
-        </div>
-        </div>
-      </section>
-
-      <!-- 总计 -->
-      <section class="pay-total section-card">
-        <span class="total-label">实付金额</span>
-        <span class="total-price">¥{{ toFixedNumber(total, 2) }}</span>
-      </section>
-    </div>
-
-    </main>
-
-    <div v-if="payList.length" class="pay-footer-bar">
-      <el-button
-        type="primary"
-        size="large"
-        @click="mockPay"
-        class="pay-btn"
-        :loading="payLoading"
-      >
-        确认支付 ¥{{ toFixedNumber(total, 2) }}
-      </el-button>
-    </div>
-
-    <footer class="pay-footer">
-      <p>© 2026 星途科幻图书 · 安全支付</p>
-    </footer>
-
-    <!-- ================== 支付安全验证弹窗（短信+密码 双选择） ================== -->
-    <el-dialog
-      v-model="showPayVerifyDialog"
-      title="支付安全验证"
-      width="480px"
-      class="pay-verify-dialog"
-      :close-on-click-modal="false"
-    >
-      <el-form
-        ref="payVerifyFormRef"
-        :model="payVerifyForm"
-        label-width="110px"
-        class="verify-form"
-      >
-        <!-- 验证方式选择 -->
-        <el-form-item label="验证方式">
-          <el-radio-group v-model="verifyType">
-            <el-radio label="sms" border>短信验证码</el-radio>
-            <el-radio label="password" border>账号密码验证</el-radio>
-          </el-radio-group>
+    <!-- 弹窗 -->
+    <el-dialog v-model="visible" title="地址" width="500px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+        <el-form-item label="地区" prop="region">
+          <el-cascader v-model="form.region" :options="regionOptions" style="width:100%" />
         </el-form-item>
-
-        <!-- 短信验证 -->
-        <template v-if="verifyType === 'sms'">
-          <el-form-item label="绑定手机号">
-            <el-input
-              v-model="payVerifyForm.phone"
-              placeholder="已绑定手机号"
-              maxlength="11"
-              disabled
-            />
-          </el-form-item>
-
-          <el-form-item label="验证码" prop="code">
-            <div class="code-box">
-              <el-input v-model="payVerifyForm.code" placeholder="请输入6位验证码" maxlength="6" />
-              <el-button type="primary" @click="handleSendPayCode" :disabled="countdown > 0">
-                {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
-              </el-button>
-            </div>
-          </el-form-item>
-        </template>
-
-        <!-- 密码验证 -->
-        <template v-else>
-          <el-form-item label="当前登录密码" prop="password">
-            <el-input
-              v-model="payVerifyForm.password"
-              type="password"
-              show-password
-              placeholder="请输入您的登录密码"
-            />
-          </el-form-item>
-        </template>
+        <el-form-item label="详细地址" prop="detail">
+          <el-input v-model="form.detail" type="textarea" rows="2" />
+        </el-form-item>
+        <el-form-item label="设为默认">
+          <el-switch v-model="form.is_default" />
+        </el-form-item>
       </el-form>
-
       <template #footer>
-        <el-button @click="closePayVerify">取消</el-button>
-        <el-button type="primary" :loading="verifying" @click="confirmPayVerify">
-          确认验证并支付
-        </el-button>
+        <el-button @click="visible=false">取消</el-button>
+        <el-button type="primary" @click="submit">保存</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, FormInstance } from 'element-plus'
-import { useUserStore } from '@/store/modules/user'
-import { getPayGoodsInfo, submitMockPay } from '@/api/front/pay'
-import { sendSmsCode, loginByCode } from '@/api/front/user'
-import { verifyPayPwd } from '@/api/front/user'
-import { getDefaultAddress } from '@/api/front/address'
-// 路由/状态/用户仓库
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
-const payList = ref<any[]>([])
-const loading = ref(true)
-const payLoading = ref(false)
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getAddressList, saveAddress, deleteAddress } from '@/api/front/address'
+// 直接复用你支付页的省市区数据！！！
 
-// 地址逻辑
-const addressFormRef = ref<FormInstance>()
-const addressForm = reactive({
-  region: [] as string[],
-  detail: '',
-})
 
-// 完整省市区数据
+const loading = ref(false)
+const list = ref([])
+const visible = ref(false)
+const formRef = ref()
+// 省市区数据
 const regionOptions = [
   {
     value: '110000',
@@ -585,491 +454,93 @@ const regionOptions = [
     ]
   },
 ];
-const addressRules = {
-  region: [{ type: 'array', required: true, message: '请选择省市区', trigger: 'change' }],
-  detail: [{ required: true, message: '请输入详细地址', trigger: 'blur' }],
+const regionMap: Record<string, string> = {}
+const buildRegionMap = (options: any[]) => {
+  options.forEach(option => {
+    regionMap[option.value] = option.label
+    if (option.children && option.children.length) {
+      buildRegionMap(option.children)
+    }
+  })
 }
+buildRegionMap(regionOptions)
 
-// 支付验证弹窗逻辑
-const showPayVerifyDialog = ref(false)
-const payVerifyFormRef = ref<FormInstance>()
-const payVerifyForm = ref({
-  phone: userStore.user?.phone || '',
-  code: '',
-  password: ''
+// 地址编码转中文方法
+const formatAddress = (province: string, city: string, district: string) => {
+  const p = regionMap[province] || province
+  const c = regionMap[city] || city
+  const d = regionMap[district] || district
+  return `${p} ${c} ${d}`
+}
+const form = ref({
+  id: 0,
+  region: [],
+  detail: '',
+  is_default: false
 })
-
-// 验证方式：sms / password
-const verifyType = ref<'sms' | 'password'>('sms')
-
-const countdown = ref(0)
-let timer: any = null
-const verifying = ref(false)
-
-// 通用数字格式化
-const toFixedNumber = (num: any, digits: number) => {
-  if (num === null || num === undefined) return '0.00'
-  const number = Number(num) || 0
-  return number.toFixed(digits)
+const rules = {
+  region: [{ required: true, message: '请选择地区' }],
+  detail: [{ required: true, message: '请填写详细地址' }]
 }
 
-// 发送支付验证码
-const handleSendPayCode = async () => {
-  const phone = payVerifyForm.value.phone
-  if (!/^1[3-9]\d{9}$/.test(phone)) {
-    ElMessage.error('请输入正确的11位手机号！')
-    return
-  }
-
-  try {
-    const res = await sendSmsCode({ phone })
-    //@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success('验证码已发送：' + res.data.code)
-      countdown.value = 60
-      timer = setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) clearInterval(timer)
-      }, 1000)
-    } else {
-      //@ts-ignore
-      ElMessage.error(res.msg || '发送失败')
-    }
-  } catch (err) {
-    ElMessage.error('网络异常')
-  }
-}
-
-// 关闭弹窗
-const closePayVerify = () => {
-  showPayVerifyDialog.value = false
-  payVerifyForm.value.code = ''
-  payVerifyForm.value.password = ''
-  clearInterval(timer)
-  countdown.value = 0
-}
-
-// ====================== 验证逻辑（短信+密码） ======================
-const confirmPayVerify = async () => {
-  if (verifyType.value === 'sms' && !payVerifyForm.value.code) {
-    ElMessage.warning('请输入验证码')
-    return
-  }
-  if (verifyType.value === 'password' && !payVerifyForm.value.password) {
-    ElMessage.warning('请输入登录密码')
-    return
-  }
-
-  verifying.value = true
-  try {
-    // 1. 短信验证
-    if (verifyType.value === 'sms') {
-      const res = await loginByCode({
-        phone: payVerifyForm.value.phone,
-        code: payVerifyForm.value.code,
-        role: 'buyer',
-      })
-      //@ts-ignore
-      if (res.code !== 200) {
-        ElMessage.error(res.msg || '验证码错误')
-        return
-      }
-    }
-    // 2. 密码验证
-    else {
-      const res = await verifyPayPwd({
-        password: payVerifyForm.value.password
-      })
-      //@ts-ignore
-      if (res.code !== 200) {
-        ElMessage.error('输入的密码有误，无法支付')
-        verifying.value = false
-        return
-      }
-    }
-
-    // 验证成功 → 支付
-    ElMessage.success('验证成功，正在支付...')
-    closePayVerify()
-    await doRealPay()
-
-  } catch (error) {
-  } finally {
-    verifying.value = false
-  }
-}
-
-
-const cartIdsStr = route.query.cartIds as string
-if (!cartIdsStr) {
-  ElMessage.warning('请从购物车进入支付页面')
-  router.push('/cart')
-}
-const cartIds = cartIdsStr?.split(',').filter((id) => id) || []
-
-// 计算总金额（优先使用优惠价）
-const total = computed(() => {
-  return payList.value
-    .reduce((sum, item) => {
-      const realPrice = Number(item.discount_price || item.book_price) || 0
-      return sum + realPrice * Number(item.quantity)
-    }, 0)
-})
-
-// 获取支付商品数据
-const getPayData = async () => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录后再支付')
-    router.push('/login')
-    loading.value = false
-    return
-  }
-
+// 加载列表
+const loadList = async () => {
   loading.value = true
-  try {
-    //@ts-ignore
-    const res = await getPayGoodsInfo(cartIds)
-    payList.value = res.data || []
-    if (!payList.value.length) {
-      ElMessage.warning('待支付商品为空')
-    }
-  } catch (error) {
-    console.error('获取支付信息失败：', error)
-    ElMessage.error('获取订单信息失败，请返回购物车重试')
-    router.push('/cart')
-  } finally {
-    loading.value = false
-  }
+  const res = await getAddressList()
+  list.value = res.data || []
+  loading.value = false
 }
 
-// 点击支付按钮
-const mockPay = async () => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录账号')
-    router.push('/login')
-    return
-  }
-
-  try {
-    await addressFormRef.value?.validate()
-  } catch (error) {
-    ElMessage.warning('请完善全部收货地址信息')
-    return
-  }
-
-  payVerifyForm.value.phone = userStore.user?.phone || ''
-  showPayVerifyDialog.value = true
+// 新增
+const openAdd = () => {
+  form.value = { id:0, region:[], detail:'', is_default:false }
+  visible.value = true
 }
 
-// 最终支付
-const doRealPay = async () => {
-  payLoading.value = true
-  try {
-    const addressPayload = {
-      province: addressForm.region[0],
-      city: addressForm.region[1],
-      district: addressForm.region[2],
-      detail: addressForm.detail,
-    }
-
-    // 传给 submitMockPay 接口
-    const res = await submitMockPay(cartIds, addressPayload)
-    //@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success('🎉 订单支付成功！')
-      router.push('/user')
-    } else {
-      //@ts-ignore
-      ElMessage.error(res.msg || '订单支付提交失败')
-    }
-  } catch (error) {
-    console.error('最终支付接口失败：', error)
-    ElMessage.error('支付请求异常，请稍后重试')
-  } finally {
-    payLoading.value = false
+// 编辑
+const edit = (item) => {
+  form.value = {
+    id: item.id,
+    region: [item.province, item.city, item.district],
+    detail: item.detail_address,
+    is_default: item.is_default === 1
   }
+  visible.value = true
 }
-onMounted(async () => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    loading.value = false
-    return
-  }
-  // 自动加载默认地址
-  const addrRes = await getDefaultAddress()
-  if (addrRes.data) {
-    addressForm.region = [addrRes.data.province, addrRes.data.city, addrRes.data.district]
-    addressForm.detail = addrRes.data.detail_address
-  }
- 
-})
-onMounted(() => {
-  getPayData()
-})
 
-onUnmounted(() => clearInterval(timer))
+// 提交
+const submit = async () => {
+  await formRef.value.validate()
+  const params = {
+    id: form.value.id,
+    province: form.value.region[0],
+    city: form.value.region[1],
+    district: form.value.region[2] || '',
+    detail_address: form.value.detail,
+    is_default: form.value.is_default ? 1 : 0
+  }
+  await saveAddress(params)
+  ElMessage.success('保存成功')
+  visible.value = false
+  loadList()
+}
+
+// 删除
+const del = async (id) => {
+  await deleteAddress(id)
+  ElMessage.success('删除成功')
+  loadList()
+}
+
+onMounted(() => loadList())
 </script>
 
 <style scoped>
-/* Reference: activity DefaultLayout - purple gradient checkout */
-.pay-page {
-  min-height: 100vh;
-  background: #f5f7fa;
-  padding-bottom: 100px;
-}
-.pay-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  padding: 14px 20px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-.header-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.back-btn {
-  cursor: pointer;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  font-size: 14px;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-}
-.header-title {
-  flex: 1;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.header-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.25);
-  white-space: nowrap;
-}
-.pay-main {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px 16px;
-}
-.loading-tip,
-.empty-tip {
-  text-align: center;
-  padding: 80px 20px;
-  color: #6b7280;
-}
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  margin: 0 auto 16px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  animation: pay-spin 0.8s linear infinite;
-}
-@keyframes pay-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-.empty-text {
-  font-size: 16px;
-  color: #4b5563;
-  margin: 0 0 20px;
-}
-.order-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.section-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-.block-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #409eff;
-  display: inline-block;
-}
-.goods-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.pay-item {
-  display: flex;
-  gap: 16px;
-  padding: 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 10px;
-  background: #fafafa;
-  transition: box-shadow 0.2s;
-}
-.pay-item:hover {
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.12);
-}
-.cover {
-  width: 72px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
-}
-.goods-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-}
-.goods-name {
-  color: #1f2937;
-  font-weight: 600;
-  font-size: 15px;
-  margin: 0;
-  line-height: 1.4;
-}
-.goods-price {
-  color: #6b7280;
-  font-size: 14px;
-  margin: 0;
-}
-.goods-price-origin {
-  color: #9ca3af;
-  text-decoration: line-through;
-  margin-left: 8px;
-  font-size: 12px;
-}
-.pay-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-  font-weight: 600;
-}
-.total-label {
-  color: #4b5563;
-}
-.total-price {
-  color: #dc2626;
-  font-size: 24px;
-  font-weight: 700;
-}
-.pay-footer-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 90;
-  padding: 12px 16px 20px;
-  background: linear-gradient(to top, #fff 70%, rgba(255, 255, 255, 0.95));
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-}
-.pay-footer-bar .pay-btn {
-  display: block;
-  width: 100%;
-  max-width: 500px;
-  height: 48px;
-  margin: 0 auto;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.pay-footer-bar .pay-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-}
-.pay-footer {
-  text-align: center;
-  padding: 24px 16px 8px;
-  color: #9ca3af;
-  font-size: 12px;
-}
-.pay-footer p {
-  margin: 0;
-}
-.code-box {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.code-box .el-input {
-  flex: 1;
-  min-width: 140px;
-}
-.verify-form {
-  padding: 8px 0;
-}
-:deep(.pay-verify-dialog .el-dialog__header) {
-  border-bottom: 1px solid #f0f0f0;
-  margin-right: 0;
-}
-:deep(.pay-verify-dialog .el-dialog__title) {
-  font-weight: 600;
-  color: #1f2937;
-}
-@media (max-width: 768px) {
-  .header-inner {
-    flex-wrap: wrap;
-  }
-  .header-title {
-    font-size: 16px;
-    order: -1;
-    width: 100%;
-  }
-  .pay-item {
-    gap: 12px;
-    padding: 12px;
-  }
-  .cover {
-    width: 56px;
-    height: 78px;
-  }
-  .pay-total {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .total-price {
-    font-size: 22px;
-  }
-  .code-box {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .code-box .el-button {
-    width: 100%;
-  }
+.header{display:flex;justify-content:space-between;margin-bottom:20px;margin-top: 26px;}
+.item{border:1px solid #eee;border-radius:8px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+
+.list{
+  margin-left: 15.5%;
+  width: 70%;
 }
 </style>

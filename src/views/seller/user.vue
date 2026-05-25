@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, DocumentAdd, List, Reading, DocumentChecked } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/modules/user'
@@ -121,6 +121,7 @@ const showAvatarDialog = ref(false)
 const previewAvatar = ref('')
 
 // 每 2.5 秒自动拉取最新用户状态（实时同步限制）
+let refreshTimer: number | null = null
 const AUTO_REFRESH_INTERVAL = 2500
 
 const isMySelf = computed(() => !targetUsername.value || targetUsername.value === userStore.user?.username)
@@ -151,7 +152,7 @@ const loadSellerStats = async () => {
   try {
     const res = await getSellerStats()
     if (res.code === 200) stats.value = res.data
-  } catch (e) { ElMessage.error('加载统计失败') }
+  } catch (e) { ElMessage.error('暂无统计数据') }
 }
 
 // 后端拉最新用户状态
@@ -185,16 +186,19 @@ onMounted(async () => {
   await loadSellerStats()
 
   // 每 2.5 秒自动同步一次
-  const timer = setInterval(async () => {
+  refreshTimer = window.setInterval(async () => {
     await refreshUserInfo()
   }, AUTO_REFRESH_INTERVAL)
 
-  // 页面销毁清除定时器
-  onUnmounted(() => {
-    clearInterval(timer)
-  })
+  
 })
-
+// 页面销毁清除定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+})
 // 头像逻辑
 const openAvatarDialog = () => {
   previewAvatar.value = userStore.user?.avatar || ''

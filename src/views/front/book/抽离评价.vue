@@ -12,7 +12,7 @@
           score-format="(value) => value.toFixed(1)"
         />
        
-        <span class="count-text">共 {{ commentTotalCount }} 人评价</span>
+        <!-- <span class="count-text">共 {{ commentTotalCount }} 人评价</span> -->
       </div>
       <!-- 数据没加载时：用空占位，保持布局位置不变 -->
       <div v-else class="score-summary placeholder"></div>
@@ -102,17 +102,17 @@ watch(
 </style>
 <style scoped>
 .book-comment-container {
-  width: 40%;
+  width:auto;
   margin-top: 10px;
   height: 100px;
   padding: 12px;
 user-select: none;
   border-radius: 8px;
-  border: 1px solid #eee;
+ 
 }
 .comment-header {
   padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
+ 
   margin-bottom: 20px;
 }
 .comment-title {

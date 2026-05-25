@@ -195,4 +195,9 @@ onMounted(loadProfile)
   font-size: 30px;
   color: #999;
 }
+.seller-profile{
+ 
+  height: 540px;
+ margin-left: 28%;
+}
 </style>

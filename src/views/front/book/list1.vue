@@ -129,7 +129,18 @@
             @click="handleSalesSort">销量最高</span>
     </div>
   </div>
+  <el-button
+    class="ziwy"
+    link
+    @click="go('/shoucang')"
+    ><img
+      class="gwdh1"
+      style="width: 32px; height: auto; margin-right: 9px"
+      src="/public/img/收藏夹.png"
+    /><span style="color: red">收藏夹</span></el-button
+  >
 
+  <el-button link class="ziwy2" @click="dingbu"><span style="">↑</span></el-button>
   <div style="padding: 0 20px; background:#fff; margin: 10px 0;"></div>
 
   <div v-if="!loading" class="book-list-container" v-cloak>
@@ -162,6 +173,9 @@
               优惠价：¥{{ formatPrice(getDiscountPrice(book)) }}
               <el-tag type="danger" class="discount-tag">{{ getDiscountRate(book) }}</el-tag>
             </p>
+            <el-button type="primary" size="large" class="add-cart-btn2" style="margin-left: 0px;" @click="addToShoucang(book)" :disabled="!userStore.token">
+                    {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
+                  </el-button>
           </div>
         </div>
       </el-card>
@@ -239,7 +253,7 @@ import { useBookStore1 } from '@/store/newbook'
 const userStore = useUserStore()
 const router = useRouter()
 const bookStore1 = useBookStore1()
-
+const go = (path: string) => router.push(path)
 const loading = ref(true)
 const allBooks = ref([])
 const newBookList = ref([])
@@ -260,7 +274,7 @@ const pageSize = ref(6)
 const total = ref(0)
 const isRefreshing = ref(false)
 
-// 随机打乱数组
+// 洗牌算法,随机打乱数组
 const shuffleArray = <T>(arr: T[]): T[] => {
   const newArr = [...arr]
   for (let i = newArr.length - 1; i > 0; i--) {
@@ -269,7 +283,32 @@ const shuffleArray = <T>(arr: T[]): T[] => {
   }
   return newArr
 }
+// 收藏
+const addToShoucang = async (book: any) => {
+  if (!userStore.token) {
+    ElMessage.warning('请先登录')
+    return
+  }
 
+  try {
+    const res = await request.post('/api/shoucang/add', {
+      goodsId: book.id,
+      num: 1,
+      spec: '平装版',
+      source: 'seller',
+      bookName: book.name,
+      bookCover: book.cover,
+      bookPrice: getDiscountPrice(book)
+    })
+
+    res.code === 200
+      ? ElMessage.success('收藏成功')
+      : ElMessage.error(res.msg)
+  } catch {
+    ElMessage.error('收藏失败')
+  }
+}
+const dingbu = () => window.scrollTo(0, 0)
 // 拼音工具
 const getFullPinyin = (text: string) =>
   pinyin(text, { toneType: 'none', type: 'array' }).join('').toLowerCase()
@@ -504,7 +543,17 @@ onMounted(async () => {
   margin: 4px 0;
 }
 
+.add-cart-btn2 {
 
+border: none !important;
+}
+.add-cart-btn2:hover {
+background-color: #ec8f33 !important;
+}
+.add-cart-btn2:disabled {
+  background-color: #95a5a6 !important;
+  cursor: not-allowed;
+}
 .book-detail-chuban{ 
   margin-bottom: 10px;
    color: #626161;
@@ -736,8 +785,8 @@ onMounted(async () => {
     min-width: 430px;
    }
 .book-card:hover {
-   background: rgba(255, 0, 0, 0.108) !important;
-    box-shadow: 3px 4px 12px rgba(240, 119, 137, 0.741);
+   background: rgba(105, 102, 102, 0.108) !important;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.741);
    }
 .book-card-content { 
   display: flex;
@@ -842,6 +891,31 @@ onMounted(async () => {
 </style>
 
 <style scoped>
+.ziwy2 {
+  position: fixed !important;
+  top: 69.5vh !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+
+  height: auto;
+  background-color: #79787881 !important ;
+  font-size: 32px !important;
+  font-weight: 900 !important;
+  padding-left: 9px;
+  padding-right: 9px;
+  transform: translateX(0px);
+  padding-top: 7px;
+  padding-bottom: 7px !important;
+  padding-left: 9px !important;
+  padding-right: 9px !important;
+  width: 50px;
+  color: #ffffff;
+  transition: all 0.25s ease;
+}
+.ziwy2:hover {
+  transform: translateX(0px);
+  color: #ff0000;
+}
 .page-footer {
   width: 103.95vw;
   min-width: 100%;

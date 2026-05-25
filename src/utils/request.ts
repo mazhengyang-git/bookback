@@ -34,7 +34,10 @@ request.interceptors.response.use(
     // 适配后端返回格式（code/msg/data）
     const res = response.data
     if (res.code !== 200) {
-      ElMessage.error(res.msg || '请求失败')
+      // 401/403 由页面或路由守卫处理，避免未登录时全局重复弹窗
+      if (res.code !== 401 && res.code !== 403) {
+        ElMessage.error(res.msg || '请求失败')
+      }
       return Promise.reject(res)
     }
     return res
