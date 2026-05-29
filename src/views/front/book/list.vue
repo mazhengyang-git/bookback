@@ -18,14 +18,14 @@
     <div class="nav-right1">
       <div v-if="!userStore.isLogin">
         <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
+          style="color: black !important; font-weight: 600 !important; font-size: 20px !important"
           type="primary"
           link
           @click="$router.push('/login')"
           >登录</el-button
         >
         <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
+          style="color: black !important; font-weight: 600 !important; font-size: 20px !important"
           type="primary"
           link
           @click="$router.push('/register')"
@@ -45,10 +45,10 @@
           "
           >欢迎：{{ userStore.user?.username }}</span
         >
-        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')"
+        <el-button style="font-size: 17px !important; color: black !important" link @click="$router.push('/user')"
           ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
         >
-        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')"
+        <el-button style="font-size: 17px !important; color: red !important" link @click="$router.push('/cart')"
           ><img
             class="gwdh"
             style="width: 26px; height: auto; margin-right: 3px"
@@ -56,7 +56,7 @@
           />购物车</el-button
         >
         <el-button
-          style="color: white; background-color: red; position: relative; font-size: 15px"
+          style="color: white !important; background-color: red !important;  position: relative !important; font-size: 15px !important"
           type="danger"
           link
           @click="handleLogout"
@@ -266,7 +266,7 @@
   >
   <el-button
     class="ziwy"
-    style="position: absolute; font-size: 17px; margin-left: 250px; top: 19px; z-index: 10"
+    style="position: absolute; font-size: 17px; margin-left: 250px !important;  z-index: 10"
     link
     @click="go('/shoucang')"
     ><img
@@ -281,6 +281,8 @@
   <div v-if="!loading" class="book-list-container" v-cloak>
     <div class="main-content-wrapper">
       <!-- 左侧图书列表 -->
+      <h2  class="syses2" @click="$router.push('/books2')"><span class="mse" style="padding: 6px;border-radius: 20px;">前往卖家专区</span><br><hr style="color: #000;width: 936px;margin-left: -10px;margin-top: 16px;display: block;"></h2> 
+     
       <div class="left-content">
         <div class="book-card-list">
          
@@ -720,12 +722,15 @@ discountBooks.value.forEach((discount) => {
     // 匹配规则：ID相同 且 类型相同
     if (item.is_seller) {
       // 商家书：book_type=2
+      //@ts-ignore
       return item.id === discount.book_id && discount.book_type === 2;
     } else if (showType.value === 'new') {
       // 新书：book_type=1
+       //@ts-ignore
       return item.id === discount.book_id && discount.book_type === 1;
     } else {
       // 普通书：book_type=0
+       //@ts-ignore
       return item.id === discount.book_id && discount.book_type === 0;
     }
   });
@@ -914,6 +919,19 @@ onMounted(() => {
 })
 </script>
 <style scoped>
+.mse{
+  background-color: #d8d3d3;
+  cursor: pointer;
+  user-select: none;
+  color: #000 !important;
+ 
+}
+.mse:hover{
+  color: #dc0606 !important;
+}
+.xian{
+  position: absolute;
+}
 .zysyy {
   color: rgb(105, 0, 0) !important;
   background-color: #e09a75d8;
@@ -952,14 +970,14 @@ onMounted(() => {
   height: auto;
   background-color: #0000001e !important;
   border-radius: 12px 0 0 12px;
-  transform: translateX(55px);
+  transform: translateX(55px) !important;
   padding-top: 5px;
   padding-bottom: 5px;
   padding-left: 7px;
   transition: all 0.25s ease;
 }
 .ziwy:hover {
-  transform: translateX(0px);
+  transform: translateX(0px) !important;
 }
 .ziwy1 {
   position: fixed !important;
@@ -970,7 +988,7 @@ onMounted(() => {
   height: auto;
   background-color: #0000001e;
 
-  transform: translateX(49.8%);
+  transform: translateX(49.8%) !important;
   padding-top: 7px;
   padding-bottom: 7px;
   padding-left: 9px;
@@ -978,7 +996,7 @@ onMounted(() => {
   transition: all 0.25s ease;
 }
 .ziwy1:hover {
-  transform: translateX(0px);
+  transform: translateX(0px) !important;
 }
 
 .ziwy2 {
@@ -993,7 +1011,7 @@ onMounted(() => {
   font-weight: 900 !important;
   padding-left: 9px;
   padding-right: 9px;
-  transform: translateX(0px);
+  transform: translateX(0px) !important;
   padding-top: 7px;
   padding-bottom: 7px !important;
   padding-left: 9px !important;
@@ -1003,7 +1021,7 @@ onMounted(() => {
   transition: all 0.25s ease;
 }
 .ziwy2:hover {
-  transform: translateX(0px);
+  transform: translateX(0px) !important;
   color: #ff0000;
 }
 .ziwy3 {
@@ -1015,7 +1033,7 @@ onMounted(() => {
   height: auto;
   background-color: #0000001e;
 
-  transform: translateX(49.8%);
+  transform: translateX(49.8%) !important;
   padding-top: 7px;
   padding-bottom: 7px;
   padding-left: 9px;
@@ -1023,7 +1041,7 @@ onMounted(() => {
   transition: all 0.25s ease;
 }
 .ziwy3:hover {
-  transform: translateX(0px);
+  transform: translateX(0px) !important;
   color: #ff0000;
 }
 .gwdh1 {
@@ -1231,44 +1249,46 @@ onMounted(() => {
 }
 
 .syws {
-  display: flex;
+  display: flex !important;
   background: rgba(22,93,255,0.08) !important;
   
-  border: 1px solid rgba(64, 158, 255, 0.3);
-  transition: all 0.3s ease;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.875rem;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid rgba(64, 158, 255, 0.3) !important;
+  transition: all 0.3s ease !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.875rem !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .syws1 {
-  display: flex;
-  position: absolute;
-  left: 862px;
-  top: -58px;
-  background: #ff4d00;
-  border: 1px solid rgba(255, 137, 64, 0.3);
-  transition: all 0.3s ease;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.875rem;
-  align-items: center;
-  width: 130px;
-  justify-content: center;
+  display: flex !important;
+  position: absolute !important;
+  left: 862px !important;
+  top: -58px !important;
+  background: #ff4d00 !important;
+  border: 1px solid rgba(255, 137, 64, 0.3) !important;
+  transition: all 0.3s ease !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.875rem !important;
+  align-items: center !important;
+  width: 130px !important;
+  justify-content: center !important;
 }
 .syses {
-  color: rgb(0, 0, 0);
-  font-size: clamp(1rem, 2vw, 1.125rem);
-  text-decoration: none;
-  line-height: 1.2;
+  color: rgb(0, 0, 0) !important;
+  font-size: clamp(1rem, 2vw, 1.125rem) !important;
+  text-decoration: none !important;
+  line-height: 1.2 !important;
 }
 .syses:hover {
-  color: #ec8f33;
-  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5);
+  color: #ec8f33 !important;
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5) !important;
 }
 .syses1 {
   color: rgb(231, 230, 230) !important;
   font-size: clamp(0.9rem, 2vw, 1.025rem) !important;
   text-decoration: none !important;
+ 
+  
   background: #ff4d00 !important;
   border: 1px solid rgba(255, 137, 64, 0.3) !important;
   line-height: 1.2 !important;
@@ -1278,25 +1298,41 @@ onMounted(() => {
   color: #ffffff !important;
   text-shadow: 0 0 8px rgba(220, 223, 226, 0.5) !important;
 }
+.syses2 {
+  
+  font-size: clamp(0.9rem, 2vw, 1.025rem) !important;
+  text-decoration: none !important;
+ position: absolute !important;
+  top: -36px !important;
+  margin-left: 3% !important;
+ 
+  
+  line-height: 1.2 !important;
+  border-radius: 0.375rem !important;
+}
+.syses2:hover {
+ 
+  text-shadow: 0 0 8px rgba(220, 223, 226, 0.5) !important;
+}
 .sywss1 {
-  display: flex;
-  position: absolute;
-  left: 862px;
-  top: -58px;
-  background: #b50202;
-  border: 1px solid rgba(255, 137, 64, 0.3);
-  transition: all 0.3s ease;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.875rem;
-  align-items: center;
-  width: 130px;
-  justify-content: center;
+  display: flex !important;
+  position: absolute !important;
+  left: 862px !important;
+  top: -58px !important;
+  background: #b50202 !important;
+  border: 1px solid rgba(255, 137, 64, 0.3) !important;
+  transition: all 0.3s ease !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.875rem !important;
+  align-items: center !important;
+  width: 130px !important;
+  justify-content: center !important;
 }
 .sysess1 {
   color: rgb(255, 255, 255) !important;
   font-size: clamp(0.9rem, 2vw, 1.025rem) !important;
   text-decoration: none !important;
-  font-weight: 550;
+  font-weight: 550 !important;
   border: 1px solid rgba(255, 137, 64, 0.3) !important;
   line-height: 1.2 !important;
   border-radius: 0.375rem !important;
@@ -1307,7 +1343,7 @@ onMounted(() => {
 }
 /* 筛选栏 */
 .filter-bar {
-  width: 100%;
+  width: 100% ;
   max-width: 100vw;
   margin: 1.25rem auto;
   padding: 1rem 1.25rem;
@@ -1360,39 +1396,39 @@ margin-bottom: -19px;
 }
 
 .refresh-btn {
-  min-width: 116px;
+  min-width: 116px !important;
 }
 
 .tag-filter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  min-width: 260px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  min-width: 260px !important;
 }
 
 .sort-btns {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  flex: 1;
+  display: flex !important;
+  gap: 12px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  flex: 1 !important;
 }
 
 .search-icon {
-  cursor: pointer;
-  color: #666;
-  font-size: clamp(1.25rem, 2vw, 1.375rem);
-  transition: color 0.2s;
+  cursor: pointer !important;
+  color: #666 !important;
+  font-size: clamp(1.25rem, 2vw, 1.375rem) !important;
+  transition: color 0.2s !important;
 }
 .search-icon:hover {
-  color: #e6a23c;
+  color: #e6a23c !important;
 }
 
 :deep(.el-button--primary) {
-  --el-button-primary-bg-color: #e6a23c;
-  --el-button-primary-border-color: #e6a23c;
+  --el-button-primary-bg-color: #e6a23c !important;
+  --el-button-primary-border-color: #e6a23c !important;
 }
 
 /*  图书列表容器 */
@@ -1598,11 +1634,11 @@ margin-bottom: -19px;
 }
 
 .add-cart-btn {
-  cursor: pointer;
-  width: 130px;
+  cursor: pointer !important;
+  width: 130px !important;
   background: #e6a23c !important;
   border-color: #e6a23c !important;
-  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-size: clamp(1rem, 2vw, 1.125rem) !important;
 }
 
 .empty-tip {
@@ -1625,18 +1661,18 @@ margin-bottom: -19px;
 }
 /* 页面全部金色按钮主题 */
 :deep(.el-pagination) {
-  --el-pagination-button-bg-color: #ffffff;
-  --el-pagination-button-disabled-bg-color: #f5f5f5;
-  --el-pagination-color: #e6a23c;
-  --el-pagination-active-bg: #e6a23c;
-  --el-pagination-active-border-color: #e6a23c;
+  --el-pagination-button-bg-color: #ffffff !important;
+  --el-pagination-button-disabled-bg-color: #f5f5f5 !important;
+  --el-pagination-color: #e6a23c !important;
+  --el-pagination-active-bg: #e6a23c !important;
+  --el-pagination-active-border-color: #e6a23c !important;
   font-size: 15px;
 }
 /* 页码按钮加宽 */
 :deep(.el-pagination .el-pager li) {
-  min-width: 36px;
-  height: 36px;
-  line-height: 36px;
+  min-width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 :deep(.el-select) {
@@ -1656,76 +1692,76 @@ margin-bottom: -19px;
   border-color: #e6a23c !important;
 }
 .lx:disabled {
-  opacity: 0.85;
-  cursor: not-allowed;
+  opacity: 0.85 !important;
+  cursor: not-allowed !important;
 }
 .price-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 .price-divider {
-  color: #999;
-  font-size: 1rem;
+  color: #999 !important;
+  font-size: 1rem !important;
 }
 .tag-filter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin-top: 10px !important;
 }
 .tag-label {
-  color: #666;
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: #666 !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
 }
 .tag-filter :deep(.el-checkbox) {
-  margin-right: 10px;
+  margin-right: 10px !important;
 }
 * {
-  transform: scale(0.98);
+  transform: scale(0.98) !important;
 }
 
 /* 价格文字排序按钮 */
 .sort-btns {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  display: flex !important;
+  gap: 12px !important;
+  align-items: center !important;
 }
 .sort-btn {
-  padding: 4px 10px;
-  cursor: pointer;
-  color: #666;
-  border-radius: 4px;
-  transition: all 0.25s;
-  user-select: none;
+  padding: 4px 10px !important;
+  cursor: pointer !important;
+  color: #666 !important;
+  border-radius: 4px !important;
+  transition: all 0.25s !important;
+  user-select: none !important;
 }
 .sort-btn:hover {
-  color: #409eff;
-  background-color: #f0f7ff;
+  color: #409eff !important;
+  background-color: #f0f7ff !important;
 }
 /* 选中激活样式 */
 .sort-btn.active {
-  color: #409eff;
-  font-weight: bold;
-  background-color: #e6f4ff;
+  color: #409eff !important;
+  font-weight: bold !important;
+  background-color: #e6f4ff !important;
 }
 </style>
 
 <style scoped>
 .add-cart-btn2 {
-  width: auto;
-  min-width: 130px;
-  font-size: clamp(1rem, 2vw, 1.125rem);
+  width: auto !important;
+  min-width: 130px !important;
+  font-size: clamp(1rem, 2vw, 1.125rem) !important;
   background-color: #e6a23c !important;
   border: none !important;
-  margin-left: 16px;
-  position: relative;
+  margin-left: 16px !important;
+  position: relative !important;
 }
 .add-cart-btn2:disabled {
   background-color: #95a5a6 !important;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
 }
 .page-footer {
   width: 103.95vw;

@@ -30,6 +30,17 @@
           src="/public/img/收藏夹.png"
         />收藏夹</el-button
       >
+      <el-button
+        class="zise2"
+        style="position: absolute; font-size: 17px; margin-left: 250px; top: 5px;z-index:10 "
+        link
+        @click="go('/shop')"
+        ><img
+          class="gwdh1"
+          style="width: 24px; height: auto; margin-right: 3px"
+          src="/public/img/shop.png"
+        />关注的店铺</el-button
+      >
     </div>
 
     <div style="margin-top: 80px">
@@ -48,7 +59,7 @@
             >
           </template>
 
-          <!--  头像区域 -->
+          <!-- 头像区域 -->
           <div style="display: flex; align-items: center; margin-bottom: 20px;">
             <div class="avatar-wrapper" style="position: relative; margin-right: 20px;">
               <el-avatar :src="currentAvatar" size="80" />
@@ -108,7 +119,7 @@
   <p v-else style="font-size: 16px; margin: 10px 0; color: #999">
     暂无默认收货地址
   </p>
-  <el-button type="primary" @click="goToAddress">
+  <el-button class="yz1" type="primary" @click="goToAddress">
     管理收货地址
   </el-button>
 </div>
@@ -133,6 +144,7 @@
                 height: 30px;
                 margin-right: 34px;
               "
+              class="yz1"
               type="primary"
               size="small"
               @click="handleEditPhone"
@@ -149,14 +161,16 @@
                 }}</span>
               </span>
               <div style="margin-top: 20px; margin-bottom: 20px; margin-left: -9px">
-                <el-button type="primary" @click="updetaqm" style="margin-left: 9px">{{
+                <el-button class="yz1" type="primary" @click="updetaqm" style="margin-left: 9px">{{
                   km ? '保存签名' : '设置签名'
                 }}</el-button>
                 <el-button
                   v-show="km === true"
                   type="primary"
                   @click="quxiqm"
+                  
                   style="margin-left: 43px; white-space: nowrap"
+                  class="yz1"
                 >
                   取消修改
                 </el-button>
@@ -198,59 +212,119 @@
             <el-icon v-else class="upload-icon"><Plus /></el-icon>
           </el-upload>
           <div style="margin-top: 15px; text-align: center; color: #909399; font-size: 13px;">
-            支持 jpg/png 格式，大小不超过 2MB
+            支持 jpg/png/webp 格式，大小不超过 2MB
           </div>
           <template #footer>
             <el-button @click="showAvatarDialog = false">取消</el-button>
           </template>
         </el-dialog>
 
-        <!-- 修改账密弹窗 -->
-        <el-dialog
-          v-model="showEditDialog"
-          title="修改用户名/密码"
-          width="500px"
-          style="padding: 20px !important"
-          :close-on-click-modal="false"
-        >
-          <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
-            <el-form-item style="margin-bottom: 20px" label="用户名/账号" prop="username">
-              <el-input
-                v-model="editForm.username"
-                maxlength="13"
-                placeholder="不修改请保持原样"
-                clearable
-              />
-            </el-form-item>
-            <el-form-item style="margin-bottom: 20px" label="新密码" prop="password">
-              <el-input
-                v-model="editForm.password"
-                type="password"
-                placeholder="不修改请留空"
-                show-password
-                maxlength="13"
-              />
-            </el-form-item>
-            <el-form-item label="确认密码" prop="confirmPwd">
-              <el-input
-                v-model="editForm.confirmPwd"
-                type="password"
-                placeholder="再次输入新密码"
-                show-password
-                maxlength="13"
-              />
-            </el-form-item>
-          </el-form>
-          <template #footer>
-            <el-button
-              style="margin-right: 10px; padding-left: 10px; padding-right: 10px"
-              @click="showEditDialog = false"
-              >取消</el-button
-            >
-            <el-button type="primary" @click="submitEdit">确认修改</el-button>
-          </template>
-        </el-dialog>
+       <!-- 修改账密弹窗 -->
+<el-dialog
+  v-model="showEditDialog"
+  title="修改用户名/密码"
+  width="550px"
+  style="padding: 20px !important"
+  :close-on-click-modal="false"
+>
+  <!-- 身份验证区域 -->
+  <el-form
+    ref="editPwdVerifyFormRef"
+    :model="editPwdVerifyForm"
+    :rules="editPwdVerifyRules"
+    label-width="110px"
+    v-if="!isPassEdit"
+    class="verify-section"
+  >
+    <h3 style="margin-bottom:15px;">身份验证（验证通过后才能修改）</h3>
+    <el-radio-group v-model="verifyTypeEdit" style="margin-bottom:15px;">
+      <el-radio label="当前密码验证" value="password" />
+      <el-radio label="原绑定手机号验证" value="phone" />
+    </el-radio-group>
 
+    <!-- 密码验证 -->
+    <el-form-item v-if="verifyTypeEdit === 'password'" label="当前密码" prop="oldPwd">
+      <el-input
+        v-model="editPwdVerifyForm.oldPwd"
+        type="password"
+        show-password
+        placeholder="请输入当前登录密码"
+      />
+    </el-form-item>
+
+    <!-- 手机号验证 -->
+    <template v-else>
+      <el-form-item label="绑定手机号 ">
+        <el-input style="margin-left: 2.8px !important;" v-model="originalPhone" disabled placeholder="当前账号已绑定手机号" />
+      </el-form-item>
+      <el-form-item class="yz" label="短信验证码" prop="smsCode">
+        <div class="code-box">
+          <el-input v-model="editPwdVerifyForm.smsCode" placeholder="6位验证码" maxlength="6" />
+          <el-button class="yz1" type="primary" @click="sendEditPwdSms" :disabled="smsCountdownEdit > 0">
+            {{ smsCountdownEdit > 0 ? `${smsCountdownEdit}秒后重发` : '发送验证码' }}
+          </el-button>
+        </div>
+      </el-form-item>
+    </template>
+
+    <!-- 图片验证码 -->
+    <el-form-item label="安全验证" prop="captcha">
+      <div class="captcha-row">
+        <el-input v-model="editPwdVerifyForm.captcha" placeholder="验证码" maxlength="4" style="flex:1" />
+        <div class="captcha-img" @click="refreshCaptchaEdit">{{ captchaCodeEdit }}</div>
+      </div>
+    </el-form-item>
+
+    <el-button class="yz1" style="margin-top: 10px;" type="success" @click="checkIdentityEdit">✅ 验证身份</el-button>
+    <span v-if="isPassEdit" style="color:#67c230;margin-left:12px">身份验证已通过</span>
+  </el-form>
+
+  <!-- 修改表单（验证通过才显示） -->
+  <el-form
+    ref="editFormRef"
+    :model="editForm"
+    :rules="editRules"
+    label-width="100px"
+    v-if="isPassEdit"
+  >
+    <el-form-item style="margin-bottom: 20px" label="用户名/账号" prop="username">
+      <el-input
+        v-model="editForm.username"
+        maxlength="13"
+        placeholder="不修改请保持原样"
+        clearable
+      />
+    </el-form-item>
+    <el-form-item style="margin-bottom: 20px" label="新密码" prop="password">
+      <el-input
+        v-model="editForm.password"
+        type="password"
+        placeholder="不修改请留空"
+        show-password
+        maxlength="13"
+      />
+    </el-form-item>
+    <el-form-item label="确认密码" prop="confirmPwd">
+      <el-input
+        v-model="editForm.confirmPwd"
+        type="password"
+        placeholder="再次输入新密码"
+        show-password
+        maxlength="13"
+      />
+    </el-form-item>
+  </el-form>
+
+  <template #footer>
+    <el-button class="yz1" @click="closeEditDialog">取消</el-button>
+    <el-button
+      class="yz"
+      type="primary"
+      @click="submitEdit"
+      :disabled="!isPassEdit"
+    >确认修改</el-button>
+  </template>
+</el-dialog>
         <!-- 修改手机号弹窗 -->
         <el-dialog
           v-model="showEditPhoneDialog"
@@ -276,7 +350,7 @@
               <el-form-item label="原绑定手机号">
                 <el-input v-model="originalPhone" disabled placeholder="当前账号已绑定手机号" />
               </el-form-item>
-              <el-form-item label="原手机验证码" prop="oldSmsCode">
+              <el-form-item class="yz" label="原手机验证码" prop="oldSmsCode">
                 <div class="code-box">
                   <el-input
                     v-model="editPhoneForm.oldSmsCode"
@@ -286,19 +360,6 @@
                   <el-button type="primary" @click="sendOldPhoneSms" :disabled="smsCountdown > 0">
                     {{ smsCountdown > 0 ? `${smsCountdown}秒后重发` : '发送验证码' }}
                   </el-button>
-                </div>
-              </el-form-item>
-              <el-form-item v-if="showCaptcha" label="安全核验" prop="captcha">
-                <div class="captcha-row">
-                  <el-input
-                    v-model="editPhoneForm.captcha"
-                    placeholder="请输入验证码"
-                    maxlength="4"
-                    style="flex: 1"
-                  />
-                  <div style="color: #000" class="captcha-img" @click="refreshCaptcha">
-                    {{ captchaCode }}
-                  </div>
                 </div>
               </el-form-item>
             </template>
@@ -312,8 +373,23 @@
               />
             </el-form-item>
 
+            <!-- 图片验证码 -->
+            <el-form-item label="安全验证" prop="captcha">
+              <div class="captcha-row">
+                <el-input
+                  v-model="editPhoneForm.captcha"
+                  placeholder="请输入图片验证码"
+                  maxlength="4"
+                  style="flex: 1"
+                />
+                <div style="color: #000" class="captcha-img" @click="refreshCaptcha">
+                  {{ captchaCode }}
+                </div>
+              </div>
+            </el-form-item>
+
             <el-form-item>
-              <el-button type="success" @click="checkIdentity">验证身份</el-button>
+              <el-button class="yz" type="success" @click="checkIdentity">验证身份</el-button>
               <span v-if="isPass" style="color: #67c230; margin-left: 12px">✅ 身份验证已通过</span>
             </el-form-item>
 
@@ -329,8 +405,8 @@
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="showEditPhoneDialog = false">取消</el-button>
-            <el-button type="primary" @click="confirmEditPhone" :disabled="!isPass"
+            <el-button class="yz" @click="showEditPhoneDialog = false">取消</el-button>
+            <el-button class="yz" type="primary" @click="confirmEditPhone" :disabled="!isPass"
               >确认修改</el-button
             >
           </template>
@@ -841,14 +917,13 @@ const regionOptions = [
   },
 ];
 const regionMap: Record<string, string> = {};
-const buildRegionMap = (options: any[]) => {
+  const buildRegionMap = (options: any[]) => {
   options.forEach(option => {
     regionMap[option.value] = option.label;
     if (option.children?.length) buildRegionMap(option.children);
   });
 };
 buildRegionMap(regionOptions);
-
 // 地址转中文
 const formatAddress = (province: string, city: string, district: string) => {
   const p = regionMap[province] || province;
@@ -928,8 +1003,9 @@ let smsTimer: any = null
 
 const chars = '0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ'
 const captchaCode = ref('')
-const showCaptcha = ref(false) //@ts-ignore
-const inputtext = ref(``) //@ts-ignore
+//@ts-ignore
+const inputtext = ref(``)
+//@ts-ignore
 const bcqm = ref(``)
 const km = ref(false)
 
@@ -944,15 +1020,7 @@ const isPass = ref(false)
 
 const orderList = ref<any>([])
 const loading = ref(false)
-const originalUsername = ref(userStore.user?.username || '')
-const showEditDialog = ref(false)
-const editFormRef = ref<FormInstance>()
 
-const editForm = ref({
-  username: userStore.user?.username || '',
-  password: '',
-  confirmPwd: '',
-})
 
 const validMobilePrefixes = [
   '130','131','132','133','134','135','136','137','138','139',
@@ -974,6 +1042,7 @@ const isValidAccount = (str: string): boolean => {
   return hasLetter && hasEnoughDigits && onlyLetterAndDigit
 }
 
+// 图片验证码验证规则（和登录页完全一致）
 const editPhoneRules = reactive<FormRules>({
   oldPwd: [
     { required: true, message: '请输入当前账号密码', trigger: 'blur' },
@@ -981,17 +1050,21 @@ const editPhoneRules = reactive<FormRules>({
   ],
   oldSmsCode: [{ required: true, message: '请输入原手机短信验证码', trigger: 'blur' }],
   captcha: [
-    { //@ts-ignore
-      validator: (rule, value, callback) => {
-        if (value?.toUpperCase() === captchaCode.value) callback()
-        else callback(new Error('图片验证码错误'))
+    { required: true, message: '请输入图片验证码', trigger: 'blur' },
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        if (value?.toUpperCase() === captchaCode.value) {
+          callback()
+        } else {
+          callback(new Error('图片验证码错误'))
+        }
       },
     },
   ],
   newPhone: [
     { required: true, message: '请输入新手机号', trigger: 'blur' },
-    { //@ts-ignore
-      validator: (rule, value, callback) => {
+    {
+      validator: (rule: any, value: string, callback: any) => {
         if (!isValidPhone(value)) return callback(new Error('请输入11位正规手机号'))
         if (value === originalPhone.value) return callback(new Error('不能与原手机号一致'))
         callback()
@@ -1009,10 +1082,10 @@ const handleEditPhone = () => {
 const resetPhoneDialog = () => {
   editPhoneForm.value = { oldSmsCode: '', oldPwd: '', newPhone: '', captcha: '' }
   isPass.value = false
-  showCaptcha.value = false
   smsCountdown.value = 0
   clearInterval(smsTimer)
   editPhoneFormRef.value?.clearValidate()
+  generateCaptcha() 
 }
 
 const generateCaptcha = () => {
@@ -1022,18 +1095,11 @@ const generateCaptcha = () => {
 }
 const refreshCaptcha = () => generateCaptcha()
 
+// 发送验证码：移除图片验证码前置校验，和登录页逻辑一致
 const sendOldPhoneSms = async () => {
   if (!originalPhone.value) return ElMessage.error('未绑定手机号')
   if (!isValidPhone(originalPhone.value)) return ElMessage.error('手机号格式异常')
-  if (!showCaptcha.value) {
-    showCaptcha.value = true
-    generateCaptcha()
-    return ElMessage.info('请完成图片验证')
-  }
-  if (editPhoneForm.value.captcha?.toUpperCase() !== captchaCode.value) {
-    refreshCaptcha()
-    return ElMessage.error('图片验证码错误')
-  }
+
   try {
     const res = await sendSmsCode({ phone: originalPhone.value })
     //@ts-ignore
@@ -1044,17 +1110,26 @@ const sendOldPhoneSms = async () => {
         smsCountdown.value--
         if (smsCountdown.value <= 0) clearInterval(smsTimer)
       }, 1000)
-      showCaptcha.value = false
-      editPhoneForm.value.captcha = ''
     }
   } catch (e) {}
-  refreshCaptcha()
 }
 
+// 身份验证：只校验身份相关字段，不校验新手机号（核心修复）
 const checkIdentity = async () => {
   if (!editPhoneFormRef.value) return
-  if (verifyType.value === 'phone') { //@ts-ignore
-    await editPhoneFormRef.value.validate((p) => p === 'oldSmsCode')
+  
+  // 根据验证方式，只校验对应字段，不校验还没填写的新手机号
+  const validateFields = verifyType.value === 'phone' 
+    ? ['oldSmsCode', 'captcha'] 
+    : ['oldPwd', 'captcha']
+  
+  try {
+    await editPhoneFormRef.value.validateField(validateFields)
+  } catch {
+    return
+  }
+
+  if (verifyType.value === 'phone') {
     try {
       const res = await verifyPaySmsCode({
         phone: originalPhone.value,
@@ -1067,16 +1142,13 @@ const checkIdentity = async () => {
       } else ElMessage.error('验证码错误')
     } catch (e) {}
   } else {
-    const p = editPhoneForm.value.oldPwd
-    if (p.length >= 6 && p.length <= 13) {
-      isPass.value = true
-      ElMessage.success('✅ 验证成功')
-    } else ElMessage.error('密码格式错误')
+    isPass.value = true
+    ElMessage.success('✅ 验证成功')
   }
 }
-
 const confirmEditPhone = async () => {
   if (!editPhoneFormRef.value || !isPass.value) return
+  // 确认修改时，校验整个表单（包括新手机号）
   await editPhoneFormRef.value.validate()
   try {
     const res = await bindPhone(editPhoneForm.value.newPhone)
@@ -1104,62 +1176,6 @@ const handleBind = async () => {
   }
 }
 
-const editRules = reactive<FormRules>({
-  username: [
-    { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
-    { //@ts-ignore
-      validator: (rule: any, value: string, callback: any) => {
-        if (value === originalUsername.value && !editForm.value.password)
-          return callback(new Error('未做任何修改'))
-        if (isValidAccount(value) || isValidPhone(value)) callback()
-        else callback(new Error('格式：字母+数字 或 11位手机号'))
-      },
-      trigger: 'blur',
-    },
-  ],
-  password: [{ min: 6, max: 13, message: '长度6-13位', trigger: 'blur' }],
-  confirmPwd: [
-    { //@ts-ignore
-      validator: (r, p, cb) => {
-        if (editForm.value.password && p !== editForm.value.password) cb(new Error('两次密码不一致'))
-        else cb()
-      },
-      trigger: 'blur',
-    },
-  ],
-})
-
-const openEditDialog = () => {
-  editForm.value.username = userStore.user?.username || ''
-  editForm.value.password = ''
-  editForm.value.confirmPwd = ''
-  showEditDialog.value = true
-}
-
-const submitEdit = async () => {
-  if (!editFormRef.value) return
-  await editFormRef.value.validate()
-  try {
-    const params = {
-      username: editForm.value.username,
-      password: editForm.value.password || undefined,
-      originalUsername: originalUsername.value,
-    }
-    const res = await updateUserInfoApi(params)
-    //@ts-ignore
-    if (res.code === 200) {
-      ElMessage.success('修改成功，请重新登录')
-      userStore.logout()
-      router.push('/login')
-      showEditDialog.value = false
-    } else {
-      //@ts-ignore
-      ElMessage.error(res.msg)
-    }
-  } catch (e) {
-    ElMessage.error('修改失败')
-  }
-}
 
 const go = (path: string | RouteLocationAsRelativeGeneric | RouteLocationAsPathGeneric) => {
   setTimeout(() => router.push(path), 10)
@@ -1243,7 +1259,6 @@ const getOrderList = async () => {
 // 确认收货
 const handleConfirmReceive = async (orderNo: string) => {
   await ElMessageBox.confirm('确认已经收到商品？')
-  // 调用修改状态接口 → 改为已收货
   const res = await updateOrderStatus({ orderNo, status: '已收货' })
   //@ts-ignore
   if (res.code === 200) {
@@ -1252,7 +1267,7 @@ const handleConfirmReceive = async (orderNo: string) => {
   }
 }
 
-// 退货退款（更新订单状态为已取消）
+// 退货退款
 const handleRefundOrder = async (no: string) => {
   await ElMessageBox.confirm('确定要申请退货退款吗？申请后订单将取消，库存将恢复。')
   try {
@@ -1270,37 +1285,213 @@ const handleRefundOrder = async (no: string) => {
   }
 }
 
-// 删除订单：调用deleteOrders接口（仅已取消订单可用）
+// 删除订单
 const handleRemoveOrder = async (orderNo: string) => {
-  // 先打印确认订单号是否正确（和你数据库里的一致）
-  console.log('要删除的订单号:', orderNo)
-
   await ElMessageBox.confirm('确定要删除该订单吗？删除后订单记录将无法恢复。')
   try {
-    // 直接传递订单号字符串，不要传对象或其他格式
     const res = await deleteOrder(orderNo)
-    console.log('删除接口返回:', res)
-
     //@ts-ignore
     if (res.code === 200) {
       ElMessage.success('订单删除成功')
-      getOrderList() // 删除后刷新订单列表
+      getOrderList()
     } else {
       //@ts-ignore
       ElMessage.error(res.msg || '删除失败')
     }
   } catch (err) {
-    console.error('删除订单错误:', err)
     ElMessage.error('删除失败，请稍后重试')
   }
 }
-onUnmounted(() => clearInterval(smsTimer))
+
+// =====================修改账密 身份验证=====================
+const showEditDialog = ref(false)
+const isPassEdit = ref(false)
+const verifyTypeEdit = ref<'password' | 'phone'>('password')
+const editFormRef = ref<FormInstance>()
+const editPwdVerifyFormRef = ref<FormInstance>()
+
+const editPwdVerifyForm = ref({
+  oldPwd: '',
+  smsCode: '',
+  captcha: '',
+})
+
+const captchaCodeEdit = ref('')
+const smsCountdownEdit = ref(0)
+let smsTimerEdit: any = null
+
+const editForm = ref({
+  username: userStore.user?.username || '',
+  password: '',
+  confirmPwd: '',
+})
+const originalUsername = ref(userStore.user?.username || '')
+
+// 身份验证表单规则（和登录页完全一致）
+const editPwdVerifyRules = reactive<FormRules>({
+  oldPwd: [
+    { required: true, message: '请输入当前登录密码', trigger: 'blur' },
+    { min: 6, max: 13, message: '密码长度6-13位', trigger: 'blur' },
+  ],
+  smsCode: [{ required: true, message: '请输入短信验证码', trigger: 'blur' }],
+  captcha: [
+    { required: true, message: '请输入图片验证码', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (value?.toUpperCase() === captchaCodeEdit.value) callback()
+        else callback(new Error('图片验证码错误'))
+      },
+    },
+  ],
+})
+
+// 图片验证码验证规则统一
+const editRules = reactive<FormRules>({
+  username: [
+    { min: 6, max: 13, message: '长度6-13位', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (value === originalUsername.value && !editForm.value.password)
+          return callback(new Error('未做任何修改'))
+        if (isValidAccount(value) || isValidPhone(value)) callback()
+        else callback(new Error('格式：字母+数字 或 11位手机号'))
+      },
+      trigger: 'blur',
+    },
+  ],
+  password: [{ min: 6, max: 13, message: '长度6-13位', trigger: 'blur' }],
+  confirmPwd: [
+    {
+      validator: (r, p, cb) => {
+        if (editForm.value.password && p !== editForm.value.password) cb(new Error('两次密码不一致'))
+        else cb()
+      },
+      trigger: 'blur',
+    },
+  ],
+})
+
+const openEditDialog = () => {
+  editForm.value.username = userStore.user?.username || ''
+  editForm.value.password = ''
+  editForm.value.confirmPwd = ''
+  isPassEdit.value = false
+  resetEditPwdVerify()
+  showEditDialog.value = true
+}
+
+const closeEditDialog = () => {
+  showEditDialog.value = false
+  resetEditPwdVerify()
+}
+
+const resetEditPwdVerify = () => {
+  isPassEdit.value = false
+  smsCountdownEdit.value = 0
+  editPwdVerifyForm.value = { oldPwd: '', smsCode: '', captcha: '' }
+  clearInterval(smsTimerEdit)
+  generateCaptchaEdit() 
+}
+
+const generateCaptchaEdit = () => {
+  let code = ''
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  captchaCodeEdit.value = code
+}
+const refreshCaptchaEdit = () => generateCaptchaEdit()
+
+// 发送验证码：移除图片验证码前置校验，和登录页逻辑一致
+const sendEditPwdSms = async () => {
+  if (!originalPhone.value) return ElMessage.error('未绑定手机号')
+  if (!isValidPhone(originalPhone.value)) return ElMessage.error('手机号格式异常')
+
+  try {
+    const res = await sendSmsCode({ phone: originalPhone.value })
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('验证码已发送：' + res.data.code)
+      smsCountdownEdit.value = 60
+      smsTimerEdit = setInterval(() => {
+        smsCountdownEdit.value--
+        if (smsCountdownEdit <= 0) clearInterval(smsTimerEdit)
+      }, 1000)
+    }
+  } catch (e) {}
+}
+
+// 身份验证：只校验身份相关字段（同步修复）
+const checkIdentityEdit = async () => {
+  if (!editPwdVerifyFormRef.value) return
+  
+  // 根据验证方式，只校验对应字段，不校验后面的用户名密码
+  const validateFields = verifyTypeEdit.value === 'password' 
+    ? ['oldPwd', 'captcha'] 
+    : ['smsCode', 'captcha']
+  
+  try {
+    await editPwdVerifyFormRef.value.validateField(validateFields)
+  } catch {
+    return
+  }
+
+  if (verifyTypeEdit.value === 'password') {
+    isPassEdit.value = true
+    ElMessage.success('✅ 密码验证成功')
+  } else {
+    try {
+      const res = await verifyPaySmsCode({
+        phone: originalPhone.value,
+        code: editPwdVerifyForm.value.smsCode,
+      })
+      //@ts-ignore
+      if (res.code === 200) {
+        isPassEdit.value = true
+        ElMessage.success('✅ 验证码验证成功')
+      } else {
+        ElMessage.error('验证码错误')
+      }
+    } catch (e) {}
+  }
+}
+
+const submitEdit = async () => {
+  if (!editFormRef.value || !isPassEdit.value) return
+  await editFormRef.value.validate()
+
+  try {
+    const params = {
+      username: editForm.value.username,
+      password: editForm.value.password || undefined,
+      originalUsername: originalUsername.value,
+    }
+    const res = await updateUserInfoApi(params)
+    //@ts-ignore
+    if (res.code === 200) {
+      ElMessage.success('修改成功，请重新登录')
+      userStore.logout()
+      router.push('/login')
+      showEditDialog.value = false
+    } else {
+      //@ts-ignore
+      ElMessage.error(res.msg)
+    }
+  } catch (e) {
+    ElMessage.error('修改失败')
+  }
+}
+
+onUnmounted(() => {
+  clearInterval(smsTimer)
+  clearInterval(smsTimerEdit)
+})
 onActivated(() => {
   if (userStore.isLogin) {
     getOrderList()
     fetchUserSign()
     loadDefaultAddress() 
   }
+  generateCaptcha()
+  generateCaptchaEdit()
 })
 onMounted(() => {
   if (userStore.isLogin) {
@@ -1308,10 +1499,23 @@ onMounted(() => {
     fetchUserSign()
     loadDefaultAddress()
   }
+  generateCaptcha()
+  generateCaptchaEdit()
 })
 </script>
-
 <style scoped>
+.yz{
+  margin-top: 12px;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-bottom: 12px;
+}
+.yz1{
+ 
+  padding-left: 3px;
+  padding-right: 3px;
+ 
+}
 /* 头像容器 */
 .avatar-wrapper {
   position: relative;
@@ -1436,7 +1640,8 @@ margin-left: -23.5px;
 
 /* 顶部功能按钮 */
 .zise,
-.zise1 {
+.zise1,
+.zise2 {
   position: static !important;
   margin-left: 0 !important;
   top: auto !important;
@@ -1460,13 +1665,16 @@ margin-left: -23.5px;
 }
 
 .zise1 {
-  color: #ff4d8d;
-  background: rgba(255, 77, 141, 0.08);
+  color: #ff7b00;
+  background: rgba(255, 180, 0, 0.08);
+}
+.zise2 {
+  color: #ff7b00;
+  background: rgba(255, 180, 0, 0.08);
 }
 
-.zise:hover,
-.zise1:hover {
-  transform: translateY(-2px);
+.zise2:hover{
+ 
   background: rgba(255, 255, 255, 0.85);
 }
 

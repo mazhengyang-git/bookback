@@ -1,303 +1,776 @@
 <template>
-   <div class="page-container">
-     <div class="main-content">
-  <div class="home-top-nav">
-    <div class="nav-left">
-      <h2 class="logo1 sci-fi-title1">星途科幻图书 - 商家专区</h2>
-    </div>
-    <div class="nav-center1">
-      <div class="sejb">
-        <div class="syws">
-          <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
+  <div class="page-container">
+    <div class="main-content">
+      <div class="home-top-nav">
+        <div class="nav-left">
+          <h2 class="logo1 sci-fi-title1">星途科幻图书 - 商家专区</h2>
         </div>
-        <div class="syws">
-          <el-button link class="syses" @click="$router.push('/huodong')">活动资讯</el-button>
-        </div>
-      </div>
-    </div>
-    <div class="nav-right1">
-      <div v-if="!userStore.isLogin">
-        <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
-          type="primary"
-          link
-          @click="$router.push('/login')"
-          >登录</el-button
-        >
-        <el-button
-          style="color: black; font-weight: 600; font-size: 20px"
-          type="primary"
-          link
-          @click="$router.push('/register')"
-          >注册</el-button>
-        >
-      </div>
-      <div v-else class="login-bar">
-        <span
-          class="welcome-text"
-          style="
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            font-size: 24px;
-            position: relative;
-            left: 10px;
-          "
-          >欢迎：{{ userStore.user?.username }}</span
-        >
-        <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')"
-          ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
-        >
-        <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')"
-          ><img
-            class="gwdh"
-            style="width: 26px; height: auto; margin-right: 3px"
-            src="/img/购物车.png"
-          />购物车</el-button
-        >
-        <el-button
-          style="color: white; background-color: red; position: relative; font-size: 15px"
-          type="danger"
-          link
-          @click="handleLogout"
-          >退出</el-button>
-        >
-      </div>
-    </div>
-  </div>
-
-  <!-- 筛选栏 -->
-  <div class="filter-bar">
-    <div class="filter-main">
-      <!-- 商家名称搜索（汉字+拼音双搜索） -->
-      <el-input
-        v-model="shopSearchKeyword"
-        placeholder="搜索商家（拼音/汉字）"
-        style="font-weight: 600;"
-        class="filter-control"
-        @keyup.enter="handleShopSearch"
-        @clear="handleClearShopSearch"
-        clearable
-      >
-        <template #suffix>
-          <el-icon class="search-icon" @click="handleShopSearch">
-            <Search />
-          </el-icon>
-        </template>
-      </el-input>
-
-      <!-- 图书名称搜索 -->
-      <el-input
-        v-model="searchKeyword"
-        placeholder="图书名称搜索（拼音/汉字）"
-        style="font-weight: 600;"
-        class="filter-control"
-        @keyup.enter="handleSearch"
-        @clear="handleClearSearch"
-        clearable
-      >
-        <template #suffix>
-          <el-icon class="search-icon" @click="handleSearch">
-            <Search />
-          </el-icon>
-        </template>
-      </el-input>
-
-      <!-- 刷新按钮 -->
-      <el-button
-        style="font-weight:600;width: 120px;"
-        type="primary"
-        :loading="isRefreshing"
-        @click="refreshAllData"
-      >
-        刷新列表
-      </el-button>
-
-      <!-- 价格区间筛选 -->
-      <div class="price-filter">
-        <el-input
-          v-model.number="minPrice"
-          type="number"
-          placeholder="最低价"
-          style="width: 110px"
-          @input="doFilterAndShuffle"
-          @clear="handlePriceClear"
-          clearable
-          min="0"
-        />
-        <span class="price-divider">-</span>
-        <el-input
-          v-model.number="maxPrice"
-          type="number"
-          placeholder="最高价"
-          style="width: 110px"
-          min="0"
-          class="filter-control"
-        />
-      </div>
-    </div>
-
-    <!-- 排序按钮 -->
-    <div class="sort-btns">
-      <span style="font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'price' && currentSortDirection === 'asc' }"
-            @click="handleSort('asc')">价格从低到高</span>
-      <span style="font-weight: 600;" class="sort-btn" :class="{ active: sortBy === 'price' && currentSortDirection === 'desc' }"
-            @click="handleSort('desc')">价格从高到低</span>
-    </div>
-
-    <!-- 视图切换Tab（手动切换） -->
-    <div class="view-tabs">
-      <el-button 
-        :class="{ active: showMode === 'shop' }" 
-        @click="showMode = 'shop'"
-        type="text"
-      >
-        商家一览
-      </el-button>
-      <el-button 
-        :class="{ active: showMode === 'book' }" 
-        @click="showMode = 'book'"
-        type="text"
-      >
-        商品一览
-      </el-button>
-    </div>
-  </div>
-
-  <el-button
-    class="ziwy"
-    link
-    @click="go('/shoucang')"
-    ><img
-      class="gwdh1"
-      style="width: 32px; height: auto; margin-right: 9px"
-      src="/public/img/收藏夹.png"
-    /><span style="color: red">收藏夹</span></el-button
-  >
-
-  <el-button link class="ziwy2" @click="dingbu"><span style="">↑</span></el-button>
-
-  <!-- 商家店铺卡片列表 -->
-  <div v-if="!loading && showMode === 'shop'" class="shop-list-container" v-cloak>
-    <div class="shop-card-list">
-      <div 
-        class="shop-card" 
-        v-for="shop in filteredShops" 
-        :key="shop.shop_id"
-        @click="goToShop(shop.shop_id)"
-      >
-        <el-avatar :size="60" :src="shop.seller_avatar || '/img/default-avatar.png'" />
-        <div class="shop-info">
-          <h3 class="shop-name">{{ shop.shop_name || '未知商家' }}</h3>
-          <p class="shop-desc">店铺ID：000{{ shop.shop_id }}</p>
-          <el-tag type="warning" size="small">商家自营</el-tag>
-        </div>
-      </div>
-    </div>
-    <div v-if="filteredShops.length === 0 && shopSearchKeyword.trim() !== ''" class="empty-tip">未找到相关商家 😕</div>
-  </div>
-
-  <!-- 商家图书列表 -->
-  <div v-if="!loading && showMode === 'book'" class="book-list-container" v-cloak>
-    <div class="main-content-wrapper">
-      <div class="left-content">
-        <div class="book-card-list">
-          <el-card v-for="book in showBooks" :key="book.id" class="book-card">
-            <div class="book-card-content">
-              <img
-                :src="book.cover || '/img/default-book.jpg'"
-                referrerpolicy="no-referrer"
-                alt="图书封面"
-                class="book-cover"
-                @click="handleBookClick(book)"
-                @error="(e) => (e.target.src = '/img/default-book.jpg')"
-              />
-              <div class="book-info">
-                <h3 class="book-name">{{ book.name || '未知图书' }}</h3>
-                <el-tag v-if="book.is_seller" type="warning" size="small" class="zysyy">商家自营</el-tag>
-                <p class="book-author">作者：{{ book.author || '未知作者' }}</p>
-                <p class="book-category">分类：{{ book.category || '未知分类' }}</p>
-
-                <template v-if="hasDiscount(book)">
-                  <p class="book-price" style=" color: #999; margin: 0">
-                    原价：¥{{ formatPrice(book.price) }}
-                  </p>
-                  <p class="book-price" style="color: #f56c6c; font-size: 16px; font-weight: bold; margin: 5px 0 0 0">
-                    优惠价：¥{{ formatPrice(getDiscountPrice(book)) }}
-                    <el-tag type="danger" size="small">{{ getDynamicDiscountRate(book) }}</el-tag>
-                  </p>
-                </template>
-                <p v-else class="book-price">¥{{ formatPrice(book.price) }}</p>
-
-                <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
-                <p class="book-detail-chuban">出版社：{{ book.publisher }}</p>
-                <li style="list-style: none">
-                  <el-button type="primary" size="large" class="add-cart-btn2" style="margin-left: 0px;" @click="addToShoucang(book)" :disabled="!userStore.token">
-                    {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
-                  </el-button>
-                </li>
-              </div>
+        <div class="nav-center1">
+          <div class="sejb">
+            <div class="syws">
+              <el-button link class="syses" @click="$router.push('/home')">首页</el-button>
             </div>
-            <div style="width:auto;white-space: nowrap !important; ">
-             <li style="list-style:none"> <p class="xlwy" style="white-space: nowrap !important;">销量：{{ Number(book.sales_count) || 0 }}件</p>
-              <pj class="pjwy" v-if="book.id != null" :book-id="book.id" source="normal"/>
-            </li> </div>
-          </el-card>
-        </div>
-
-        <div v-if="showBooks.length === 0" class="empty-tip">暂无商家自营图书 😕</div>
-
-        <div class="pagination-wrapper" v-if="total > 0">
-          <el-pagination
-            v-model:current-page="currentPage"
-            :page-size="pageSize"
-            :total="total"
-            layout="prev, pager, next"
-            @current-change="handlePageChange"
-            background
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div v-if="!loading" v-cloak>
-    <div class="page-footer">
-      <div class="footer-content">
-        <div class="footer-left">
-          <h3 class="footer-title">星途科幻图书</h3>
-          <p class="footer-slogan">探索宇宙的无限可能</p>
-        </div>
-        <div class="footer-center">
-          <div class="footer-links">
-            <a href="/books" class="footer-link">图书一览</a>
-            <span class="footer-separator">|</span>
-            <a href="/huodong" class="footer-link">热门活动</a>
-            <span class="footer-separator">|</span>
-            <a href="/user" class="footer-link">个人中心</a>
-            <span class="footer-separator">|</span>
-            <a href="/cart" class="footer-link">购物仓库</a>
+            <div class="syws">
+              <el-button link class="syses" @click="$router.push('/huodong')">活动资讯</el-button>
+            </div>
           </div>
         </div>
-        <div class="footer-right">
-          <p class="footer-copyright">© 2010-2026 xtkh.com 版权所有</p>
-          <p class="footer-contact">联系我们：contact@xingtu.com</p>
+        <div class="nav-right1">
+          <div v-if="!userStore.isLogin">
+            <el-button
+              style="color: black; font-weight: 600; font-size: 20px"
+              type="primary"
+              link
+              @click="$router.push('/login')"
+              >登录</el-button
+            >
+            <el-button
+              style="color: black; font-weight: 600; font-size: 20px"
+              type="primary"
+              link
+              @click="$router.push('/register')"
+              >注册</el-button
+            >
+          </div>
+          <div v-else class="login-bar">
+            <span
+              class="welcome-text"
+              style="
+                user-select: none !important;
+                -webkit-user-select: none !important;
+                font-size: 24px;
+                position: relative;
+                left: 10px;
+              "
+              >欢迎：{{ userStore.user?.username }}</span
+            >
+            <el-button style="font-size: 17px; color: black" link @click="$router.push('/user')"
+              ><img style="width: 24px; height: auto" src="/img/个人中心.png" />个人中心</el-button
+            >
+            <el-button style="font-size: 17px; color: red" link @click="$router.push('/cart')"
+              ><img
+                class="gwdh"
+                style="width: 26px; height: auto; margin-right: 3px"
+                src="/img/购物车.png"
+              />购物车</el-button
+            >
+            <el-button
+              style="color: white; background-color: red; position: relative; font-size: 15px"
+              type="danger"
+              link
+              @click="handleLogout"
+              >退出</el-button
+            >
+          </div>
         </div>
       </div>
-      <div class="footer-legal">
-        <p class="legal-text">
-          互联网图书服务资格证书:(中)-经营性-2026-0209 中公网安备 33010002000126号
-        </p>
-        <p class="legal-text">
-          出版物网络交易平台服务经营备案证:新出发中备字第2017001号 信息网络传播视听许可证:110936a号
-        </p>
-        <p class="legal-text">
-          互联网违法和不良信息举报中心:0571-371-3713713
-        </p>
+
+      <!-- 筛选栏 -->
+      <div class="filter-bar">
+        <div class="filter-main">
+          <!-- 商家名称搜索（汉字+拼音双搜索） -->
+          <el-input
+            v-model="shopSearchKeyword"
+            placeholder="搜索商家（拼音/汉字）"
+            style="font-weight: 600;"
+            class="filter-control"
+            @keyup.enter="handleShopSearch"
+            @clear="handleClearShopSearch"
+            clearable
+          >
+            <template #suffix>
+              <el-icon class="search-icon" @click="handleShopSearch">
+                <Search />
+              </el-icon>
+            </template>
+          </el-input>
+
+          <!-- 图书名称搜索 -->
+          <el-input
+            v-model="searchKeyword"
+            placeholder="图书名称搜索（拼音/汉字）"
+            style="font-weight: 600;"
+            class="filter-control"
+            @keyup.enter="handleSearch"
+            @clear="handleClearSearch"
+            clearable
+          >
+            <template #suffix>
+              <el-icon class="search-icon" @click="handleSearch">
+                <Search />
+              </el-icon>
+            </template>
+          </el-input>
+
+          <!-- 刷新按钮 -->
+          <el-button
+            style="font-weight:600;width: 120px;"
+            type="primary"
+            :loading="isRefreshing"
+            @click="refreshAllData"
+          >
+            刷新列表
+          </el-button>
+
+          <!-- 价格区间筛选 -->
+          <div class="price-filter">
+            <el-input
+              v-model.number="minPrice"
+              type="number"
+              placeholder="最低价"
+              style="width: 110px"
+              @input="doFilterAndShuffle"
+              @clear="handlePriceClear"
+              clearable
+              min="0"
+            />
+            <span class="price-divider">-</span>
+            <el-input
+              v-model.number="maxPrice"
+              type="number"
+              placeholder="最高价"
+              style="width: 110px"
+              min="0"
+              class="filter-control"
+            />
+          </div>
+        </div>
+
+        <!-- 排序按钮（四个都加上和showMode的绑定） -->
+        <div class="sort-btns">
+          <span 
+            style="font-weight: 600;" 
+            class="sort-btn" 
+            :class="{ active: sortBy === 'price' && currentSortDirection === 'asc' }"
+            :style="{ 
+              cursor: showMode === 'book' ? 'pointer' : 'not-allowed', 
+              opacity: showMode === 'book' ? 1 : 0.5,
+              pointerEvents: showMode === 'book' ? 'auto' : 'none'
+            }"
+            @click="handleSort('asc')"
+          >
+            价格从低到高
+          </span>
+          <span 
+            style="font-weight: 600;" 
+            class="sort-btn" 
+            :class="{ active: sortBy === 'price' && currentSortDirection === 'desc' }"
+            :style="{ 
+              cursor: showMode === 'book' ? 'pointer' : 'not-allowed', 
+              opacity: showMode === 'book' ? 1 : 0.5,
+              pointerEvents: showMode === 'book' ? 'auto' : 'none'
+            }"
+            @click="handleSort('desc')"
+          >
+            价格从高到低
+          </span>
+
+          <span 
+            style="font-weight: 600;" 
+            class="sort-btn" 
+            :class="{ active: sortBy === 'rating' }"
+            :style="{ 
+              cursor: showMode === 'book' ? 'pointer' : 'not-allowed', 
+              opacity: showMode === 'book' ? 1 : 0.5,
+              pointerEvents: showMode === 'book' ? 'auto' : 'none'
+            }"
+            @click="handleRatingSort"
+          >
+            好评优先
+          </span>
+          <span 
+            style="font-weight: 600;" 
+            class="sort-btn" 
+            :class="{ active: sortBy === 'sales' }"
+            :style="{ 
+              cursor: showMode === 'book' ? 'pointer' : 'not-allowed', 
+              opacity: showMode === 'book' ? 1 : 0.5,
+              pointerEvents: showMode === 'book' ? 'auto' : 'none'
+            }"
+            @click="handleSalesSort"
+          >
+            销量最高
+          </span>
+        </div>
+
+        <!-- 视图切换Tab（手动切换） -->
+        <div class="view-tabs">
+          <el-button 
+            :class="{ active: showMode === 'shop' }" 
+            @click="showMode = 'shop'"
+            type="text"
+          >
+            商家一览
+          </el-button>
+          <el-button 
+            :class="{ active: showMode === 'book' }" 
+            @click="showMode = 'book'"
+            type="text"
+          >
+            商品一览
+          </el-button>
+        </div>
+      </div>
+
+      <el-button
+        class="ziwy"
+        link
+        @click="go('/shoucang')"
+        ><img
+          class="gwdh1"
+          style="width: 32px; height: auto; margin-right: 9px"
+          src="/public/img/收藏夹.png"
+        /><span style="color: red">收藏夹</span></el-button
+      >
+
+      <el-button link class="ziwy2" @click="dingbu"><span style="">↑</span></el-button>
+
+      <!-- 商家店铺卡片列表 -->
+      <div v-if="!loading && showMode === 'shop'" class="shop-list-container" v-cloak>
+        <div class="shop-card-list">
+          <div 
+            class="shop-card" 
+            v-for="shop in filteredShops" 
+            :key="shop.shop_id"
+            @click="goToShop(shop.shop_id)"
+          >
+            <el-avatar :size="60" :src="shop.seller_avatar || '/img/default-avatar.png'" />
+            <div class="shop-info">
+              <li style="list-style: none;"><h3 class="shop-name">{{ shop.shop_name || '未知商家' }}</h3><el-button style="margin-top: 5px;" @click.stop="followShop(shop)">关注+</el-button></li>
+              <!-- <p class="shop-desc">店铺ID：000{{ shop.shop_id }}</p> -->
+              <el-tag style="width: 120px;" type="warning" size="small">商家自营</el-tag>
+            </div>
+          </div>
+        </div>
+        <div v-if="filteredShops.length === 0 && shopSearchKeyword.trim() !== ''" class="empty-tip">未找到相关商家 😕</div>
+      </div>
+
+      <!-- 商家图书列表 -->
+      <div v-if="!loading && showMode === 'book'" class="book-list-container" v-cloak>
+        <div class="main-content-wrapper">
+          <div class="left-content">
+            <div class="book-card-list">
+              <el-card v-for="book in showBooks" :key="book.id" class="book-card">
+                <div class="book-card-content">
+                  <img
+                    :src="book.cover || '/img/default-book.jpg'"
+                    referrerpolicy="no-referrer"
+                    alt="图书封面"
+                    class="book-cover"
+                    @click="handleBookClick(book)"
+                    @error="(e) => (e.target.src = '/img/default-book.jpg')"
+                  />
+                  <div class="book-info">
+                    <h3 class="book-name">{{ book.name || '未知图书' }}</h3>
+                    <el-tag v-if="book.is_seller" type="warning" size="small" class="zysyy">商家自营</el-tag>
+                    <p class="book-author">作者：{{ book.author || '未知作者' }}</p>
+                    <p class="book-category">分类：{{ book.category || '未知分类' }}</p>
+
+                    <template v-if="hasDiscount(book)">
+                      <p class="book-price" style=" color: #999; margin: 0">
+                        原价：¥{{ formatPrice(book.price) }}
+                      </p>
+                      <p class="book-price" style="color: #f56c6c; font-size: 16px; font-weight: bold; margin: 5px 0 0 0">
+                        优惠价：¥{{ formatPrice(getDiscountPrice(book)) }}
+                        <el-tag type="danger" size="small">{{ getDynamicDiscountRate(book) }}</el-tag>
+                      </p>
+                    </template>
+                    <p v-else class="book-price">¥{{ formatPrice(book.price) }}</p>
+
+                    <p class="book-desc">简介：{{ book.desc || '暂无简介' }}</p>
+                    <p class="book-detail-chuban">出版社：{{ book.publisher }}</p>
+                    <li style="list-style: none">
+                      <el-button type="primary" size="large" class="add-cart-btn2" style="margin-left: 0px;" @click="addToShoucang(book)" :disabled="!userStore.token">
+                        {{ userStore.token ? '收藏图书' : '收藏图书? 请先登录' }}
+                      </el-button>
+                    </li>
+                  </div>
+                </div>
+                <div style="width:auto;white-space: nowrap !important; ">
+                  <li style="list-style:none"> 
+                    <p class="xlwy" style="white-space: nowrap !important;">销量：{{ Number(book.sales_count) || 0 }}件</p>
+                    <pj class="pjwy" v-if="book.id != null" :book-id="book.id" source="normal"/>
+                  </li> 
+                </div>
+              </el-card>
+            </div>
+
+            <div v-if="showBooks.length === 0" class="empty-tip">暂无商家自营图书 😕</div>
+
+            <div class="pagination-wrapper" v-if="total > 0">
+              <el-pagination
+                v-model:current-page="currentPage"
+                :page-size="pageSize"
+                :total="total"
+                layout="prev, pager, next"
+                @current-change="handlePageChange"
+                background
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loading" v-cloak>
+        <div class="page-footer">
+          <div class="footer-content">
+            <div class="footer-left">
+              <h3 class="footer-title">星途科幻图书</h3>
+              <p class="footer-slogan">探索宇宙的无限可能</p>
+            </div>
+            <div class="footer-center">
+              <div class="footer-links">
+                <a href="/books" class="footer-link">图书一览</a>
+                <span class="footer-separator">|</span>
+                <a href="/huodong" class="footer-link">热门活动</a>
+                <span class="footer-separator">|</span>
+                <a href="/user" class="footer-link">个人中心</a>
+                <span class="footer-separator">|</span>
+                <a href="/cart" class="footer-link">购物仓库</a>
+              </div>
+            </div>
+            <div class="footer-right">
+              <p class="footer-copyright">© 2010-2026 xtkh.com 版权所有</p>
+              <p class="footer-contact">联系我们：contact@xingtu.com</p>
+            </div>
+          </div>
+          <div class="footer-legal">
+            <p class="legal-text">
+              互联网图书服务资格证书:(中)-经营性-2026-0209 中公网安备 33010002000126号
+            </p>
+            <p class="legal-text">
+              出版物网络交易平台服务经营备案证:新出发中备字第2017001号 信息网络传播视听许可证:110936a号
+            </p>
+            <p class="legal-text">
+              互联网违法和不良信息举报中心:0571-371-3713713
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div></div></template>
+</template>
 
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
+import {
+  getSellerBookListApi,
+  getAllShopsApi
+} from '@/api/seller/front'
+
+import { pinyin } from 'pinyin-pro'
+import type { Book } from '@/types/index'
+import { useUserStore } from '@/store/modules/user'
+import { useRouter, useRoute } from 'vue-router'
+import { useShoucangStore } from '@/store/shoucang'
+import request from '@/utils/request'
+import pj from '@/views/front/book/抽离短评价.vue'
+
+const shoucangStore = useShoucangStore()
+const userStore = useUserStore()
+const router = useRouter()
+const route = useRoute()
+const selectedPublisher = ref('全部')
+
+// 视图切换
+const showMode = ref<'shop' | 'book'>('shop')
+
+interface Shop {
+  shop_id: number
+  shop_name: string
+  seller_avatar: string
+}
+
+// 打乱数组工具
+const shuffleArray = <T>(arr: T[]): T[] => {
+  const newArr = [...arr]
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+  }
+  return newArr
+}
+
+// 工具函数
+const getDiscountPrice = (book: any) => Number(book.discount_price ?? book.price) || 0
+const hasDiscount = (book: any) => !!book.discount_price && book.discount_price < book.price
+const getDynamicDiscountRate = (book: any) => {
+  if (!hasDiscount(book)) return ''
+  const rate = (Number(book.discount_price) / Number(book.price)) * 10
+  return rate.toFixed(1) + '折'
+}
+
+// 跳转
+const handleBookClick = (book: any) =>
+  router.push({ path: `/book/${book.id}`, query: { book_type: 2 } })
+
+const go = (path: string) => router.push(path)
+
+const goToShop = (shopId: number) => router.push(`/shop/${shopId}`)
+
+// 基础状态
+const loading = ref(true)
+const isRefreshing = ref(false)
+
+const sortBy = ref<'price' | 'rating' | 'sales' | ''>('')
+const currentSortDirection = ref<'asc' | 'desc'>('asc')
+
+const selectedAAuthor = ref('全部')
+const authorSearch = ref('')
+const selectedTags = ref<string[]>([])
+const availableTags = ref<string[]>([
+  '太空歌剧',
+  '赛博朋克',
+  '时间旅行',
+  '智能纪元',
+  '外星文明',
+  '自然谜团'
+])
+
+const minPrice = ref<number | null>(null)
+const maxPrice = ref<number | null>(null)
+const selectedCategory = ref('全部')
+const searchKeyword = ref('')
+
+// 商家状态
+const shopSearchKeyword = ref('')
+const shopList = ref<Shop[]>([])
+const filteredShops = ref<Shop[]>([])
+
+// 图书状态
+const sellerBooks = ref<Book[]>([])
+const filteredBooks = ref<Book[]>([])
+const showBooks = ref<Book[]>([])
+
+const currentPage = ref(1)
+const pageSize = ref(6)
+const total = ref(0)
+const shouldShufflePage = ref(false)
+
+// 收藏
+const addToShoucang = async (book: any) => {
+  if (!userStore.token) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  try {
+    const res = await request.post('/api/shoucang/add', {
+      goodsId: book.id,
+      num: 1,
+      spec: '平装版',
+      source: 'seller',
+      bookName: book.name,
+      bookCover: book.cover,
+      bookPrice: getDiscountPrice(book)
+    })
+
+    res.code === 200
+      ? ElMessage.success('收藏成功')
+      : ElMessage.error(res.msg)
+  } catch {
+    ElMessage.error('收藏失败')
+  }
+}
+
+// 关注店铺
+async function followShop(shop: { shop_id: any; shop_name: any; seller_avatar: any }) {
+  if (!userStore.token) {
+    ElMessage.warning('请先登录');
+    return;
+  }
+
+  try {
+    const res = await request.post('/api/shop/add', {
+      shop_id: shop.shop_id,
+      shop_name: shop.shop_name,
+      shop_avatar: shop.seller_avatar
+    });
+
+    if (res.code === 200) {
+      ElMessage.success('关注成功');
+    } else {
+      ElMessage.error(res.msg);
+    }
+  } catch (err) {
+    // ElMessage.error('关注失败');
+  }
+}
+
+// 价格工具
+const formatPrice = (price: any) => Number(price || 0).toFixed(2)
+const normalizePrice = (v: any) =>
+  v === null || v === ''
+    ? null
+    : Number.isFinite(+v)
+      ? +v
+      : null
+
+const getBookSales = (book: Book) => +book.sales_count || 0
+const getBookAvgScore = (book: any) => Number(book.avg_score ?? 0)
+
+// 排序清空
+const handlePriceClear = () => {
+  minPrice.value = null
+  maxPrice.value = null
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 价格排序
+const handleSort = (type: 'asc' | 'desc') => {
+  if (showMode.value !== 'book') return
+  if (sortBy.value === 'price' && currentSortDirection.value === type) {
+    sortBy.value = ''
+    currentSortDirection.value = 'asc'
+  } else {
+    sortBy.value = 'price'
+    currentSortDirection.value = type
+  }
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 好评排序
+const handleRatingSort = () => {
+  if (showMode.value !== 'book') return
+  sortBy.value = sortBy.value === 'rating' ? '' : 'rating'
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 销量排序
+const handleSalesSort = () => {
+  if (showMode.value !== 'book') return
+  sortBy.value = sortBy.value === 'sales' ? '' : 'sales'
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// ======================================
+// 拼音工具
+// ======================================
+const getFullPinyin = (text: string) => {
+  return pinyin(text, {
+    toneType: 'none',
+    type: 'array'
+  }).join('').toLowerCase()
+}
+
+const getFirstLetterPinyin = (text: string) => {
+  return pinyin(text, {
+    pattern: 'first',
+    toneType: 'none',
+    type: 'array'
+  }).join('').toLowerCase()
+}
+
+// ======================================
+// 商家搜索
+// ======================================
+watch(shopSearchKeyword, (val) => {
+  showMode.value = 'shop'
+  const keyword = val.trim().toLowerCase()
+  if (!keyword) {
+    filteredShops.value = [...shopList.value]
+    return
+  }
+
+  filteredShops.value = shopList.value.filter((shop) => {
+    const name = shop.shop_name || ''
+    const nameLower = name.toLowerCase()
+    if (nameLower.includes(keyword)) return true
+
+    const firstPart = name.slice(0, 2)
+    const full = getFullPinyin(firstPart)
+    const first = getFirstLetterPinyin(firstPart)
+    return full.startsWith(keyword) || first.startsWith(keyword)
+  })
+})
+
+const handleClearShopSearch = () => {
+  shopSearchKeyword.value = ''
+}
+const handleShopSearch = () => {}
+
+// ======================================
+// 图书筛选
+// ======================================
+const doFilterAndShuffle = () => {
+  let list = [...sellerBooks.value]
+  const kw = searchKeyword.value.trim().toLowerCase()
+  const min = normalizePrice(minPrice.value)
+  const max = normalizePrice(maxPrice.value)
+
+  list = list.filter((b) => {
+    const price = getDiscountPrice(b)
+    const bookName = b.name || ''
+    const bookNameLower = bookName.toLowerCase()
+
+    let matchCN = kw === '' || bookNameLower.includes(kw)
+    let matchPY = false
+    if (kw) {
+      const firstPart = bookName.slice(0, 2)
+      const full = getFullPinyin(firstPart)
+      const first = getFirstLetterPinyin(firstPart)
+      matchPY = full.startsWith(kw) || first.startsWith(kw)
+    }
+    const matchName = matchCN || matchPY
+
+    return (
+      matchName &&
+      (selectedCategory.value === '全部' || b.category === selectedCategory.value) &&
+      (min === null || price >= min) &&
+      (max === null || price <= max)
+    )
+  })
+
+  // 全局排序
+  if (sortBy.value === 'price') {
+    list.sort((a, b) => currentSortDirection.value === 'asc' 
+      ? getDiscountPrice(a) - getDiscountPrice(b) 
+      : getDiscountPrice(b) - getDiscountPrice(a)
+    )
+  }
+  if (sortBy.value === 'rating') {
+    list.sort((a, b) => getBookAvgScore(b) - getBookAvgScore(a))
+  }
+  if (sortBy.value === 'sales') {
+    list.sort((a, b) => getBookSales(b) - getBookSales(a))
+  }
+
+  if (shouldShufflePage.value) {
+    list.sort(() => Math.random() - 0.5)
+  }
+
+  filteredBooks.value = list
+  total.value = list.length
+  currentPage.value = 1
+  doPaginationSlice()
+  shouldShufflePage.value = false
+}
+
+// 分页切片
+const doPaginationSlice = () => {
+  const start = (currentPage.value - 1) * pageSize.value
+  showBooks.value = filteredBooks.value.slice(start, start + pageSize.value)
+}
+
+const handlePageChange = () => doPaginationSlice()
+const handleSearch = () => {
+  showMode.value = 'book'
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+const handleClearSearch = () => {
+  searchKeyword.value = ''
+  currentPage.value = 1
+  doFilterAndShuffle()
+}
+
+// 刷新
+const refreshAllData = async () => {
+  isRefreshing.value = true
+  try {
+    currentPage.value = 1
+    if (showMode.value === 'shop') {
+      await loadShopList()
+      filteredShops.value = shuffleArray(filteredShops.value)
+      ElMessage.success('商家列表已随机刷新')
+    } else {
+      if (sortBy.value !== 'price') {
+        shouldShufflePage.value = true
+      } else {
+        shouldShufflePage.value = false
+      }
+      await Promise.all([loadSellerBooks(), loadShopList()])
+      doFilterAndShuffle()
+      ElMessage.success('图书列表已刷新')
+    }
+  } catch (e) {
+    ElMessage.error('刷新失败')
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+// 加载商家图书
+const loadSellerBooks = async () => {
+  try {
+    const res = await getSellerBookListApi('全部')
+    sellerBooks.value = res.code === 200 ? res.data.map(i => ({ ...i, is_seller: true })) : []
+  } catch {
+    sellerBooks.value = []
+  }
+}
+
+// 加载店铺列表
+const loadShopList = async () => {
+  try {
+    const res = await getAllShopsApi()
+    if (res.code === 200) {
+      shopList.value = res.data.map(item => ({
+        shop_id: item.id,
+        shop_name: item.shop_name,
+        seller_avatar: item.avatar
+      }))
+      filteredShops.value = [...shopList.value]
+    }
+  } catch (err) {
+    console.error(err)
+    shopList.value = []
+    filteredShops.value = []
+  }
+}
+
+// 回到顶部
+const dingbu = () => window.scrollTo(0, 0)
+
+// 退出登录
+const handleLogout = () => {
+  userStore.logout()
+  ElMessage.success('退出成功')
+  router.push('/login')
+}
+
+// 初始化
+onMounted(async () => {
+  loading.value = true
+  await Promise.all([loadSellerBooks(), loadShopList()])
+
+  const { category, keyword } = route.query
+  if (category) selectedCategory.value = category as string
+  if (keyword) searchKeyword.value = keyword as string
+
+  shouldShufflePage.value = true
+  doFilterAndShuffle()
+  loading.value = false
+})
+
+watch(
+  () => route.query,
+  (q) => {
+    selectedCategory.value = (q.category as string) || '全部'
+    searchKeyword.value = (q.keyword as string) || ''
+    doFilterAndShuffle()
+  },
+  { deep: true }
+)
+
+// 切换视图时清空排序，避免商家页受影响
+watch(showMode, () => {
+  sortBy.value = ''
+  currentSortDirection.value = 'asc'
+  doFilterAndShuffle()
+})
+
+watch(
+  [selectedCategory, selectedAAuthor, searchKeyword, minPrice, maxPrice, selectedPublisher],
+  () => doFilterAndShuffle()
+)
+</script>
 
 <style scoped>
 .view-tabs {
@@ -1477,404 +1950,4 @@
   75% { transform: scale(1.1) rotate3d(0,1,0,10deg); }
 }
 </style>
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
-import {
-  getSellerBookListApi,
-  getAllShopsApi
-} from '@/api/seller/front'
-
-import { pinyin } from 'pinyin-pro'
-import type { Book } from '@/types/index'
-import { useUserStore } from '@/store/modules/user'
-import { useRouter, useRoute } from 'vue-router'
-import { useShoucangStore } from '@/store/shoucang'
-import request from '@/utils/request'
-import pj from '@/views/front/book/抽离短评价.vue'
-
-const shoucangStore = useShoucangStore()
-const userStore = useUserStore()
-const router = useRouter()
-const route = useRoute()
-const selectedPublisher = ref('全部')
-
-// 视图切换
-const showMode = ref<'shop' | 'book'>('shop')
-
-interface Shop {
-  shop_id: number
-  shop_name: string
-  seller_avatar: string
-}
-
-// 打乱数组工具
-const shuffleArray = <T>(arr: T[]): T[] => {
-  const newArr = [...arr]
-  for (let i = newArr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
-  }
-  return newArr
-}
-
-// 工具函数
-const getDiscountPrice = (book: any) => Number(book.discount_price ?? book.price) || 0
-const hasDiscount = (book: any) => !!book.discount_price && book.discount_price < book.price
-const getDynamicDiscountRate = (book: any) => {
-  if (!hasDiscount(book)) return ''
-  const rate = (Number(book.discount_price) / Number(book.price)) * 10
-  return rate.toFixed(1) + '折'
-}
-
-// 跳转
-const handleBookClick = (book: any) =>
-  router.push({ path: `/book/${book.id}`, query: { book_type: 2 } })
-
-const go = (path: string) => router.push(path)
-
-const goToShop = (shopId: number) => router.push(`/shop/${shopId}`)
-
-// 基础状态
-const loading = ref(true)
-const isRefreshing = ref(false)
-
-const sortBy = ref<'price' | 'rating' | 'sales' | ''>('')
-
-const currentSortDirection = ref<'asc' | 'desc'>('asc')
-
-const selectedAAuthor = ref('全部')
-
-const authorSearch = ref('')
-
-const selectedTags = ref<string[]>([])
-
-const availableTags = ref<string[]>([
-  '太空歌剧',
-  '赛博朋克',
-  '时间旅行',
-  '智能纪元',
-  '外星文明',
-  '自然谜团'
-])
-
-const minPrice = ref<number | null>(null)
-
-const maxPrice = ref<number | null>(null)
-
-const selectedCategory = ref('全部')
-
-const searchKeyword = ref('')
-
-// 商家状态
-const shopSearchKeyword = ref('')
-
-const shopList = ref<Shop[]>([])
-
-const filteredShops = ref<Shop[]>([])
-
-// 图书状态
-const sellerBooks = ref<Book[]>([])
-
-const filteredBooks = ref<Book[]>([])
-
-const showBooks = ref<Book[]>([])
-
-const currentPage = ref(1)
-
-const pageSize = ref(6)
-
-const total = ref(0)
-
-const shouldShufflePage = ref(false)
-
-// 收藏
-const addToShoucang = async (book: any) => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录')
-    return
-  }
-
-  try {
-    const res = await request.post('/api/shoucang/add', {
-      goodsId: book.id,
-      num: 1,
-      spec: '平装版',
-      source: 'seller',
-      bookName: book.name,
-      bookCover: book.cover,
-      bookPrice: getDiscountPrice(book)
-    })
-
-    res.code === 200
-      ? ElMessage.success('收藏成功')
-      : ElMessage.error(res.msg)
-  } catch {
-    ElMessage.error('收藏失败')
-  }
-}
-
-// 价格工具
-const formatPrice = (price: any) => Number(price || 0).toFixed(2)
-
-const normalizePrice = (v: any) =>
-  v === null || v === ''
-    ? null
-    : Number.isFinite(+v)
-      ? +v
-      : null
-
-const getBookSales = (book: Book) => +book.sales_count || 0
-
-// 排序清空
-const handlePriceClear = () => {
-  minPrice.value = null
-  maxPrice.value = null
-  currentPage.value = 1
-  doFilterAndShuffle()
-}
-
-const handleSort = (type: 'asc' | 'desc') => {
-  if (sortBy.value === 'price' && currentSortDirection.value === type) {
-    sortBy.value = ''
-    currentSortDirection.value = 'asc'
-  } else {
-    sortBy.value = 'price'
-    currentSortDirection.value = type
-  }
-
-  currentPage.value = 1
-  doFilterAndShuffle()
-}
-
-// ======================================
-// 拼音工具（开头拼音 + 中文全文）
-// ======================================
-const getFullPinyin = (text: string) => {
-  return pinyin(text, {
-    toneType: 'none',
-    type: 'array'
-  }).join('').toLowerCase()
-}
-
-const getFirstLetterPinyin = (text: string) => {
-  return pinyin(text, {
-    pattern: 'first',
-    toneType: 'none',
-    type: 'array'
-  }).join('').toLowerCase()
-}
-
-// ======================================
-// 商家搜索（只匹配开头拼音）
-// ======================================
-watch(shopSearchKeyword, (val) => {
-  showMode.value = 'shop'
-  const keyword = val.trim().toLowerCase()
-  if (!keyword) {
-    filteredShops.value = [...shopList.value]
-    return
-  }
-
-  filteredShops.value = shopList.value.filter((shop) => {
-    const name = shop.shop_name || ''
-    const nameLower = name.toLowerCase()
-    if (nameLower.includes(keyword)) return true
-
-    const firstPart = name.slice(0, 2)
-    const full = getFullPinyin(firstPart)
-    const first = getFirstLetterPinyin(firstPart)
-    return full.startsWith(keyword) || first.startsWith(keyword)
-  })
-})
-
-// 清空商家搜索
-const handleClearShopSearch = () => {
-  shopSearchKeyword.value = ''
-}
-
-// 回车/点击搜索
-const handleShopSearch = () => {}
-
-// ======================================
-// 图书搜索（开头拼音 + 中文全文）
-// ======================================
-const doFilterAndShuffle = () => {
-  let list = [...sellerBooks.value]
-  const kw = searchKeyword.value.trim().toLowerCase()
-  const min = normalizePrice(minPrice.value)
-  const max = normalizePrice(maxPrice.value)
-
-  list = list.filter((b) => {
-    const price = getDiscountPrice(b)
-    const bookName = b.name || ''
-    const bookNameLower = bookName.toLowerCase()
-
-    // 1. 中文全文匹配
-    let matchCN = kw === '' || bookNameLower.includes(kw)
-
-    // 2. 拼音：只匹配开头
-    let matchPY = false
-    if (kw) {
-      const firstPart = bookName.slice(0, 2)
-      const full = getFullPinyin(firstPart)
-      const first = getFirstLetterPinyin(firstPart)
-      matchPY = full.startsWith(kw) || first.startsWith(kw)
-    }
-
-    // 满足一个即可
-    const matchName = matchCN || matchPY
-
-    return (
-      matchName &&
-      (selectedCategory.value === '全部' || b.category === selectedCategory.value) &&
-      (min === null || price >= min) &&
-      (max === null || price <= max)
-    )
-  })
-
-  if (shouldShufflePage.value) {
-    list.sort(() => Math.random() - 0.5)
-  }
-
-  filteredBooks.value = list
-  total.value = list.length
-  currentPage.value = 1
-  doPaginationSlice()
-  shouldShufflePage.value = false
-}
-
-const doPaginationSlice = () => {
-  const start = (currentPage.value - 1) * pageSize.value
-  let data = [...filteredBooks.value].slice(start, start + pageSize.value)
-
-  if (sortBy.value === 'price') {
-    data.sort((a, b) =>
-      currentSortDirection.value === 'asc'
-        ? getDiscountPrice(a) - getDiscountPrice(b)
-        : getDiscountPrice(b) - getDiscountPrice(a)
-    )
-  }
-
-  if (sortBy.value === 'sales') {
-    data.sort((a, b) => getBookSales(b) - getBookSales(a))
-  }
-
-  showBooks.value = data
-}
-
-const handlePageChange = () => doPaginationSlice()
-
-const handleSearch = () => {
-  showMode.value = 'book'
-  currentPage.value = 1
-  doFilterAndShuffle()
-}
-
-const handleClearSearch = () => {
-  searchKeyword.value = ''
-  currentPage.value = 1
-  doFilterAndShuffle()
-}
-
-
-// 刷新按钮
-
-const refreshAllData = async () => {
-  isRefreshing.value = true
-  try {
-    currentPage.value = 1
-
-    // 1. 商家视图：直接打乱商家列表
-    if (showMode.value === 'shop') {
-      await loadShopList()
-      filteredShops.value = shuffleArray(filteredShops.value)
-      ElMessage.success('商家列表已随机刷新')
-    }
-    // 2. 图书视图：价格排序时不打乱
-    else {
-      if (sortBy.value !== 'price') {
-        shouldShufflePage.value = true
-      } else {
-        shouldShufflePage.value = false
-      }
-      await Promise.all([loadSellerBooks(), loadShopList()])
-      doFilterAndShuffle()
-      ElMessage.success('图书列表已刷新')
-    }
-  } catch (e) {
-    ElMessage.error('刷新失败')
-  } finally {
-    isRefreshing.value = false
-  }
-}
-
-// 加载图书
-const loadSellerBooks = async () => {
-  try {
-    const res = await getSellerBookListApi('全部')
-    sellerBooks.value = res.code === 200 ? res.data.map(i => ({ ...i, is_seller: true })) : []
-  } catch {
-    sellerBooks.value = []
-  }
-}
-
-// 加载商家
-const loadShopList = async () => {
-  try {
-    const res = await getAllShopsApi()
-    if (res.code === 200) {
-      shopList.value = res.data.map(item => ({
-        shop_id: item.id,
-        shop_name: item.shop_name,
-        seller_avatar: item.avatar
-      }))
-      filteredShops.value = [...shopList.value]
-    }
-  } catch (err) {
-    console.error(err)
-    shopList.value = []
-    filteredShops.value = []
-  }
-}
-
-// 回到顶部
-const dingbu = () => window.scrollTo(0, 0)
-
-const handleLogout = () => {
-  userStore.logout()
-  ElMessage.success('退出成功')
-  router.push('/login')
-}
-
-// 初始化
-onMounted(async () => {
-  loading.value = true
-  await Promise.all([loadSellerBooks(), loadShopList()])
-
-  const { category, keyword } = route.query
-  if (category) selectedCategory.value = category as string
-  if (keyword) searchKeyword.value = keyword as string
-
-  shouldShufflePage.value = true
-  doFilterAndShuffle()
-  loading.value = false
-})
-
-watch(
-  () => route.query,
-  (q) => {
-    selectedCategory.value = (q.category as string) || '全部'
-    searchKeyword.value = (q.keyword as string) || ''
-    doFilterAndShuffle()
-  },
-  { deep: true }
-)
-
-watch(
-  [selectedCategory, selectedAAuthor, searchKeyword, minPrice, maxPrice, selectedPublisher],
-  () => doFilterAndShuffle()
-)
-</script>
 

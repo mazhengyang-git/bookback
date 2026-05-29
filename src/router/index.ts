@@ -28,7 +28,7 @@ const routes = [
   { path: '/huodong', name: 'homehuodong', component: () => import('@/views/front/home/huodong.vue') },
   { path: `/huodong `, name: 'homehuodong.', component: () => import('@/views/front/home/huodong1.vue') },
   { path: '/activity/:id', name: 'ActivityDetail', component: () => import('@/views/front/activity/ActivityDetail.vue') },
-  
+  { path: '/shop', name: 'Shop', component: () => import('@/views/front/cart/shop.vue'), meta: { requiresAuth: true } },
   {
   path: '/activity/:id/:title',
   name: 'ActivityDetail',
@@ -51,6 +51,7 @@ const routes = [
       { path: 'newbook', name: 'newbookadmin', component: () => import('@/views/back/book/newbook.vue') },
         { path: 'huodongzx', name: 'huodongzxadmin', component: () => import('@/views/back/huodongzx/huodongzx.vue') },
         { path: 'seller-audit', name: 'SellerAuditAdmin', component: () => import('@/views/back/seller/audit.vue') },
+        
     ]
   },
   {

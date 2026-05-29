@@ -869,7 +869,8 @@ background-color: #ec8f33 !important;
   align-items: center;
 }
 .cover-footer {
-  width: auto;
+  width: 200px;
+  height: 50px;
   white-space: nowrap;
  top: -6px;
   position: absolute;
@@ -885,6 +886,8 @@ background-color: #ec8f33 !important;
   white-space: nowrap;
 }
 .pjwy {
+  width: 220px;
+  height: auto;
   transform: scale(0.8);
   transform-origin: left center;
 }

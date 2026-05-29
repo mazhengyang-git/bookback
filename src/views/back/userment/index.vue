@@ -184,9 +184,7 @@ const confirmReset = async () => {
   }
 }
 
-// ==============================================
-// 🔴 修复：方法名改成 toggleBan，不和接口重名
-// ==============================================
+
 const toggleBan = async (user: any) => {
   if (loadingMap.value[user.id]) return
   loadingMap.value[user.id] = true

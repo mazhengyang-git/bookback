@@ -116,7 +116,7 @@ const saveLoading = ref(false)
 const bookListLoading = ref(false)
 const bookSelectDialogVisible = ref(false)
 
-//ID列表和图书列表分离，避免数据不一致
+//ID列表和图书列表分离
 const topBookIds = ref<(number | string)[]>([])
 const selectedBookList = ref<Book[]>([])
 const allBookList = ref<Book[]>([])
