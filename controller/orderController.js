@@ -416,12 +416,10 @@ function buildRegionMap(options) {
   });
 }
 buildRegionMap(regionOptions);
-
 // ===================== 获取订单接口 =====================
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user.id;
-    
     // 关联 seller 店铺表，查询店铺信息
     const [orders] = await pool.execute(`
       SELECT 
@@ -445,13 +443,11 @@ const getUserOrders = async (req, res) => {
       WHERE o.user_id = ?
       ORDER BY o.create_time DESC
     `, [userId]);
-
     // 编码转中文 + 注入店铺数据
     const formatOrders = orders.map(item => {
       const provinceName = regionMap[item.province] || item.province || '';
       const cityName = regionMap[item.city] || item.city || '';
       const districtName = regionMap[item.district] || item.district || '';
-
       return {
         id: item.id,
         orderNo: item.order_no,

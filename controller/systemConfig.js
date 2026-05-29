@@ -1,5 +1,4 @@
 const pool = require('../config/db');
-
 // 1. 获取所有系统配置（或单个配置）
 exports.getSystemConfig = async (req, res) => {
   try {
@@ -11,15 +10,12 @@ exports.getSystemConfig = async (req, res) => {
       sql += ' WHERE config_key = ?';
       params.push(key);
     }
-    
     const [rows] = await pool.execute(sql, params);
-    
     // 处理JSON格式的value
     const data = rows.map(row => ({
       ...row,
       config_value: parseJsonSafely(row.config_value)
     }));
-    
     res.json({ 
       code: 200, 
       data: key ? data[0] : data, 
@@ -30,7 +26,6 @@ exports.getSystemConfig = async (req, res) => {
     res.status(500).json({ code: 500, msg: '服务器错误' });
   }
 };
-
 // 2. 更新系统配置（管理员）
 exports.updateSystemConfig = async (req, res) => {
   try {
@@ -38,14 +33,11 @@ exports.updateSystemConfig = async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({ code: 403, msg: '无管理员权限' });
     }
-
     const { config_key, config_value, config_desc } = req.body;
-    
     // 自动处理JSON格式
     const valueToStore = typeof config_value === 'object' 
       ? JSON.stringify(config_value) 
       : config_value;
-
     // 使用 INSERT ... ON DUPLICATE KEY UPDATE 实现新增或更新
     await pool.execute(
       `INSERT INTO system_config (config_key, config_value, config_desc) 
@@ -55,7 +47,6 @@ exports.updateSystemConfig = async (req, res) => {
        config_desc = VALUES(config_desc)`,
       [config_key, valueToStore, config_desc || '']
     );
-
     res.json({ code: 200, msg: '配置更新成功' });
   } catch (err) {
     console.error('更新配置失败：', err);

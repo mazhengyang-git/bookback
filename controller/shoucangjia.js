@@ -3,19 +3,15 @@ const pool = require('../config/db')
 
 
 //1.加入收藏夹 
-
 exports.addShoucang = async (req, res) => {
   try {
     const { goodsId, num, spec, source, bookName, bookCover, bookPrice } = req.body;
     const userId = req.user.id;
-
     if (!goodsId || !num || !spec) {
       return res.json({ code: 400, msg: '参数缺失：goodsId/num/spec不能为空' });
     }
-
     // 使用前端传过来的source
     const finalSource = source || 'normal';
-
     // source判断，避免不同来源的同ID冲突
     const [exist] = await pool.execute(
       'SELECT id FROM shoucang WHERE user_id = ? AND goods_id = ? AND spec = ? AND source = ?',
@@ -24,7 +20,6 @@ exports.addShoucang = async (req, res) => {
     if (exist.length > 0) {
       return res.json({ code: 400, msg: '该图书已在收藏夹中' });
     }
-
     let bookInfo = null;
     // 根据source查询图书信息
     if (finalSource === 'new') {

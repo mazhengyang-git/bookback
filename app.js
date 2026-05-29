@@ -41,6 +41,7 @@ const newbookguan = require('./router/newbookguanli');
 const bookcom = require('./router/bookComrute');
 const bookcom1 = require('./router/bookComrute1');
 const shoucang = require('./router/shoucangroute');
+const shop = require('./router/shop');
 const bookpaihang = require('./router/systembookpaihang');
 const bookDiscountRouter = require('./router/bookdiscount');
 const sellerorder = require('./sellerroute/sellerorder');
@@ -67,6 +68,7 @@ app.use('/api', bookcom1);
 app.use('/api', hdzx);
 
 app.use('/api/shoucang', shoucang);
+app.use('/api/shop', shop);
 // 订单后台路由
 app.use('/api', orderadmin);
 app.use('/api', bookpaihang);
